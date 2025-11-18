@@ -1,6 +1,6 @@
 // ==========================================================
 // Archivo: script.js
-// FUNCIÓN: Lógica de la página principal (cargar sorteos y botón de tickets).
+// FUNCIÓN: Lógica de la página principal.
 // ==========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,21 +9,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function cargarSorteos() {
         console.log("Intentando cargar sorteos desde Supabase...");
         
-        // Verifica si 'supabase' está definido (Debería estarlo si el orden de carga es correcto)
         if (typeof supabase === 'undefined') {
             console.error("Error: La variable 'supabase' no está definida. Revise el orden en index.html.");
-            document.getElementById('sorteos-container').innerHTML = '<p>Error de conexión inicial. Revise la consola.</p>';
+            document.getElementById('sorteos-container').innerHTML = '<h2>Error de conexión. Revise la consola.</h2>';
             return;
         }
 
         const { data: sorteos, error } = await supabase
-            .from('sorteos') // Nombre de tu tabla de sorteos
+            .from('sorteos') // Nombre de tu tabla
             .select('*')
-            .eq('estado', 'activo'); // Asumiendo que tienes un campo 'estado'
+            .eq('estado', 'activo'); 
 
         if (error) {
             console.error('Error al cargar sorteos:', error.message);
-            document.getElementById('sorteos-container').innerHTML = '<p>Error al obtener datos de sorteos: ' + error.message + '</p>';
+            document.getElementById('sorteos-container').innerHTML = '<p>Error al obtener datos: ' + error.message + '</p>';
             return;
         }
 
@@ -31,8 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('sorteos-container').innerHTML = '<h2>No hay sorteos activos por el momento.</h2>';
         } else {
             console.log("Sorteos cargados exitosamente:", sorteos);
-            // Lógica para mostrar los sorteos
-            document.getElementById('sorteos-container').innerHTML = `<p>Se encontraron ${sorteos.length} sorteo(s) activo(s). (La conexión funciona, falta el diseño)</p>`;
+            document.getElementById('sorteos-container').innerHTML = `<p>✅ Se encontraron ${sorteos.length} sorteo(s) activo(s). La conexión funciona.</p>`;
         }
     }
     
@@ -40,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const consultarBtn = document.getElementById('consultar-tickets-btn');
     if (consultarBtn) {
         consultarBtn.addEventListener('click', () => {
-            alert('Consultar Mis Tickets: El script de lógica detectó el clic.');
-            // Aquí iría el código para abrir el modal o formulario de tickets.
+            alert('Consultar Mis Tickets: ¡El botón funciona! Ahora se abriría el modal.');
         });
     }
 

@@ -1,1 +1,333 @@
 
+:root {
+    --primary-color: #1a73e8; /* Azul de Google */
+    --secondary-color: #4CAF50; /* Verde de éxito */
+    --danger-color: #dc3545; /* Rojo de peligro */
+    --background-color: #f4f6f9;
+    --sidebar-color: #2c3e50; /* Gris oscuro */
+    --light-color: #ecf0f1;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+}
+
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 250px;
+    background-color: var(--sidebar-color);
+    color: var(--light-color);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #3c546b;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    color: white;
+}
+
+.sidebar-nav {
+    flex-grow: 1;
+    padding: 20px 0;
+}
+
+.nav-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 15px 20px;
+    margin-bottom: 5px;
+    background-color: transparent;
+    color: var(--light-color);
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-btn:hover {
+    background-color: #3c546b;
+}
+
+.nav-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.logout-btn {
+    border-top: 1px solid #3c546b;
+    margin-top: auto;
+    color: #f39c12; /* Naranja para destacar */
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex-grow: 1;
+    padding: 30px;
+}
+
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+}
+
+.section-header h2 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* --- BOTONES GENERALES --- */
+.btn-primary, .btn-secondary, .btn-danger, .btn-success {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-primary:hover { background-color: #0d47a1; }
+.btn-secondary:hover { background-color: #5a6268; }
+.btn-danger:hover { background-color: #c82333; }
+.btn-success:hover { background-color: #3d8b40; }
+
+/* --- LISTA DE SORTEOS --- */
+.sorteo-admin-card {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sorteo-admin-info h4 {
+    margin: 0 0 5px 0;
+    color: var(--dark-color);
+}
+
+.sorteo-admin-actions button {
+    margin-left: 10px;
+}
+
+/* --- MODAL DE SORTEO --- */
+.modal-overlay-admin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.modal-overlay-admin.active {
+    display: flex;
+}
+
+.modal-content-admin {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-btn-admin {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.modal-content-admin label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.modal-content-admin input[type="text"],
+.modal-content-admin input[type="number"],
+.modal-content-admin input[type="url"],
+.modal-content-admin input[type="datetime-local"],
+.modal-content-admin textarea,
+.modal-content-admin select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-group-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.form-group-inline > * {
+    margin-bottom: 10px;
+}
+
+/* Estilos de Premios dentro del Modal */
+#premios-container {
+    border: 1px dashed #ccc;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+#premios-container h4 {
+    color: #333;
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.premio-form-group {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    position: relative;
+}
+.premio-form-group h4 {
+    font-size: 1em;
+    font-weight: normal;
+    color: #007bff;
+    border-bottom: none;
+}
+.remove-premio-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    line-height: 1;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* --- TABLA DE BOLETOS --- */
+.boletos-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.boletos-table th, .boletos-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 14px;
+}
+
+.boletos-table th {
+    background-color: #f0f0f0;
+    color: var(--dark-color);
+    font-weight: bold;
+}
+
+.boletos-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.status-pendiente {
+    background-color: #ffc107;
+    color: #333;
+}
+.status-rechazado {
+    background-color: #dc3545;
+    color: white;
+}
+.status-validado {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-table-action {
+    margin-right: 5px;
+    padding: 6px 10px;
+}
+
+.view-capture-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}

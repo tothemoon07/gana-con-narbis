@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrador</title>
+    <link rel="stylesheet" href="admin_styles.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    
+    <style>
+        /* Estilos básicos para el formulario de login */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4ff4f4; /* Fondo claro */
+            margin: 0;
+        }
+        .login-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+            width: 320px;
+        }
+        .login-container h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            color: #333;
+        }
+        .login-container input[type="email"], 
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff; /* Color primario */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 17px;
+            transition: background-color 0.3s ease;
+        }
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+        #error-message {
+            color: #dc3545; /* Color de error */
+            text-align: center; 
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Acceso Administrativo</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Correo Electrónico" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Iniciar Sesión</button>
+            <p id="error-message"></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = ''; // Limpiar mensaje de error anterior
+
+            try {
+                // Función clave: Intenta iniciar sesión con el método signInWithPassword
+                const { error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    errorMessage.textContent = 'Error: Credenciales inválidas o cuenta no confirmada.';
+                    console.error('Error de autenticación:', error);
+                } else {
+                    alert('¡Inicio de sesión exitoso! Redirigiendo al panel.');
+                    // Redirige al panel de administración principal
+                    window.location.href = 'admin.html';
+                }
+            } catch (err) {
+                errorMessage.textContent = 'Ocurrió un error inesperado de conexión.';
+                console.error('Error inesperado:', err);
+            }
+        });
+    </script>
+</body>
+</html>

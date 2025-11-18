@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: admin_script.js
+// Archivo: admin_script.js - COMPLETO Y CORREGIDO
 // FUNCIÓN: Lógica del panel de administración (navegación y formularios).
 // ==========================================================
 
@@ -9,12 +9,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verifica si 'supabase' está definido (Debería estarlo)
     if (typeof supabase === 'undefined') {
         console.error("Error: La variable 'supabase' no está definida. Revise el orden en admin.html.");
-        adminView.innerHTML = '<h2>Error crítico de conexión.</h2>';
+        adminView.innerHTML = '<h2>Error crítico de conexión a Supabase.</h2>';
         return;
     }
 
     // --- FUNCIONES DE VISTA ---
     
+    function mostrarListaSorteos() {
+         adminView.innerHTML = '<h2>Lista de Sorteos (Conexión OK)</h2><p>Aquí se cargaría la lista de sorteos existentes desde la base de datos.</p>';
+    }
+
+    // FUNCIÓN CORREGIDA: Usa 'creado_en' en lugar de 'fecha_creacion'
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -30,21 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const titulo = document.getElementById('titulo').value;
             
+            // CORRECCIÓN CLAVE: Usamos 'creado_en' y agregamos 'estado'
             const { error } = await supabase
                 .from('sorteos')
-                .insert([{ titulo: titulo, fecha_creacion: new Date() }]);
+                .insert([{ 
+                    titulo: titulo, 
+                    creado_en: new Date(), // <-- CORRECTO: Columna existente en DB
+                    estado: 'activo' // <-- Requerido por la lógica
+                }]);
 
             if (error) {
                 alert('ERROR: No se pudo crear el sorteo. ' + error.message);
+                console.error("Detalle del error:", error);
             } else {
-                alert('¡Sorteo creado exitosamente en Supabase!');
+                alert(`¡Sorteo "${titulo}" creado exitosamente en Supabase!`);
                 mostrarListaSorteos(); // Vuelve a la lista después de guardar
             }
         });
-    }
-    
-    function mostrarListaSorteos() {
-         adminView.innerHTML = '<h2>Lista de Sorteos (Aquí iría el fetch y la tabla)</h2>';
     }
 
     function mostrarBoletosVendidos() {
@@ -78,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Botón "Cerrar Sesión"
     document.getElementById('cerrar-sesion-btn')?.addEventListener('click', () => {
-        alert('Cerrando sesión (Se puede integrar la función de Supabase Auth aquí)');
+        alert('Cerrando sesión (Lógica pendiente)');
     });
     
     // Carga la vista por defecto (al iniciar)

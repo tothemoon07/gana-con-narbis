@@ -1,75 +1,86 @@
 // ==========================================================
 // Archivo: admin_script.js
-// FUNCIÓN: Manejar la lógica del panel de administración.
-// NOTA: La variable 'supabase' ya está disponible gracias a supabase-config.js
+// FUNCIÓN: Lógica del panel de administración (navegación y formularios).
 // ==========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const adminView = document.getElementById('admin-view');
+    
+    // Verifica si 'supabase' está definido (Debería estarlo)
+    if (typeof supabase === 'undefined') {
+        console.error("Error: La variable 'supabase' no está definida. Revise el orden en admin.html.");
+        adminView.innerHTML = '<h2>Error crítico de conexión.</h2>';
+        return;
+    }
 
-    // Función que carga el contenido de "Nuevo Sorteo"
+    // --- FUNCIONES DE VISTA ---
+    
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
             <form id="form-nuevo-sorteo">
                 <label for="titulo">Título del Sorteo:</label>
                 <input type="text" id="titulo" required><br><br>
-                <button type="submit">Guardar Sorteo</button>
+                <button type="submit">Guardar Sorteo en Supabase</button>
             </form>
         `;
 
-        // Agregar listener al formulario para guardar en Supabase
+        // Lógica de Supabase para guardar el nuevo sorteo
         document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
             e.preventDefault();
             const titulo = document.getElementById('titulo').value;
             
-            // Simulación de inserción en Supabase
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('sorteos')
                 .insert([{ titulo: titulo, fecha_creacion: new Date() }]);
 
             if (error) {
-                alert('Error al crear el sorteo: ' + error.message);
+                alert('ERROR: No se pudo crear el sorteo. ' + error.message);
             } else {
-                alert('Sorteo creado exitosamente!');
-                console.log('Nuevo sorteo:', data);
-                // Aquí podrías recargar la vista de sorteos
+                alert('¡Sorteo creado exitosamente en Supabase!');
+                mostrarListaSorteos(); // Vuelve a la lista después de guardar
             }
         });
     }
-
-    // --- EVENT LISTENERS DE NAVEGACIÓN (Sidebar y Botones) ---
-
-    // Botón "+Nuevo Sorteo"
-    const nuevoSorteoBtn = document.getElementById('nuevo-sorteo-btn');
-    if (nuevoSorteoBtn) {
-        nuevoSorteoBtn.addEventListener('click', mostrarNuevoSorteo);
+    
+    function mostrarListaSorteos() {
+         adminView.innerHTML = '<h2>Lista de Sorteos (Aquí iría el fetch y la tabla)</h2>';
     }
 
-    // Enlaces del Sidebar
+    function mostrarBoletosVendidos() {
+        adminView.innerHTML = '<h2>Vista de Boletos Vendidos (Falta desarrollar)</h2>';
+    }
+
+    function mostrarMetodosDePago() {
+        adminView.innerHTML = '<h2>Vista de Métodos de Pago (Falta desarrollar)</h2>';
+    }
+
+    // --- EVENT LISTENERS (Botones) ---
+
+    // Botones de navegación del Sidebar
     document.getElementById('sorteos-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Cargando la lista de Sorteos...'); 
-        // Lógica para cargar la vista de sorteos
+        mostrarListaSorteos();
     });
 
     document.getElementById('boletos-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Cargando Boletos Vendidos...');
-        // Lógica para cargar la vista de boletos
+        mostrarBoletosVendidos();
     });
 
     document.getElementById('pagos-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Cargando Métodos de Pago...');
-        // Lógica para cargar la vista de métodos de pago
+        mostrarMetodosDePago();
     });
 
+    // Botón "+Nuevo Sorteo"
+    document.getElementById('nuevo-sorteo-btn')?.addEventListener('click', mostrarNuevoSorteo);
+
+    // Botón "Cerrar Sesión"
     document.getElementById('cerrar-sesion-btn')?.addEventListener('click', () => {
-        alert('Cerrando sesión (Falta la lógica de autenticación)');
-        // Lógica de Supabase para cerrar sesión
+        alert('Cerrando sesión (Se puede integrar la función de Supabase Auth aquí)');
     });
     
-    // Carga la vista por defecto al iniciar
+    // Carga la vista por defecto (al iniciar)
     mostrarNuevoSorteo();
 });

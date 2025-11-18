@@ -1,78 +1,39 @@
 
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorteos Exclusivos - Gana con Narbis</title>
+    <title>Gana con Narbis - Sorteos Activos</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-
+    
+    </head>
 <body>
+    <header>
+        <nav>
+            <button id="consultar-tickets-btn">Consultar Mis Tickets</button>
+            </nav>
+    </header>
 
-    <nav class="navbar">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo Narbis" class="logo">
-        </div>
-        <div>
-            <a href="index.html" class="nav-link">Inicio</a>
-            <a href="index.html#sorteos-activos" class="nav-link">Sorteos Activos</a>
-        </div>
-        <button class="consulta-btn" id="open-tickets-modal">
-            <i class="fas fa-search"></i> Consultar Mis Tickets
-        </button>
-    </nav>
-
-    <section class="sorteos-header-section" id="sorteos-activos">
-        <h2>Sorteos Activos</h2>
+    <main>
+        <h1>Sorteos Activos</h1>
         <p>¡Participa y Gana Grandes Premios!</p>
-    </section>
-
-    <div class="sorteos-grid" id="sorteos-container">
-        <h2 id="loading-status">Cargando sorteos disponibles...</h2>
-    </div>
-
-    <section class="banner-invitacion">
-        <h3>¡Lleva tu emprendimiento al siguiente nivel!</h3>
-        <p>Compra tu rifa y entra en nuestros sorteos exclusivos de mentorías, cursos y herramientas.</p>
-    </section>
-
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Autorizado por:</h4>
-                <p>CONALOT (Comisión Nacional de Lotería)</p>
-            </div>
-            <div class="footer-section">
-                <h4>Únete al Movimiento</h4>
-                <p>#ganaconnarbis</p>
-                <p>#narbisjunior</p>
-            </div>
-            <div class="footer-section">
-                <h4>Contáctanos</h4>
-                <p><i class="fas fa-map-marker-alt"></i> Chacao, Caracas, Venezuela</p>
-                <p><i class="fas fa-phone"></i> +58 424...</p>
-                <p><i class="fas fa-envelope"></i> nar_narbis@hotmail.com</p>
-            </div>
+        
+        <div id="sorteos-container">
+            Cargando sorteos disponibles...
         </div>
-        <div class="copyright">
-            © 2025 Gana con Narbis. Todos los derechos reservados
-        </div>
+        
+        </main>
+
+    <footer>
+        <p>© 2025 Gana con Narbis. Todos los derechos reservados.</p>
     </footer>
 
-    <div id="modal-consulta-tickets" class="modal-overlay-pago" style="z-index: 2500;">
-        <div class="modal-pago-content">
-            <span class="close-btn-pago">&times;</span>
-            <h4>Consultar Mis Tickets</h4>
-            <p>Ingresa tu email o número de teléfono para ver todos tus tickets de sorteos</p>
-            </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+    
+    <script src="supabase-config.js"></script>
 
+    <script src="script.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js"></script>
-    <script src="script.js" defer></script>
 </body>
-
 </html>

@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: admin_script.js - COMPLETO Y CORREGIDO (FINAL)
+// Archivo: admin_script.js - COMPLETO Y CORREGIDO (FINAL CON TODOS LOS CAMPOS)
 // FUNCIÓN: Lógica del panel de administración (navegación y formularios).
 // ==========================================================
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
          adminView.innerHTML = '<h2>Lista de Sorteos (Conexión OK)</h2><p>Aquí se cargaría la lista de sorteos existentes desde la base de datos.</p>';
     }
 
-    // FUNCIÓN CORREGIDA: Incluye precio_bs (obligatorio) y usa creado_en
+    // FUNCIÓN CORREGIDA: Incluye todos los campos obligatorios del sorteo
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label for="precio_bs">Precio por Boleto (Bs.):</label>
                 <input type="number" step="0.01" id="precio_bs" required><br><br>
                 
+                <label for="fecha_sorteo">Fecha y Hora del Sorteo:</label>
+                <input type="datetime-local" id="fecha_sorteo" required><br><br>
+                
                 <button type="submit">Guardar Sorteo en Supabase</button>
             </form>
         `;
@@ -38,16 +41,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
             e.preventDefault();
             const titulo = document.getElementById('titulo').value;
-            const precio_bs = document.getElementById('precio_bs').value; // <-- NUEVO: Recogemos el precio
+            const precio_bs = document.getElementById('precio_bs').value;
+            const fecha_sorteo_local = document.getElementById('fecha_sorteo').value;
             
-            // INSERCIÓN ACTUALIZADA: Enviamos titulo, creado_en, estado y precio_bs
+            // Convertir el valor de datetime-local a un objeto Date (timestamptz)
+            const fecha_sorteo_tz = new Date(fecha_sorteo_local).toISOString(); 
+
+            // INSERCIÓN ACTUALIZADA: Enviamos todos los valores obligatorios
             const { error } = await supabase
                 .from('sorteos')
                 .insert([{ 
                     titulo: titulo, 
+                    precio_bs: precio_bs,
+                    fecha_sorteo: fecha_sorteo_tz, // <-- NUEVO: Columna obligatoria
                     creado_en: new Date(), 
-                    estado: 'activo',
-                    precio_bs: precio_bs // <-- CORREGIDO: Valor de columna not-null
+                    estado: 'activo'
                 }]);
 
             if (error) {

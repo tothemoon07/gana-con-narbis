@@ -1,13 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="sorteo-title">Detalle del Sorteo</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="sorteo-title">Detalle del Sorteo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -45,7 +44,7 @@
                 <button class="buy-option-btn" data-tickets="30">+30</button>
                 <button class="buy-option-btn" data-tickets="50">+50</button>
             </div>
-            
+             
             <div class="ticket-counter">
                 <button class="counter-btn" id="decrement-btn">-</button>
                 <input type="number" id="tickets-input" class="counter-input" value="1" min="1" max="10000" readonly>
@@ -56,11 +55,11 @@
                 🛒 Comprar <span id="tickets-count-display">1</span> boletos
             </button>
         </div>
-        
+         
         <div id="premios-detalle-container">
             <h3>Detalles del sorteo</h3>
-            </div>
-        
+        </div>
+         
     </div>
 
     <div id="modal-datos-contacto" class="modal-overlay-pago">
@@ -73,7 +72,7 @@
                 <input type="text" id="nombre-completo" placeholder="Nombre Completo *" required>
                 <input type="email" id="email-contacto" placeholder="Email *" required>
                 <input type="tel" id="telefono-contacto" placeholder="Teléfono: +58 424 1234567 *" required>
-                
+                 
                 <select id="estado-contacto" required>
                     <option value="">Selecciona tu estado *</option>
                     <option value="Distrito Capital">Distrito Capital</option>
@@ -82,7 +81,7 @@
                     <option value="Zulia">Zulia</option>
                     <option value="Otro">Otro</option>
                 </select>
-                
+                 
                 <div class="form-group" style="display: flex; gap: 10px;">
                     <select id="cedula-prefijo" style="width: 25%;">
                         <option value="V">V</option>
@@ -92,11 +91,11 @@
                 </div>
 
                 <div class="total-summary">
-                    <p>Precio por boleto: <span id="precio-por-boleto">Bs. 55</span></p>
+                    <p>Precio por boleto: <span id="precio-por-boleto">Bs. 0.00</span></p>
                     <p>Cantidad de boletos: <span id="cantidad-boletos-summary">1</span></p>
-                    <p class="total">Total a pagar: <span id="total-a-pagar">Bs. 55</span></p>
+                    <p class="total">Total a pagar: <span id="total-a-pagar">Bs. 0.00</span></p>
                 </div>
-                
+                 
                 <button type="submit" class="btn-pago-movil">
                     <span style="font-size: 20px;">💳</span> Pagar con Pago Móvil Seguro + Rápido
                 </button>
@@ -117,7 +116,7 @@
 
             <div style="text-align: center; margin-bottom: 20px;">
                 <p style="margin: 0;">Monto a pagar:</p>
-                <h3 style="color: var(--primary-color); font-size: 28px;">Bs. <span id="monto-final-pago">110</span></h3>
+                <h3 style="color: var(--primary-color); font-size: 28px;">Bs. <span id="monto-final-pago">0.00</span></h3>
             </div>
 
             <div class="verification-code-box">
@@ -125,7 +124,7 @@
                     ⚠️ DEBE COLOCAR EN CONCEPTO ESTE CÓDIGO PARA VERIFICAR SU PAGO MÁS RÁPIDO
                 </p>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-                    <span id="codigo-referencia" class="code">414956</span>
+                    <span id="codigo-referencia" class="code">000000</span>
                     <button class="copy-btn" data-copy-target="codigo-referencia">Copiar</button>
                 </div>
             </div>
@@ -142,7 +141,7 @@
             <h4>Reportar Pago</h4>
 
             <div style="text-align: center;">
-                <h3 style="color: red;">Código de Referencia: <span id="codigo-referencia-display">414956</span></h3>
+                <h3 style="color: red;">Código de Referencia: <span id="codigo-referencia-display">000000</span></h3>
                 <p>¿NO PUDISTE REGISTRAR TU PAGO AUTOMATIZADO?</p>
                 <p style="font-size: 14px;">Puedes registrarlo manualmente:</p>
             </div>
@@ -150,7 +149,7 @@
             <form id="form-reporte-pago">
                 <input type="text" id="referencia-pago" placeholder="Últimos 6 dígitos de la referencia (Ej: 123456)" maxlength="6" pattern="\d{6}" required>
                 <input type="tel" id="telefono-pago-movil" placeholder="Teléfono desde donde pagaste (Ej: 04241234567)" required>
-                
+                 
                 <div class="form-group">
                     <label for="capture-input" class="file-upload-label">
                         <span id="capture-label-text">Subir Capture / Comprobante de Pago *</span>
@@ -162,7 +161,7 @@
                 <button type="submit" class="btn-reportar-pago">
                     Reportar Pago
                 </button>
-                
+                 
                 <p style="font-size: 12px; margin-top: 10px;">
                     Validaremos tu pago en máximo 12 horas y te enviaremos tus tickets por WhatsApp.
                 </p>
@@ -180,8 +179,9 @@
     </footer>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js"></script>
-    <script src="script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="sorteo_script.js" defer></script>
 </body>
 
 </html>

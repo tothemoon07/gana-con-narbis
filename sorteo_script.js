@@ -1,12 +1,14 @@
 // ==========================================================
-// Archivo: sorteo_script.js - Lógica completa de detalle y compra
+// Archivo: sorteo_script.js - CÓDIGO FINAL CORREGIDO PARA TUS COLUMNAS
 // ==========================================================
 
 // Variables de estado
 let sorteoActual = null;
 let precioUnitario = 0;
 let boletosSeleccionados = 1;
-let referenciaUnica = null; // Para la referencia de la orden en Supabase
+let referenciaUnica = null; // Código de 6 dígitos que va en codigo_concpeto
+
+// ... (Resto de las variables DOM) ...
 
 // Elementos del DOM para el contador y totales
 const inputCantidad = document.getElementById('tickets-input');
@@ -24,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const sorteoId = urlParams.get('id');
 
+    // VERIFICACIÓN: Supabase debe estar definido en supabase-config.js
     if (typeof supabase === 'undefined') {
         console.error("Error: Supabase no está definido. Revise supabase-config.js.");
         return;
@@ -43,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================
-// A. Carga de Datos del Sorteo
+// A. Carga de Datos del Sorteo (No necesita cambios)
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -85,11 +88,7 @@ async function cargarDetalleSorteo(id) {
             </div>
         `;
         
-        // 2. Actualizar el precio en el modal de contacto
         displayPrecioBoleto.textContent = `Bs. ${precioUnitario}`;
-        
-        // 3. Inicializar el contador y los totales
-        // Aseguramos que el input empiece en 1
         inputCantidad.value = 1; 
         actualizarTotales();
 
@@ -100,16 +99,13 @@ async function cargarDetalleSorteo(id) {
 }
 
 // ==========================================================
-// B. Lógica de Contador y Precio
+// B. Lógica de Contador y Precio (No necesita cambios)
 // ==========================================================
 
 function actualizarTotales() {
-    // Asegurarse de que el valor sea un número
     boletosSeleccionados = parseInt(inputCantidad.value);
-    
     const total = (boletosSeleccionados * precioUnitario).toFixed(2);
     
-    // Actualizar todos los displays
     displayTicketsCount.textContent = boletosSeleccionados;
     displayCantidadSummary.textContent = boletosSeleccionados;
     displayTotalPagar.textContent = `Bs. ${total}`;
@@ -146,7 +142,6 @@ function configurarBotonesCompraRapida() {
     document.querySelectorAll('.buy-option-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const ticketsToAdd = parseInt(e.currentTarget.getAttribute('data-tickets'));
-            // En lugar de SUMAR, reemplazamos por el valor del botón
             inputCantidad.value = ticketsToAdd;
             actualizarTotales();
         });
@@ -154,7 +149,7 @@ function configurarBotonesCompraRapida() {
 }
 
 // ==========================================================
-// C. Lógica de Modales y Formularios
+// C. Lógica de Modales y Formularios (Pequeños cambios)
 // ==========================================================
 
 function configurarModales() {
@@ -187,7 +182,6 @@ function configurarModales() {
         const targetId = e.currentTarget.getAttribute('data-copy-target');
         const targetElement = document.getElementById(targetId);
         
-        // Uso de Clipboard API para copiar texto
         navigator.clipboard.writeText(targetElement.textContent.trim()).then(() => {
             alert('Código de referencia copiado: ' + targetElement.textContent);
         }).catch(err => {
@@ -202,18 +196,18 @@ function configurarFormularios() {
     document.getElementById('form-datos-contacto').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // 1. Generar Referencia Única (6 dígitos)
+        // Generar Referencia Única (6 dígitos)
         referenciaUnica = Math.floor(100000 + Math.random() * 900000); 
         
-        // 2. Lógica de Supabase: Guardar la orden de compra como PENDIENTE
+        // Lógica de Supabase: Guardar la orden de compra como PENDIENTE
         const ordenGuardada = await guardarOrdenPendiente();
         
         if (ordenGuardada) {
-            // 3. Actualizar el código en los modales de pago
+            // Actualizar el código en los modales de pago
             codigoReferenciaPago.textContent = referenciaUnica;
             codigoReferenciaDisplay.textContent = referenciaUnica;
 
-            // 4. Cerrar modal de contacto y abrir modal de pago
+            // Cerrar modal de contacto y abrir modal de pago
             document.getElementById('modal-datos-contacto').style.display = 'none';
             document.getElementById('modal-datos-pago').style.display = 'flex';
         } else {
@@ -238,8 +232,8 @@ function configurarFormularios() {
 
         // 1. Subir el comprobante a Supabase Storage
         const file = fileInput.files[0];
-        // Nota: Asumo que el bucket se llama 'comprobantes_narbis'
-        const filePath = `comprobantes/${referenciaUnica}-${Date.now()}-${file.name}`;
+        // NOTA: El nombre del bucket es 'comprobantes_narbis'
+        const filePath = `comprobantes_narbis/${referenciaUnica}-${Date.now()}-${file.name}`;
         
         const { error: uploadError } = await supabase.storage
             .from('comprobantes_narbis') 
@@ -259,7 +253,6 @@ function configurarFormularios() {
         if (reporteExitoso) {
             document.getElementById('modal-reporte-pago').style.display = 'none';
             alert('✅ ¡Reporte de pago exitoso! En breve validaremos la transacción y te enviaremos tus tickets.');
-            // Redirigir al index después de un reporte exitoso
             window.location.href = 'index.html'; 
         } else {
             alert('Error al actualizar la orden con el reporte. Revise la consola.');
@@ -277,28 +270,37 @@ function configurarFormularios() {
 }
 
 // ==========================================================
-// D. Funciones de Base de Datos
+// D. Funciones de Base de Datos (CORREGIDAS PARA TUS NOMBRES)
 // ==========================================================
 
 async function guardarOrdenPendiente() {
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
+    // USANDO TUS NOMBRES DE COLUMNA EXISTENTES/CORREGIDOS
     const datosOrden = {
         sorteo_id: sorteoActual.id,
         nombre_cliente: document.getElementById('nombre-completo').value,
         email_cliente: document.getElementById('email-contacto').value,
         telefono_cliente: document.getElementById('telefono-contacto').value,
-        cedula: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value,
-        estado: document.getElementById('estado-contacto').value,
-        cantidad_boletos: boletosSeleccionados,
-        total_pagar: total,
-        metodo_pago: 'pago_movil', 
-        referencia_pago_sistema: referenciaUnica, 
-        estado_pago: 'pendiente', 
+        
+        // TU NOMBRE DE COLUMNA ES ceulda_client
+        ceulda_client: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
+        estado_cliente: document.getElementById('estado-contacto').value, 
+        
+        cantidad_boletos: boletosSeleccionados, 
+        // TU NOMBRE DE COLUMNA ES precios_total
+        precios_total: total, 
+        
+        // TU NOMBRE DE COLUMNA ES metodo_pego
+        metodo_pego: 'pago_movil', 
+        // TU NOMBRE DE COLUMNA ES codigo_concpeto
+        codigo_concpeto: referenciaUnica, 
+        // TU NOMBRE DE COLUMNA PARA ESTADO DE PAGO ES estado
+        estado: 'pendiente', 
+        
         creado_en: new Date().toISOString()
     };
     
-    // NOTA: La tabla debe llamarse 'boletos'
     const { data, error } = await supabase
         .from('boletos') 
         .insert([datosOrden])
@@ -309,8 +311,8 @@ async function guardarOrdenPendiente() {
         return false;
     }
     
-    // Si la referencia única es generada por la DB, la actualizamos
-    referenciaUnica = data[0].referencia_pago_sistema || referenciaUnica;
+    referenciaUnica = data[0].codigo_concpeto || referenciaUnica; 
+    console.log("Orden pendiente guardada. Referencia:", referenciaUnica);
     return true;
 }
 
@@ -318,16 +320,23 @@ async function actualizarOrdenConReporte(comprobanteUrl) {
     const telefonoPagoMovil = document.getElementById('telefono-pago-movil').value;
     const referenciaPago = document.getElementById('referencia-pago').value;
     
+    // USANDO TUS NOMBRES DE COLUMNA EXISTENTES/CORREGIDOS
     const { error } = await supabase
         .from('boletos')
         .update({
-            referencia_pago_banco: referenciaPago, 
-            telefono_pago_movil: telefonoPagoMovil,
-            comprobante_url: comprobanteUrl, 
-            estado_pago: 'reportado', 
-            fecha_reporte: new Date().toISOString()
+            // TU NOMBRE DE COLUMNA ES referencia_pago (referencia banco)
+            referencia_pago: referenciaPago, 
+            // TU NOMBRE DE COLUMNA ES telefono_pago (teléfono origen)
+            telefono_pago: telefonoPagoMovil, 
+            // TU NOMBRE DE COLUMNA ES url_capture
+            url_capture: comprobanteUrl, 
+            // TU NOMBRE DE COLUMNA PARA ESTADO DE PAGO ES estado
+            estado: 'reportado', 
+            // TU NOMBRE DE COLUMNA ES fecha_validacion
+            fecha_validacion: new Date().toISOString() 
         })
-        .eq('referencia_pago_sistema', referenciaUnica);
+        // Buscamos la orden por tu código único codigo_concpeto
+        .eq('codigo_concpeto', referenciaUnica); 
         
     if (error) {
         console.error("Error al actualizar la orden:", error);

@@ -1,25 +1,38 @@
 // ==========================================================
-// Archivo: admin_script.js - COMPLETO Y CORREGIDO (FINAL CON TODOS LOS CAMPOS)
-// FUNCIÓN: Lógica del panel de administración (navegación y formularios).
+// Archivo: admin_script.js - FINAL (CON AUTENTICACIÓN)
+// FUNCIÓN: Protege la vista y permite la inserción de sorteos (ya que la RLS está activa)
 // ==========================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    const adminView = document.getElementById('admin-view');
-    
-    // Verifica si 'supabase' está definido
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Verificación Crítica de Supabase y Sesión
     if (typeof supabase === 'undefined') {
-        console.error("Error: La variable 'supabase' no está definida. Revise el orden en admin.html.");
-        adminView.innerHTML = '<h2>Error crítico de conexión a Supabase.</h2>';
+        console.error("Error: La variable 'supabase' no está definida.");
         return;
     }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    // Redirige al login si NO hay una sesión activa
+    if (sessionError || !session) {
+        console.log("Sesión no encontrada o expirada. Redirigiendo a login.");
+        // Redirige a la página de inicio de sesión que acabamos de crear
+        window.location.href = 'admin_login.html'; 
+        return; // Detiene la ejecución del script de administración
+    }
+
+    // --- Si hay sesión, continúa con la lógica del Panel ---
+
+    const adminView = document.getElementById('admin-view');
+    console.log("Usuario autenticado (" + session.user.email + "). Cargando panel.");
+    // NOTA: El usuario está autenticado, la RLS permitirá la inserción ahora.
 
     // --- FUNCIONES DE VISTA ---
     
     function mostrarListaSorteos() {
-         adminView.innerHTML = '<h2>Lista de Sorteos (Conexión OK)</h2><p>Aquí se cargaría la lista de sorteos existentes desde la base de datos.</p>';
+         adminView.innerHTML = '<h2>Lista de Sorteos Activos</h2><p>Aquí se cargaría la lista de sorteos existentes desde la base de datos.</p>';
     }
 
-    // FUNCIÓN CORREGIDA: Incluye todos los campos obligatorios del sorteo
+    // FUNCIÓN FINAL: Creación de Sorteo (Ahora protegido por Auth)
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -37,24 +50,21 @@ document.addEventListener('DOMContentLoaded', () => {
             </form>
         `;
 
-        // Lógica de Supabase para guardar el nuevo sorteo
         document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
             e.preventDefault();
             const titulo = document.getElementById('titulo').value;
             const precio_bs = document.getElementById('precio_bs').value;
             const fecha_sorteo_local = document.getElementById('fecha_sorteo').value;
             
-            // Convertir el valor de datetime-local a un objeto Date (timestamptz)
-            // Necesario para que Supabase lo acepte como un timestamp con zona horaria
             const fecha_sorteo_tz = new Date(fecha_sorteo_local).toISOString(); 
 
-            // INSERCIÓN ACTUALIZADA: Enviamos todos los valores obligatorios (incluyendo fecha_sorteo)
+            // INSERCIÓN DE DATOS: Ahora que el usuario está autenticado, esto funcionará.
             const { error } = await supabase
                 .from('sorteos')
                 .insert([{ 
                     titulo: titulo, 
                     precio_bs: precio_bs,
-                    fecha_sorteo: fecha_sorteo_tz, // <--- ¡AHORA SÍ ESTÁ INCLUIDO!
+                    fecha_sorteo: fecha_sorteo_tz,
                     creado_en: new Date(), 
                     estado: 'activo'
                 }]);
@@ -64,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Detalle del error:", error);
             } else {
                 alert(`¡Sorteo "${titulo}" creado exitosamente en Supabase!`);
-                mostrarListaSorteos(); // Vuelve a la lista después de guardar
+                mostrarListaSorteos();
             }
         });
     }
@@ -77,9 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminView.innerHTML = '<h2>Vista de Métodos de Pago (Falta desarrollar)</h2>';
     }
 
-    // --- EVENT LISTENERS (Botones) ---
+    // --- EVENT LISTENERS ---
 
-    // Botones de navegación del Sidebar
     document.getElementById('sorteos-link')?.addEventListener('click', (e) => {
         e.preventDefault();
         mostrarListaSorteos();
@@ -95,12 +104,18 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarMetodosDePago();
     });
 
-    // Botón "+Nuevo Sorteo"
     document.getElementById('nuevo-sorteo-btn')?.addEventListener('click', mostrarNuevoSorteo);
 
-    // Botón "Cerrar Sesión"
-    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', () => {
-        alert('Cerrando sesión (Lógica pendiente)');
+    // Lógica para cerrar la sesión
+    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error al cerrar sesión:', error);
+            alert('Error al cerrar sesión.');
+        } else {
+            alert('Sesión cerrada. Serás redirigido al login.');
+            window.location.href = 'admin_login.html';
+        }
     });
     
     // Carga la vista por defecto (al iniciar)

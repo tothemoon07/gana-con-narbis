@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gana con Narbis - Sorteos Activos</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Gana con Narbis - Sorteos en Línea</title>
+    <link rel="stylesheet" href="styles.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
 </head>
 <body>
     <header>
+        <h1>🏆 Gana con Narbis</h1>
         <nav>
-            <button id="consultar-tickets-btn">Consultar Mis Tickets</button>
-            </nav>
+            <a href="index.html">Sorteos</a>
+            <a href="resultados.html">Resultados</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="admin.html" style="margin-left: 20px;">Acceso Admin</a>
+        </nav>
     </header>
 
     <main>
-        <h1>Sorteos Activos</h1>
-        <p>¡Participa y Gana Grandes Premios!</p>
-        
-        <div id="sorteos-container">
-            Cargando sorteos disponibles...
-        </div>
+        <section class="hero">
+            <h2>¡Participa y Gana Grandes Premios!</h2>
+            <p>Selecciona tu sorteo favorito y compra tus boletos al instante.</p>
+        </section>
+
+        <section class="sorteos-activos-section">
+            <h2>Sorteos Activos</h2>
+            <div id="sorteos-container" class="sorteos-grid">
+                <p>Cargando sorteos disponibles...</p> 
+            </div>
+        </section>
+        <section class="instrucciones">
+            <h2>¿Cómo Participar?</h2>
+            <ol>
+                <li>Elige el sorteo que más te guste.</li>
+                <li>Selecciona la cantidad de boletos.</li>
+                <li>Realiza el pago de forma segura.</li>
+                <li>¡Espera el día del sorteo y gana!</li>
+            </ol>
+        </section>
     </main>
 
     <footer>
         <p>© 2025 Gana con Narbis. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
-    
-    <script src="supabase-config.js"></script>
-
     <script src="script.js"></script>
-
 </body>
 </html>

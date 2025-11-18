@@ -45,15 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const fecha_sorteo_local = document.getElementById('fecha_sorteo').value;
             
             // Convertir el valor de datetime-local a un objeto Date (timestamptz)
+            // Necesario para que Supabase lo acepte como un timestamp con zona horaria
             const fecha_sorteo_tz = new Date(fecha_sorteo_local).toISOString(); 
 
-            // INSERCIÓN ACTUALIZADA: Enviamos todos los valores obligatorios
+            // INSERCIÓN ACTUALIZADA: Enviamos todos los valores obligatorios (incluyendo fecha_sorteo)
             const { error } = await supabase
                 .from('sorteos')
                 .insert([{ 
                     titulo: titulo, 
                     precio_bs: precio_bs,
-                    fecha_sorteo: fecha_sorteo_tz, // <-- NUEVO: Columna obligatoria
+                    fecha_sorteo: fecha_sorteo_tz, // <--- ¡AHORA SÍ ESTÁ INCLUIDO!
                     creado_en: new Date(), 
                     estado: 'activo'
                 }]);

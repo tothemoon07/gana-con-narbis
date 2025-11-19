@@ -234,7 +234,8 @@ function configurarFormularios() {
         const file = fileInput.files[0];
         
         // CORRECCIÓN FINAL: Agregamos la subcarpeta 'reportes/' al path
-        const filePath = `reportes/${referenciaUnica}-${Date.now()}-${file.name}`;
+       const cleanFileName = file.name.replace(/\s+/g, '_'); // Reemplaza espacios con guiones bajos
+const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
         
         const { error: uploadError } = await supabase.storage
             .from('comprobantes_narbis') 

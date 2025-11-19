@@ -1,14 +1,13 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CÓDIGO FINAL CORREGIDO PARA TUS COLUMNAS
+// Archivo: sorteo_script.js - CÓDIGO FINAL CORREGIDO
+// Nombres de columna alineados con la DB: cedula_cliente, precio_total, codigo_concepto, etc.
 // ==========================================================
 
 // Variables de estado
 let sorteoActual = null;
 let precioUnitario = 0;
 let boletosSeleccionados = 1;
-let referenciaUnica = null; // Código de 6 dígitos que va en codigo_concpeto
-
-// ... (Resto de las variables DOM) ...
+let referenciaUnica = null; // Código de 6 dígitos que va en codigo_concepto
 
 // Elementos del DOM para el contador y totales
 const inputCantidad = document.getElementById('tickets-input');
@@ -46,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================
-// A. Carga de Datos del Sorteo (No necesita cambios)
+// A. Carga de Datos del Sorteo
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -99,7 +98,7 @@ async function cargarDetalleSorteo(id) {
 }
 
 // ==========================================================
-// B. Lógica de Contador y Precio (No necesita cambios)
+// B. Lógica de Contador y Precio
 // ==========================================================
 
 function actualizarTotales() {
@@ -149,7 +148,7 @@ function configurarBotonesCompraRapida() {
 }
 
 // ==========================================================
-// C. Lógica de Modales y Formularios (Pequeños cambios)
+// C. Lógica de Modales y Formularios
 // ==========================================================
 
 function configurarModales() {
@@ -270,32 +269,35 @@ function configurarFormularios() {
 }
 
 // ==========================================================
-// D. Funciones de Base de Datos (CORREGIDAS PARA TUS NOMBRES)
+// D. Funciones de Base de Datos (ALINEADAS CON LA LISTA FINAL)
 // ==========================================================
 
 async function guardarOrdenPendiente() {
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
-    // USANDO TUS NOMBRES DE COLUMNA EXISTENTES/CORREGIDOS
+    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
     const datosOrden = {
         sorteo_id: sorteoActual.id,
         nombre_cliente: document.getElementById('nombre-completo').value,
         email_cliente: document.getElementById('email-contacto').value,
         telefono_cliente: document.getElementById('telefono-contacto').value,
         
-        // TU NOMBRE DE COLUMNA ES ceulda_client
-        ceulda_client: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
+        // NOMBRE CORRECTO: cedula_cliente
+        cedula_cliente: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
+        
         estado_cliente: document.getElementById('estado-contacto').value, 
-        
         cantidad_boletos: boletosSeleccionados, 
-        // TU NOMBRE DE COLUMNA ES precios_total
-        precios_total: total, 
         
-        // TU NOMBRE DE COLUMNA ES metodo_pego
-        metodo_pego: 'pago_movil', 
-        // TU NOMBRE DE COLUMNA ES codigo_concpeto
-        codigo_concpeto: referenciaUnica, 
-        // TU NOMBRE DE COLUMNA PARA ESTADO DE PAGO ES estado
+        // NOMBRE CORRECTO: precio_total
+        precio_total: total, 
+        
+        // NOMBRE CORRECTO: metodo_pago
+        metodo_pago: 'pago_movil', 
+        
+        // NOMBRE CORRECTO: codigo_concepto
+        codigo_concepto: referenciaUnica, 
+        
+        // NOMBRE CORRECTO: estado
         estado: 'pendiente', 
         
         creado_en: new Date().toISOString()
@@ -311,7 +313,7 @@ async function guardarOrdenPendiente() {
         return false;
     }
     
-    referenciaUnica = data[0].codigo_concpeto || referenciaUnica; 
+    referenciaUnica = data[0].codigo_concepto || referenciaUnica; 
     console.log("Orden pendiente guardada. Referencia:", referenciaUnica);
     return true;
 }
@@ -320,23 +322,23 @@ async function actualizarOrdenConReporte(comprobanteUrl) {
     const telefonoPagoMovil = document.getElementById('telefono-pago-movil').value;
     const referenciaPago = document.getElementById('referencia-pago').value;
     
-    // USANDO TUS NOMBRES DE COLUMNA EXISTENTES/CORREGIDOS
+    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
     const { error } = await supabase
         .from('boletos')
         .update({
-            // TU NOMBRE DE COLUMNA ES referencia_pago (referencia banco)
+            // NOMBRE CORRECTO: referencia_pago (referencia banco)
             referencia_pago: referenciaPago, 
-            // TU NOMBRE DE COLUMNA ES telefono_pago (teléfono origen)
+            // NOMBRE CORRECTO: telefono_pago (teléfono origen)
             telefono_pago: telefonoPagoMovil, 
-            // TU NOMBRE DE COLUMNA ES url_capture
+            // NOMBRE CORRECTO: url_capture
             url_capture: comprobanteUrl, 
-            // TU NOMBRE DE COLUMNA PARA ESTADO DE PAGO ES estado
+            // NOMBRE CORRECTO: estado
             estado: 'reportado', 
-            // TU NOMBRE DE COLUMNA ES fecha_validacion
+            // NOMBRE CORRECTO: fecha_validacion
             fecha_validacion: new Date().toISOString() 
         })
-        // Buscamos la orden por tu código único codigo_concpeto
-        .eq('codigo_concpeto', referenciaUnica); 
+        // Buscamos la orden por tu código único codigo_concepto
+        .eq('codigo_concepto', referenciaUnica); 
         
     if (error) {
         console.error("Error al actualizar la orden:", error);

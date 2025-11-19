@@ -1,7 +1,6 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CÓDIGO COMPLETO Y FINAL
-// Incluye: Correcciones de nombres de columna, limpieza de nombre de archivo 
-// y el cambio de bucket a 'comprobantes_narbis_v2' para solucionar el problema RLS/400.
+// Archivo: sorteo_script.js - CÓDIGO CON URL FIRMADA (Service Key Temporal)
+// ESTE CÓDIGO REQUIERE QUE LA SUPABASE_ANON_KEY EN supabase-config.js SEA LA SERVICE_ROLE KEY
 // ==========================================================
 
 // Variables de estado
@@ -106,7 +105,7 @@ function actualizarTotales() {
     boletosSeleccionados = parseInt(inputCantidad.value);
     const total = (boletosSeleccionados * precioUnitario).toFixed(2);
     
-    displayTicketsCount.textContent = boletosSeleccionados;
+    displayTicketsCount.textContent = boletosSeleletosCount.textContent = boletosSeleccionados;
     displayCantidadSummary.textContent = boletosSeleccionados;
     displayTotalPagar.textContent = `Bs. ${total}`;
     displayMontoFinalPago.textContent = total;
@@ -220,43 +219,76 @@ function configurarFormularios() {
         e.preventDefault();
         
         const fileInput = document.getElementById('capture-input');
-        
-        if (!referenciaUnica || !fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const BUCKET_NAME = 'comprobantes_narbis_v2'; // Bucket de destino final
+
+        if (!referenciaUnica || !file) {
              alert('Error: Falta la referencia de la orden o el comprobante.');
              return;
         }
         
         const btnReportar = e.submitter;
         btnReportar.disabled = true;
-        btnReportar.textContent = 'Procesando pago...';
+        btnReportar.textContent = 'Procesando subida...';
 
-        // 1. Subir el comprobante a Supabase Storage
-        const file = fileInput.files[0];
-        
-        // CÓDIGO ULTRA-LIMPIO: Aseguramos que el nombre del archivo sea seguro para la URL
+        // 1. Limpiar el nombre del archivo para la URL
         const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
-        
-        // CORRECCIÓN FINAL: Cambiamos el bucket a 'comprobantes_narbis_v2'
         const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
         
-        const { error: uploadError } = await supabase.storage
-            .from('comprobantes_narbis_v2') // <--- ¡BUCKET CORREGIDO!
-            .upload(filePath, file);
+        let signedUrl = null;
 
-        if (uploadError) {
-            console.error('Error subiendo el archivo:', uploadError);
-            alert('Error al subir el comprobante. Verifique el nuevo bucket de Storage: comprobantes_narbis_v2.');
+        // --- PASO 1: GENERAR LA URL DE SUBIDA FIRMADA (Requiere Service Key en el config) ---
+        try {
+             // Generamos una URL de 60 segundos que permite a cualquiera subir el archivo
+             const { data, error } = await supabase.storage.from(BUCKET_NAME)
+                 .createSignedUploadUrl(filePath);
+
+             if (error) throw error;
+             signedUrl = data.signedUrl;
+             
+        } catch (error) {
+             console.error("Error generando URL de subida (Service Key):", error);
+             alert("Error crítico al preparar la subida. Asegúrese que la clave en supabase-config.js es la Service Role Key.");
+             btnReportar.disabled = false;
+             btnReportar.textContent = 'Reportar Pago';
+             return;
+        }
+
+        // --- PASO 2: SUBIR EL ARCHIVO USANDO LA URL GENERADA ---
+        try {
+            btnReportar.textContent = 'Subiendo comprobante...';
+            
+            const response = await fetch(signedUrl, {
+                method: 'PUT',
+                body: file, // El archivo binario
+                headers: {
+                    'Content-Type': file.type,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Fallo la subida (PUT): ${response.statusText}`);
+            }
+            
+        } catch (error) {
+            console.error('Error subiendo el archivo con URL firmada:', error);
+            alert('Error al subir el comprobante. El servidor rechazó el archivo. Verifique el tamaño.');
             btnReportar.disabled = false;
             btnReportar.textContent = 'Reportar Pago';
             return;
         }
 
-        // 2. Actualizar la orden de compra con los datos del reporte
-        const reporteExitoso = await actualizarOrdenConReporte(filePath);
+
+        // --- PASO 3: ACTUALIZAR EL ESTADO EN LA BD ---
+        btnReportar.textContent = 'Actualizando orden...';
+        
+        // La URL de captura es la ruta relativa del archivo en el bucket
+        const reporteExitoso = await actualizarOrdenConReporte(filePath); 
         
         if (reporteExitoso) {
             document.getElementById('modal-reporte-pago').style.display = 'none';
-            alert('✅ ¡Reporte de pago exitoso! En breve validaremos la transacción y te enviaremos tus tickets.');
+            alert(`✅ ¡Reporte de pago exitoso! El comprobante ha sido subido y la orden ${referenciaUnica} está reportada.`);
+            // IMPORTANTE: Volver a cambiar la Service Key por la Anon Key por seguridad.
             window.location.href = 'index.html'; 
         } else {
             alert('Error al actualizar la orden con el reporte. Revise la consola.');

@@ -1,7 +1,7 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CÓDIGO FINAL CORREGIDO
-// Incluye nombres de columna finales (ej: cedula_cliente) y
-// corrección de ruta de Storage (agregando 'reportes/').
+// Archivo: sorteo_script.js - CÓDIGO COMPLETO Y FINAL
+// Incluye: Correcciones de nombres de columna, limpieza de nombre de archivo 
+// y el cambio de bucket a 'comprobantes_narbis_v2' para solucionar el problema RLS/400.
 // ==========================================================
 
 // Variables de estado
@@ -233,17 +233,19 @@ function configurarFormularios() {
         // 1. Subir el comprobante a Supabase Storage
         const file = fileInput.files[0];
         
-    // Quita todos los caracteres que no sean letras, números o guiones bajos
-const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
-const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
+        // CÓDIGO ULTRA-LIMPIO: Aseguramos que el nombre del archivo sea seguro para la URL
+        const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
+        
+        // CORRECCIÓN FINAL: Cambiamos el bucket a 'comprobantes_narbis_v2'
+        const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
         
         const { error: uploadError } = await supabase.storage
-            .from('comprobantes_narbis') 
+            .from('comprobantes_narbis_v2') // <--- ¡BUCKET CORREGIDO!
             .upload(filePath, file);
 
         if (uploadError) {
             console.error('Error subiendo el archivo:', uploadError);
-            alert('Error al subir el comprobante. Verifique el bucket de Storage.');
+            alert('Error al subir el comprobante. Verifique el nuevo bucket de Storage: comprobantes_narbis_v2.');
             btnReportar.disabled = false;
             btnReportar.textContent = 'Reportar Pago';
             return;
@@ -278,7 +280,7 @@ const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
 async function guardarOrdenPendiente() {
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
-    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS (cedula_cliente, precio_total, etc.)
+    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
     const datosOrden = {
         sorteo_id: sorteoActual.id,
         nombre_cliente: document.getElementById('nombre-completo').value,

@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: admin_script.js - INTEGRADO Y FINAL
+// Archivo: admin_script.js - INTEGRADO Y FINAL (CORREGIDO)
 // ==========================================================
 
 const BUCKET_NAME = 'comprobantes_narbis_v2'; // El bucket nuevo que creamos
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
          adminView.innerHTML = '<h2>Lista de Sorteos Activos</h2><p>Aquí se cargaría la lista de sorteos existentes.</p>';
     }
 
-    // --- VISTA DE GESTIÓN DE PAGOS (Lo que faltaba) ---
+    // --- VISTA DE GESTIÓN DE PAGOS ---
     window.mostrarBoletosVendidos = function() {
         adminView.innerHTML = `
             <h2>Gestión de Pagos y Boletos</h2>
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cargarPagos(filtroActual);
     }
 
-    // --- VISTA DE NUEVO SORTEO (Tu código original) ---
+    // --- VISTA DE NUEVO SORTEO ---
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.cambiarFiltro = function(nuevoEstado) {
         filtroActual = nuevoEstado;
-        mostrarBoletosVendidos(); // Recarga la vista con el nuevo filtro
+        mostrarBoletosVendidos(); 
     }
 
     async function cargarPagos(estado) {
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        tbody.innerHTML = ''; // Limpiar tabla
+        tbody.innerHTML = ''; 
 
         ordenes.forEach(orden => {
             // Generar Link de Captura
@@ -150,10 +150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (orden.url_capture) {
                 if (orden.url_capture.startsWith('http') || orden.url_capture.includes('WhatsApp')) {
-                    // Es texto o URL externa
                     captureHtml = `<span title="${orden.url_capture}">📲 WhatsApp/Ext</span>`;
                 } else {
-                    // Es una imagen en Supabase Storage (V2)
                     const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(orden.url_capture);
                     captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
                 }
@@ -162,9 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Botones de Acción
             let botonesHtml = '';
             if (estado === 'reportado') {
+                // AQUÍ ESTABA EL ERROR: Se agregaron comillas simples ('') alrededor de ${orden.id}
                 botonesHtml = `
-                    <button class="btn-accion validar" onclick="actualizarEstado(${orden.id}, 'validado')">✔</button>
-                    <button class="btn-accion rechazar" onclick="actualizarEstado(${orden.id}, 'rechazado')">✖</button>
+                    <button class="btn-accion validar" onclick="actualizarEstado('${orden.id}', 'validado')">✔</button>
+                    <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>
                 `;
             } else {
                 botonesHtml = orden.estado.toUpperCase();
@@ -185,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Función global para actualizar estado
     window.actualizarEstado = async function(id, nuevoEstado) {
         if(!confirm(`¿Cambiar estado a ${nuevoEstado}?`)) return;
 
@@ -196,13 +196,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) {
             alert('Error al actualizar: ' + error.message);
         } else {
-            // Recargar la tabla
-            cargarPagos(filtroActual);
+            cargarPagos(filtroActual); // Recargar la tabla
         }
     }
 
     // ==========================================
-    // EVENT LISTENERS DEL MENÚ LATERAL
+    // EVENT LISTENERS
     // ==========================================
 
     document.getElementById('sorteos-link')?.addEventListener('click', (e) => {

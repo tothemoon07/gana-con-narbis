@@ -232,8 +232,7 @@ function configurarFormularios() {
         // 1. Subir el comprobante a Supabase Storage
         const file = fileInput.files[0];
         // NOTA: El nombre del bucket es 'comprobantes_narbis'
-        const filePath = `comprobantes_narbis/${referenciaUnica}-${Date.now()}-${file.name}`;
-        
+const filePath = `${referenciaUnica}-${Date.now()}-${file.name}`; // Solo el nombre del archivo        
         const { error: uploadError } = await supabase.storage
             .from('comprobantes_narbis') 
             .upload(filePath, file);

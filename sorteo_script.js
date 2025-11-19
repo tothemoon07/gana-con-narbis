@@ -1,6 +1,6 @@
 // ==========================================================
 // Archivo: sorteo_script.js - CÓDIGO CON URL FIRMADA (Service Key Temporal)
-// ESTE CÓDIGO REQUIERE QUE LA SUPABASE_ANON_KEY EN supabase-config.js SEA LA SERVICE_ROLE KEY
+// CORRECCIÓN FINAL: Arreglado el typo 'boletosSeleletosCount'
 // ==========================================================
 
 // Variables de estado
@@ -105,7 +105,9 @@ function actualizarTotales() {
     boletosSeleccionados = parseInt(inputCantidad.value);
     const total = (boletosSeleccionados * precioUnitario).toFixed(2);
     
-    displayTicketsCount.textContent = boletosSeleletosCount.textContent = boletosSeleccionados;
+    // CORRECCIÓN DEL TYPO: Se asegura que se usa displayTicketsCount
+    displayTicketsCount.textContent = boletosSeleccionados;
+    
     displayCantidadSummary.textContent = boletosSeleccionados;
     displayTotalPagar.textContent = `Bs. ${total}`;
     displayMontoFinalPago.textContent = total;
@@ -237,8 +239,10 @@ function configurarFormularios() {
         
         let signedUrl = null;
 
-        // --- PASO 1: GENERAR LA URL DE SUBIDA FIRMADA (Requiere Service Key en el config) ---
+        // --- PASO 1: GENERAR LA URL DE SUBIDA FIRMADA (Requiere Service Key) ---
         try {
+             btnReportar.textContent = 'Generando URL segura...';
+
              // Generamos una URL de 60 segundos que permite a cualquiera subir el archivo
              const { data, error } = await supabase.storage.from(BUCKET_NAME)
                  .createSignedUploadUrl(filePath);
@@ -267,6 +271,7 @@ function configurarFormularios() {
             });
 
             if (!response.ok) {
+                // Si la subida PUT falla, no es un error RLS, es un error de red/servidor.
                 throw new Error(`Fallo la subida (PUT): ${response.statusText}`);
             }
             

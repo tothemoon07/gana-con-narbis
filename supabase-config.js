@@ -5,7 +5,7 @@
 
 // Tus credenciales (Ya insertadas)
 const SUPABASE_URL = 'https://clmtkqygxrdtzgrtjrzx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbXRrcXlneHJkdHpncnRqcnp4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzQxMzE5MSwiZXhwIjoyMDc4OTg5MTkxfQ.IIUDveRbZ4g7wUvZ7iMe5S0ZKFiCstCtvjgL4g-phMQ';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbXRrcXlneHJkdHpncnRqcnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MTMxOTEsImV4cCI6MjA3ODk4OTE5MX0.C03fAwZIpgSi5iy0Urh1MyBHpR3UUMN6N-m8-n7ErXU';
 
 // Asegura que la librería esté cargada antes de intentar usar createClient.
 // La función createClient DEBE ser globalmente accesible en este punto

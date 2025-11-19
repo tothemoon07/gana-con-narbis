@@ -1,6 +1,7 @@
 // ==========================================================
 // Archivo: sorteo_script.js - CÓDIGO FINAL CORREGIDO
-// Nombres de columna alineados con la DB: cedula_cliente, precio_total, codigo_concepto, etc.
+// Incluye nombres de columna finales (ej: cedula_cliente) y
+// corrección de ruta de Storage (agregando 'reportes/').
 // ==========================================================
 
 // Variables de estado
@@ -231,8 +232,10 @@ function configurarFormularios() {
 
         // 1. Subir el comprobante a Supabase Storage
         const file = fileInput.files[0];
-        // NOTA: El nombre del bucket es 'comprobantes_narbis'
-const filePath = `${referenciaUnica}-${Date.now()}-${file.name}`; // Solo el nombre del archivo        
+        
+        // CORRECCIÓN FINAL: Agregamos la subcarpeta 'reportes/' al path
+        const filePath = `reportes/${referenciaUnica}-${Date.now()}-${file.name}`;
+        
         const { error: uploadError } = await supabase.storage
             .from('comprobantes_narbis') 
             .upload(filePath, file);
@@ -268,37 +271,28 @@ const filePath = `${referenciaUnica}-${Date.now()}-${file.name}`; // Solo el nom
 }
 
 // ==========================================================
-// D. Funciones de Base de Datos (ALINEADAS CON LA LISTA FINAL)
+// D. Funciones de Base de Datos
 // ==========================================================
 
 async function guardarOrdenPendiente() {
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
-    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
+    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS (cedula_cliente, precio_total, etc.)
     const datosOrden = {
         sorteo_id: sorteoActual.id,
         nombre_cliente: document.getElementById('nombre-completo').value,
         email_cliente: document.getElementById('email-contacto').value,
         telefono_cliente: document.getElementById('telefono-contacto').value,
         
-        // NOMBRE CORRECTO: cedula_cliente
         cedula_cliente: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
         
         estado_cliente: document.getElementById('estado-contacto').value, 
         cantidad_boletos: boletosSeleccionados, 
         
-        // NOMBRE CORRECTO: precio_total
         precio_total: total, 
-        
-        // NOMBRE CORRECTO: metodo_pago
         metodo_pago: 'pago_movil', 
-        
-        // NOMBRE CORRECTO: codigo_concepto
         codigo_concepto: referenciaUnica, 
-        
-        // NOMBRE CORRECTO: estado
         estado: 'pendiente', 
-        
         creado_en: new Date().toISOString()
     };
     
@@ -325,18 +319,12 @@ async function actualizarOrdenConReporte(comprobanteUrl) {
     const { error } = await supabase
         .from('boletos')
         .update({
-            // NOMBRE CORRECTO: referencia_pago (referencia banco)
             referencia_pago: referenciaPago, 
-            // NOMBRE CORRECTO: telefono_pago (teléfono origen)
             telefono_pago: telefonoPagoMovil, 
-            // NOMBRE CORRECTO: url_capture
             url_capture: comprobanteUrl, 
-            // NOMBRE CORRECTO: estado
             estado: 'reportado', 
-            // NOMBRE CORRECTO: fecha_validacion
             fecha_validacion: new Date().toISOString() 
         })
-        // Buscamos la orden por tu código único codigo_concepto
         .eq('codigo_concepto', referenciaUnica); 
         
     if (error) {

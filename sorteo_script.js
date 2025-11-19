@@ -233,8 +233,8 @@ function configurarFormularios() {
         // 1. Subir el comprobante a Supabase Storage
         const file = fileInput.files[0];
         
-        // CORRECCIÓN FINAL: Agregamos la subcarpeta 'reportes/' al path
-       const cleanFileName = file.name.replace(/\s+/g, '_'); // Reemplaza espacios con guiones bajos
+    // Quita todos los caracteres que no sean letras, números o guiones bajos
+const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
 const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
         
         const { error: uploadError } = await supabase.storage

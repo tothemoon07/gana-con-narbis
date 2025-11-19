@@ -1,7 +1,9 @@
 // ==========================================================
-// Archivo: admin_script.js - FINAL (CON AUTENTICACIÓN)
-// FUNCIÓN: Protege la vista y permite la inserción de sorteos (ya que la RLS está activa)
+// Archivo: admin_script.js - INTEGRADO Y FINAL
 // ==========================================================
+
+const BUCKET_NAME = 'comprobantes_narbis_v2'; // El bucket nuevo que creamos
+let filtroActual = 'reportado'; // Estado por defecto para ver
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Verificación Crítica de Supabase y Sesión
@@ -15,24 +17,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Redirige al login si NO hay una sesión activa
     if (sessionError || !session) {
         console.log("Sesión no encontrada o expirada. Redirigiendo a login.");
-        // Redirige a la página de inicio de sesión que acabamos de crear
         window.location.href = 'admin_login.html'; 
-        return; // Detiene la ejecución del script de administración
+        return; 
     }
-
-    // --- Si hay sesión, continúa con la lógica del Panel ---
 
     const adminView = document.getElementById('admin-view');
-    console.log("Usuario autenticado (" + session.user.email + "). Cargando panel.");
-    // NOTA: El usuario está autenticado, la RLS permitirá la inserción ahora.
+    console.log("Usuario autenticado. Cargando panel.");
 
-    // --- FUNCIONES DE VISTA ---
-    
+    // ==========================================
+    // FUNCIONES DE VISTA (NAVEGACIÓN)
+    // ==========================================
+
     function mostrarListaSorteos() {
-         adminView.innerHTML = '<h2>Lista de Sorteos Activos</h2><p>Aquí se cargaría la lista de sorteos existentes desde la base de datos.</p>';
+         adminView.innerHTML = '<h2>Lista de Sorteos Activos</h2><p>Aquí se cargaría la lista de sorteos existentes.</p>';
     }
 
-    // FUNCIÓN FINAL: Creación de Sorteo (Ahora protegido por Auth)
+    // --- VISTA DE GESTIÓN DE PAGOS (Lo que faltaba) ---
+    window.mostrarBoletosVendidos = function() {
+        adminView.innerHTML = `
+            <h2>Gestión de Pagos y Boletos</h2>
+            
+            <div class="filtros-container">
+                <button class="btn-filtro ${filtroActual === 'reportado' ? 'activo' : ''}" onclick="cambiarFiltro('reportado')">Pendientes (Reportados)</button>
+                <button class="btn-filtro ${filtroActual === 'validado' ? 'activo' : ''}" onclick="cambiarFiltro('validado')">Validados</button>
+                <button class="btn-filtro ${filtroActual === 'rechazado' ? 'activo' : ''}" onclick="cambiarFiltro('rechazado')">Rechazados</button>
+            </div>
+
+            <table class="tabla-reportes">
+                <thead>
+                    <tr>
+                        <th>Ref. Orden</th>
+                        <th>Cliente</th>
+                        <th>Teléfono</th>
+                        <th>Monto</th>
+                        <th>Ref. Banco</th>
+                        <th>Captura</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-pagos">
+                    <tr><td colspan="7">Cargando...</td></tr>
+                </tbody>
+            </table>
+        `;
+        
+        cargarPagos(filtroActual);
+    }
+
+    // --- VISTA DE NUEVO SORTEO (Tu código original) ---
     function mostrarNuevoSorteo() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -55,10 +87,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const titulo = document.getElementById('titulo').value;
             const precio_bs = document.getElementById('precio_bs').value;
             const fecha_sorteo_local = document.getElementById('fecha_sorteo').value;
-            
             const fecha_sorteo_tz = new Date(fecha_sorteo_local).toISOString(); 
 
-            // INSERCIÓN DE DATOS: Ahora que el usuario está autenticado, esto funcionará.
             const { error } = await supabase
                 .from('sorteos')
                 .insert([{ 
@@ -70,54 +100,130 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }]);
 
             if (error) {
-                alert('ERROR: No se pudo crear el sorteo. ' + error.message);
-                console.error("Detalle del error:", error);
+                alert('ERROR: ' + error.message);
             } else {
-                alert(`¡Sorteo "${titulo}" creado exitosamente en Supabase!`);
+                alert(`¡Sorteo "${titulo}" creado exitosamente!`);
                 mostrarListaSorteos();
             }
         });
-    }
-
-    function mostrarBoletosVendidos() {
-        adminView.innerHTML = '<h2>Vista de Boletos Vendidos (Falta desarrollar)</h2>';
     }
 
     function mostrarMetodosDePago() {
         adminView.innerHTML = '<h2>Vista de Métodos de Pago (Falta desarrollar)</h2>';
     }
 
-    // --- EVENT LISTENERS ---
+    // ==========================================
+    // LÓGICA DE PAGOS Y BASE DE DATOS
+    // ==========================================
+
+    window.cambiarFiltro = function(nuevoEstado) {
+        filtroActual = nuevoEstado;
+        mostrarBoletosVendidos(); // Recarga la vista con el nuevo filtro
+    }
+
+    async function cargarPagos(estado) {
+        const tbody = document.getElementById('tbody-pagos');
+        if(!tbody) return;
+
+        const { data: ordenes, error } = await supabase
+            .from('boletos')
+            .select('*')
+            .eq('estado', estado)
+            .order('creado_en', { ascending: false });
+
+        if (error) {
+            console.error(error);
+            tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`;
+            return;
+        }
+
+        if (ordenes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center">No hay órdenes en estado: ${estado}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = ''; // Limpiar tabla
+
+        ordenes.forEach(orden => {
+            // Generar Link de Captura
+            let captureHtml = '<span style="color:gray">Sin captura</span>';
+            
+            if (orden.url_capture) {
+                if (orden.url_capture.startsWith('http') || orden.url_capture.includes('WhatsApp')) {
+                    // Es texto o URL externa
+                    captureHtml = `<span title="${orden.url_capture}">📲 WhatsApp/Ext</span>`;
+                } else {
+                    // Es una imagen en Supabase Storage (V2)
+                    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(orden.url_capture);
+                    captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
+                }
+            }
+
+            // Botones de Acción
+            let botonesHtml = '';
+            if (estado === 'reportado') {
+                botonesHtml = `
+                    <button class="btn-accion validar" onclick="actualizarEstado(${orden.id}, 'validado')">✔</button>
+                    <button class="btn-accion rechazar" onclick="actualizarEstado(${orden.id}, 'rechazado')">✖</button>
+                `;
+            } else {
+                botonesHtml = orden.estado.toUpperCase();
+            }
+
+            const row = `
+                <tr>
+                    <td>${orden.codigo_concepto}</td>
+                    <td>${orden.nombre_cliente}</td>
+                    <td>${orden.telefono_cliente}</td>
+                    <td>Bs. ${orden.precio_total}</td>
+                    <td>${orden.referencia_pago || 'N/A'}</td>
+                    <td>${captureHtml}</td>
+                    <td>${botonesHtml}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    window.actualizarEstado = async function(id, nuevoEstado) {
+        if(!confirm(`¿Cambiar estado a ${nuevoEstado}?`)) return;
+
+        const { error } = await supabase
+            .from('boletos')
+            .update({ estado: nuevoEstado })
+            .eq('id', id);
+
+        if (error) {
+            alert('Error al actualizar: ' + error.message);
+        } else {
+            // Recargar la tabla
+            cargarPagos(filtroActual);
+        }
+    }
+
+    // ==========================================
+    // EVENT LISTENERS DEL MENÚ LATERAL
+    // ==========================================
 
     document.getElementById('sorteos-link')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        mostrarListaSorteos();
+        e.preventDefault(); mostrarListaSorteos();
     });
 
     document.getElementById('boletos-link')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        mostrarBoletosVendidos();
+        e.preventDefault(); mostrarBoletosVendidos();
     });
 
     document.getElementById('pagos-link')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        mostrarMetodosDePago();
+        e.preventDefault(); mostrarMetodosDePago();
     });
 
     document.getElementById('nuevo-sorteo-btn')?.addEventListener('click', mostrarNuevoSorteo);
 
-    // Lógica para cerrar la sesión
     document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('Error al cerrar sesión:', error);
-            alert('Error al cerrar sesión.');
-        } else {
-            alert('Sesión cerrada. Serás redirigido al login.');
-            window.location.href = 'admin_login.html';
-        }
+        await supabase.auth.signOut();
+        window.location.href = 'admin_login.html';
     });
     
-    // Carga la vista por defecto (al iniciar)
-    mostrarNuevoSorteo();
+    // Carga inicial
+    mostrarListaSorteos();
 });

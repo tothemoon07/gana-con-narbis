@@ -1,8 +1,8 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN FINAL Y COMPLETA (CORREGIDA PARA UUIDs)
-// Incluye: Gestor de Sorteos, Gestor de Pagos y Asignación de Números Automática.
+// Archivo: admin_script.js - VERSIÓN FINAL Y CORREGIDA
 // ==========================================================
 
+// Asegúrate de que estos nombres de bucket coincidan exactamente con tu Storage de Supabase.
 const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
 const BUCKET_SORTEOS = 'imagenes_sorteos';            
 let filtroActual = 'reportado'; 
@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const adminView = document.getElementById('admin-view');
-    console.log("Admin autenticado.");
-
+    console.log("Admin autenticado. Cargando panel.");
+    
     // =================================================================
     // A. GESTIÓN DE SORTEOS
     // =================================================================
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tbody.innerHTML = '';
         sorteos.forEach(sorteo => {
             let imgHtml = sorteo.imagen_url ? `<img src="${sorteo.imagen_url}" width="60">` : 'Sin Foto';
+            // ID pasado como STRING en el onclick (Eliminar)
             tbody.innerHTML += `<tr><td style="text-align:center;">${imgHtml}</td><td>${sorteo.titulo}</td><td>Bs. ${sorteo.precio_bs}</td><td>${sorteo.total_boletos || 10000}</td><td>${sorteo.estado}</td><td><button class="btn-accion rechazar" onclick="eliminarSorteo('${sorteo.id}')">Eliminar</button></td></tr>`;
         });
     }
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =================================================================
-    // B. GESTIÓN DE PAGOS (CON GENERACIÓN DE NÚMEROS)
+    // B. GESTIÓN DE PAGOS (CON GENERACIÓN DE NÚMEROS Y ARREGLO DE STORAGE)
     // =================================================================
     
     window.mostrarBoletosVendidos = function() {
@@ -128,8 +129,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (orden.url_capture) {
                 if (orden.url_capture.includes('WhatsApp')) captureHtml = `📲 WhatsApp`;
                 else {
-                    // Usamos el bucket correcto
-                    const bucket = orden.url_capture.startsWith('comprobantes_narbis_v2/') ? BUCKET_COMPROBANTES : 'comprobantes_narbis'; // Fallback por si hay pagos viejos
+                    // **ARREGLO DEL BUG 400/404 DE STORAGE**
+                    // Se usa el bucket definido BUCKET_COMPROBANTES, haciendo fallback solo si es necesario.
+                    const bucket = orden.url_capture.startsWith(BUCKET_COMPROBANTES + '/') ? BUCKET_COMPROBANTES : 'comprobantes_narbis'; 
                     const fileName = orden.url_capture.includes('/') ? orden.url_capture.split('/').pop() : orden.url_capture;
                     
                     const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
@@ -143,14 +145,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<span style="color:#999;">Pendiente</span>';
 
             // --- CORRECCIÓN CLAVE: Pasamos los UUIDs ('orden.id' y 'orden.sorteo_id') como STRINGS ---
-            const ordenId = orden.id || '0';
+            const ordenId = orden.id;
             const cantidadBoletos = orden.cantidad_boletos || 0;
-            const sorteoId = orden.sorteo_id || '0'; 
+            const sorteoId = orden.sorteo_id; 
 
             let acciones = estado === 'reportado' ? 
-                // Nótese el uso de comillas simples en el onclick para los UUIDs
+                // Uso de comillas simples en el onclick para pasar UUIDs:
                 `<button class="btn-accion validar" onclick="validarYAsignar('${ordenId}', ${cantidadBoletos}, '${sorteoId}')">✔ Validar</button>
-                 <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>` 
+                 <button class="btn-accion rechazar" onclick="actualizarEstado('${ordenId}', 'rechazado')">✖</button>` 
                 : orden.estado.toUpperCase();
 
             tbody.innerHTML += `<tr><td>${orden.codigo_concepto}</td><td>${orden.nombre_cliente}<br><small>${orden.telefono_cliente}</small></td><td>${orden.cantidad_boletos}</td><td>${orden.precio_total}</td><td>${captureHtml}</td><td style="max-width:150px; word-wrap:break-word;">${numerosHtml}</td><td>${acciones}</td></tr>`;
@@ -159,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- FUNCIÓN PRINCIPAL: ASIGNAR NÚMEROS Y VALIDAR ORDEN ---
     window.validarYAsignar = async function(ordenId, cantidad, sorteoId) {
-        if(cantidad === 0 || sorteoId === '0') {
+        if(cantidad === 0 || !sorteoId) {
             alert("Error: Datos de la orden incompletos. Por favor, revise la BD (cantidad_boletos o sorteo_id están nulos/cero).");
             return;
         }
@@ -199,6 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const maxIntentos = maxBoletos * 2;
 
         while (nuevosNumeros.length < cantidad && intentos < maxIntentos) { 
+            // Genera un número entre 1 y maxBoletos (inclusive)
             let num = Math.floor(Math.random() * maxBoletos) + 1; 
             
             if (!setOcupados.has(num) && !nuevosNumeros.includes(num)) {

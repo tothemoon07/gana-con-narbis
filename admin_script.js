@@ -1,6 +1,6 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN FINAL Y COMPLETA
-// Incluye: Gestor de Sorteos, Gestor de Pagos y Asignación de Números Automática.
+// Archivo: admin_script.js - VERSIÓN CORREGIDA FINAL
+// Se corrige el llamado al botón de Validar para prevenir errores de null/undefined.
 // ==========================================================
 
 const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
@@ -10,7 +10,6 @@ let filtroActual = 'reportado';
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof supabase === 'undefined') {
         console.error("Error: 'supabase' no definido.");
-        // Si hay un error aquí, la carga se detiene.
         return;
     }
 
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
-        // Redirigir al login si no hay sesión
         window.location.href = 'admin_login.html'; 
         return; 
     }
@@ -30,7 +28,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // A. GESTIÓN DE SORTEOS
     // =================================================================
     
-    // Hacemos la función global con 'window.' para que pueda ser llamada desde el onclick
     window.mostrarListaSorteos = async function() {
         adminView.innerHTML = `
             <h2>Administrar Sorteos</h2>
@@ -141,8 +138,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `<span style="font-size:12px; color:green; font-weight:bold;">${orden.numeros_asignados}</span>` : 
                 '<span style="color:#999;">Pendiente</span>';
 
+            // --- LÍNEA CORREGIDA PARA PREVENIR ERRORES DE SYNTAX ---
+            // Usamos OR (||) para asegurar que siempre haya un valor numérico (0) si es nulo.
+            const ordenId = orden.id || 0;
+            const cantidadBoletos = orden.cantidad_boletos || 0;
+            const sorteoId = orden.sorteo_id || 0;
+
             let acciones = estado === 'reportado' ? 
-                `<button class="btn-accion validar" onclick="validarYAsignar(${orden.id}, ${orden.cantidad_boletos}, ${orden.sorteo_id})">✔ Validar</button>
+                `<button class="btn-accion validar" onclick="validarYAsignar(${ordenId}, ${cantidadBoletos}, ${sorteoId})">✔ Validar</button>
                  <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>` 
                 : orden.estado.toUpperCase();
 
@@ -152,9 +155,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- FUNCIÓN PRINCIPAL: ASIGNAR NÚMEROS Y VALIDAR ORDEN ---
     window.validarYAsignar = async function(ordenId, cantidad, sorteoId) {
-        console.log("Iniciando validación para Orden:", ordenId); // Línea de depuración
+        if(cantidad === 0 || sorteoId === 0) {
+            alert("Error: Datos de la orden incompletos. Por favor, revise la BD.");
+            return;
+        }
 
-        if(!confirm(`¿Validar orden y asignar ${cantidad} números automáticamente?`)) return;
+        if(!confirm(`¿Validar orden ${ordenId} y asignar ${cantidad} números automáticamente?`)) return;
         
         // 1. Obtener el total de boletos del sorteo (para el límite, ej: 10000)
         const { data: sorteo, error: sorteoError } = await supabase.from('sorteos').select('total_boletos').eq('id', sorteoId).single();
@@ -172,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .from('boletos')
             .select('numeros_asignados')
             .eq('sorteo_id', sorteoId)
-            .neq('estado', 'rechazado') // Ignorar los rechazados
+            .neq('estado', 'rechazado') 
             .not('numeros_asignados', 'is', null);
 
         // Crear una lista única (Set) de números ocupados
@@ -186,10 +192,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Generar números aleatorios únicos
         let nuevosNumeros = [];
         let intentos = 0;
-        while (nuevosNumeros.length < cantidad && intentos < maxBoletos * 2) { // Intentos limitados
-            let num = Math.floor(Math.random() * maxBoletos) + 1; // Genera de 1 a MAX
+        const maxIntentos = maxBoletos * 2;
+
+        while (nuevosNumeros.length < cantidad && intentos < maxIntentos) { 
+            let num = Math.floor(Math.random() * maxBoletos) + 1; 
             
-            // Verifica que no esté en la nueva lista NI en la lista de ocupados
             if (!setOcupados.has(num) && !nuevosNumeros.includes(num)) {
                 nuevosNumeros.push(num);
             }
@@ -197,12 +204,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (nuevosNumeros.length < cantidad) {
-            alert(`Error: No se pudieron encontrar ${cantidad} números únicos. Solo se encontraron ${nuevosNumeros.length}.`);
+            alert(`Error Crítico: No se pudieron encontrar ${cantidad} números únicos disponibles.`);
             return;
         }
 
-        // Formatear números (ej: 0005, 0123)
-        // Ejemplo: Si maxBoletos es 10000, el relleno es '0000'
+        // Formatear números (ej: 0005)
         const paddingLength = maxBoletos.toString().length;
         const numerosString = nuevosNumeros.map(n => n.toString().padStart(paddingLength, '0')).join(', ');
 
@@ -242,6 +248,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         await supabase.auth.signOut(); window.location.href = 'admin_login.html';
     });
 
-    // Iniciar con la lista de sorteos al cargar
     mostrarListaSorteos();
 });

@@ -1,38 +1,191 @@
 // ==========================================================
-// Archivo: admin_script.js - INTEGRADO Y FINAL (CORREGIDO)
+// Archivo: admin_script.js - VERSIÓN FINAL CON IMÁGENES
+// Incluye: Auth, Gestión de Pagos y Gestión de Sorteos con Foto
 // ==========================================================
 
-const BUCKET_NAME = 'comprobantes_narbis_v2'; // El bucket nuevo que creamos
-let filtroActual = 'reportado'; // Estado por defecto para ver
+const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; // Para ver pagos
+const BUCKET_SORTEOS = 'imagenes_sorteos';            // Para subir premios
+let filtroActual = 'reportado'; 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Verificación Crítica de Supabase y Sesión
+    // 1. Verificación de Supabase
     if (typeof supabase === 'undefined') {
-        console.error("Error: La variable 'supabase' no está definida.");
+        console.error("Error: 'supabase' no definido.");
         return;
     }
 
+    // 2. Verificación de Sesión
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    // Redirige al login si NO hay una sesión activa
     if (sessionError || !session) {
-        console.log("Sesión no encontrada o expirada. Redirigiendo a login.");
+        console.log("Sesión expirada. Redirigiendo.");
         window.location.href = 'admin_login.html'; 
         return; 
     }
 
     const adminView = document.getElementById('admin-view');
-    console.log("Usuario autenticado. Cargando panel.");
+    console.log("Admin autenticado.");
 
-    // ==========================================
-    // FUNCIONES DE VISTA (NAVEGACIÓN)
-    // ==========================================
+    // =================================================================
+    // VISTA 1: GESTIÓN DE SORTEOS (LISTAR Y CREAR)
+    // =================================================================
 
-    function mostrarListaSorteos() {
-         adminView.innerHTML = '<h2>Lista de Sorteos Activos</h2><p>Aquí se cargaría la lista de sorteos existentes.</p>';
+    window.mostrarListaSorteos = async function() {
+        adminView.innerHTML = `
+            <h2>Administrar Sorteos</h2>
+            <button onclick="mostrarNuevoSorteo()" style="background:#b70014; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; font-weight:bold;">+ Crear Nuevo Sorteo</button>
+            
+            <table class="tabla-reportes">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Título</th>
+                        <th>Precio</th>
+                        <th>Fecha Sorteo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-sorteos">
+                    <tr><td colspan="6">Cargando sorteos...</td></tr>
+                </tbody>
+            </table>`;
+
+        const tbody = document.getElementById('tbody-sorteos');
+        
+        // Cargar sorteos de la BD
+        const { data: sorteos, error } = await supabase
+            .from('sorteos')
+            .select('*')
+            .order('creado_en', { ascending: false });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="6" style="color:red">${error.message}</td></tr>`;
+            return;
+        }
+
+        if (sorteos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center">No hay sorteos creados.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        sorteos.forEach(sorteo => {
+            // Si no tiene imagen, ponemos una por defecto
+            const imgUrl = sorteo.imagen_url || 'https://via.placeholder.com/50?text=Sin+Foto';
+
+            const row = `
+                <tr>
+                    <td><img src="${imgUrl}" width="60" height="60" style="object-fit:cover; border-radius:4px; border:1px solid #ccc;"></td>
+                    <td><strong>${sorteo.titulo}</strong></td>
+                    <td>Bs. ${sorteo.precio_bs}</td>
+                    <td>${new Date(sorteo.fecha_sorteo).toLocaleString()}</td>
+                    <td><span style="padding:4px 8px; background:#eee; border-radius:4px;">${sorteo.estado}</span></td>
+                    <td>
+                        <button class="btn-accion rechazar" onclick="eliminarSorteo(${sorteo.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
     }
 
-    // --- VISTA DE GESTIÓN DE PAGOS ---
+    // Función para eliminar sorteo
+    window.eliminarSorteo = async function(id) {
+        if(!confirm("⚠️ ¿PELIGRO: Estás seguro de eliminar este sorteo? \n\nSe borrarán todos los datos asociados. Esta acción no se puede deshacer.")) return;
+        
+        const { error } = await supabase.from('sorteos').delete().eq('id', id);
+        if(error) alert("Error al eliminar: " + error.message);
+        else {
+            alert("Sorteo eliminado.");
+            mostrarListaSorteos();
+        }
+    }
+
+    // Vista del Formulario de Nuevo Sorteo
+    window.mostrarNuevoSorteo = function() {
+        adminView.innerHTML = `
+            <h2>Crear Nuevo Sorteo</h2>
+            <button onclick="mostrarListaSorteos()" style="margin-bottom:15px; cursor:pointer;">← Volver a la lista</button>
+            
+            <form id="form-nuevo-sorteo" style="max-width:500px; background:white; padding:20px; border-radius:8px; border:1px solid #ddd;">
+                <label style="font-weight:bold;">Título del Sorteo:</label>
+                <input type="text" id="titulo" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+
+                <label style="font-weight:bold;">Precio por Boleto (Bs.):</label>
+                <input type="number" step="0.01" id="precio_bs" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+                
+                <label style="font-weight:bold;">Fecha del Sorteo:</label>
+                <input type="datetime-local" id="fecha_sorteo" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+
+                <label style="font-weight:bold; color:#b70014;">Imagen del Premio:</label>
+                <input type="file" id="imagen_sorteo" accept="image/*" required style="width:100%; margin-bottom:20px;">
+                
+                <button type="submit" id="btn-guardar-sorteo" style="width:100%; background:#28a745; color:white; padding:12px; border:none; font-size:16px; cursor:pointer; font-weight:bold; border-radius:4px;">Guardar Sorteo</button>
+            </form>
+        `;
+
+        // Manejar el envío del formulario
+        document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-guardar-sorteo');
+            btn.disabled = true;
+            btn.textContent = "Subiendo imagen...";
+
+            const titulo = document.getElementById('titulo').value;
+            const precio_bs = document.getElementById('precio_bs').value;
+            const fecha_sorteo = new Date(document.getElementById('fecha_sorteo').value).toISOString();
+            const file = document.getElementById('imagen_sorteo').files[0];
+
+            try {
+                // 1. Subir Imagen al Bucket 'imagenes_sorteos'
+                // Limpiamos el nombre para evitar errores
+                const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_');
+                const fileName = `premio-${Date.now()}-${cleanName}`;
+                
+                const { data: dataImg, error: errorImg } = await supabase.storage
+                    .from(BUCKET_SORTEOS)
+                    .upload(fileName, file);
+
+                if (errorImg) throw new Error("Error subiendo imagen: " + errorImg.message);
+
+                // 2. Obtener URL pública
+                const { data: { publicUrl } } = supabase.storage
+                    .from(BUCKET_SORTEOS)
+                    .getPublicUrl(fileName);
+
+                btn.textContent = "Guardando datos...";
+
+                // 3. Guardar en Base de Datos
+                const { error: errorDB } = await supabase
+                    .from('sorteos')
+                    .insert([{ 
+                        titulo: titulo, 
+                        precio_bs: precio_bs,
+                        fecha_sorteo: fecha_sorteo,
+                        imagen_url: publicUrl, // Guardamos el link de la foto
+                        creado_en: new Date(), 
+                        estado: 'activo'
+                    }]);
+
+                if (errorDB) throw new Error("Error guardando en BD: " + errorDB.message);
+
+                alert(`¡Sorteo creado exitosamente!`);
+                mostrarListaSorteos();
+
+            } catch (error) {
+                alert(error.message);
+                btn.disabled = false;
+                btn.textContent = "Guardar Sorteo";
+                console.error(error);
+            }
+        });
+    }
+
+    // =================================================================
+    // VISTA 2: GESTIÓN DE PAGOS (BOLETOS VENDIDOS)
+    // =================================================================
+
     window.mostrarBoletosVendidos = function() {
         adminView.innerHTML = `
             <h2>Gestión de Pagos y Boletos</h2>
@@ -56,65 +209,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </tr>
                 </thead>
                 <tbody id="tbody-pagos">
-                    <tr><td colspan="7">Cargando...</td></tr>
+                    <tr><td colspan="7">Cargando pagos...</td></tr>
                 </tbody>
             </table>
         `;
         
         cargarPagos(filtroActual);
     }
-
-    // --- VISTA DE NUEVO SORTEO ---
-    function mostrarNuevoSorteo() {
-        adminView.innerHTML = `
-            <h2>Crear Nuevo Sorteo</h2>
-            <form id="form-nuevo-sorteo">
-                <label for="titulo">Título del Sorteo:</label>
-                <input type="text" id="titulo" required><br><br>
-
-                <label for="precio_bs">Precio por Boleto (Bs.):</label>
-                <input type="number" step="0.01" id="precio_bs" required><br><br>
-                
-                <label for="fecha_sorteo">Fecha y Hora del Sorteo:</label>
-                <input type="datetime-local" id="fecha_sorteo" required><br><br>
-                
-                <button type="submit">Guardar Sorteo en Supabase</button>
-            </form>
-        `;
-
-        document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const titulo = document.getElementById('titulo').value;
-            const precio_bs = document.getElementById('precio_bs').value;
-            const fecha_sorteo_local = document.getElementById('fecha_sorteo').value;
-            const fecha_sorteo_tz = new Date(fecha_sorteo_local).toISOString(); 
-
-            const { error } = await supabase
-                .from('sorteos')
-                .insert([{ 
-                    titulo: titulo, 
-                    precio_bs: precio_bs,
-                    fecha_sorteo: fecha_sorteo_tz,
-                    creado_en: new Date(), 
-                    estado: 'activo'
-                }]);
-
-            if (error) {
-                alert('ERROR: ' + error.message);
-            } else {
-                alert(`¡Sorteo "${titulo}" creado exitosamente!`);
-                mostrarListaSorteos();
-            }
-        });
-    }
-
-    function mostrarMetodosDePago() {
-        adminView.innerHTML = '<h2>Vista de Métodos de Pago (Falta desarrollar)</h2>';
-    }
-
-    // ==========================================
-    // LÓGICA DE PAGOS Y BASE DE DATOS
-    // ==========================================
 
     window.cambiarFiltro = function(nuevoEstado) {
         filtroActual = nuevoEstado;
@@ -132,7 +233,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             .order('creado_en', { ascending: false });
 
         if (error) {
-            console.error(error);
             tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`;
             return;
         }
@@ -145,28 +245,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         tbody.innerHTML = ''; 
 
         ordenes.forEach(orden => {
-            // Generar Link de Captura
             let captureHtml = '<span style="color:gray">Sin captura</span>';
             
             if (orden.url_capture) {
                 if (orden.url_capture.startsWith('http') || orden.url_capture.includes('WhatsApp')) {
                     captureHtml = `<span title="${orden.url_capture}">📲 WhatsApp/Ext</span>`;
                 } else {
-                    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(orden.url_capture);
+                    const { data } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(orden.url_capture);
                     captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
                 }
             }
 
-            // Botones de Acción
             let botonesHtml = '';
             if (estado === 'reportado') {
-                // AQUÍ ESTABA EL ERROR: Se agregaron comillas simples ('') alrededor de ${orden.id}
                 botonesHtml = `
                     <button class="btn-accion validar" onclick="actualizarEstado('${orden.id}', 'validado')">✔</button>
                     <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>
                 `;
             } else {
-                botonesHtml = orden.estado.toUpperCase();
+                botonesHtml = `<span style="font-weight:bold;">${orden.estado.toUpperCase()}</span>`;
             }
 
             const row = `
@@ -184,7 +281,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Función global para actualizar estado
     window.actualizarEstado = async function(id, nuevoEstado) {
         if(!confirm(`¿Cambiar estado a ${nuevoEstado}?`)) return;
 
@@ -196,12 +292,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) {
             alert('Error al actualizar: ' + error.message);
         } else {
-            cargarPagos(filtroActual); // Recargar la tabla
+            cargarPagos(filtroActual); 
         }
     }
 
+    function mostrarMetodosDePago() {
+        adminView.innerHTML = '<h2>Vista de Métodos de Pago</h2><p>Próximamente...</p>';
+    }
+
     // ==========================================
-    // EVENT LISTENERS
+    // EVENT LISTENERS (MENÚ LATERAL)
     // ==========================================
 
     document.getElementById('sorteos-link')?.addEventListener('click', (e) => {
@@ -223,6 +323,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'admin_login.html';
     });
     
-    // Carga inicial
+    // Carga inicial por defecto
     mostrarListaSorteos();
 });

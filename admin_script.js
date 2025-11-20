@@ -1,6 +1,6 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN CORREGIDA FINAL
-// Se corrige el llamado al botón de Validar para prevenir errores de null/undefined.
+// Archivo: admin_script.js - VERSIÓN FINAL Y COMPLETA (CORREGIDA PARA UUIDs)
+// Incluye: Gestor de Sorteos, Gestor de Pagos y Asignación de Números Automática.
 // ==========================================================
 
 const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tbody.innerHTML = '';
         sorteos.forEach(sorteo => {
             let imgHtml = sorteo.imagen_url ? `<img src="${sorteo.imagen_url}" width="60">` : 'Sin Foto';
-            tbody.innerHTML += `<tr><td style="text-align:center;">${imgHtml}</td><td>${sorteo.titulo}</td><td>Bs. ${sorteo.precio_bs}</td><td>${sorteo.total_boletos || 10000}</td><td>${sorteo.estado}</td><td><button class="btn-accion rechazar" onclick="eliminarSorteo(${sorteo.id})">Eliminar</button></td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:center;">${imgHtml}</td><td>${sorteo.titulo}</td><td>Bs. ${sorteo.precio_bs}</td><td>${sorteo.total_boletos || 10000}</td><td>${sorteo.estado}</td><td><button class="btn-accion rechazar" onclick="eliminarSorteo('${sorteo.id}')">Eliminar</button></td></tr>`;
         });
     }
 
@@ -128,7 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (orden.url_capture) {
                 if (orden.url_capture.includes('WhatsApp')) captureHtml = `📲 WhatsApp`;
                 else {
-                    const { data } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(orden.url_capture);
+                    // Usamos el bucket correcto
+                    const bucket = orden.url_capture.startsWith('comprobantes_narbis_v2/') ? BUCKET_COMPROBANTES : 'comprobantes_narbis'; // Fallback por si hay pagos viejos
+                    const fileName = orden.url_capture.includes('/') ? orden.url_capture.split('/').pop() : orden.url_capture;
+                    
+                    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
                     captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
                 }
             }
@@ -138,14 +142,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `<span style="font-size:12px; color:green; font-weight:bold;">${orden.numeros_asignados}</span>` : 
                 '<span style="color:#999;">Pendiente</span>';
 
-            // --- LÍNEA CORREGIDA PARA PREVENIR ERRORES DE SYNTAX ---
-            // Usamos OR (||) para asegurar que siempre haya un valor numérico (0) si es nulo.
-            const ordenId = orden.id || 0;
+            // --- CORRECCIÓN CLAVE: Pasamos los UUIDs ('orden.id' y 'orden.sorteo_id') como STRINGS ---
+            const ordenId = orden.id || '0';
             const cantidadBoletos = orden.cantidad_boletos || 0;
-            const sorteoId = orden.sorteo_id || 0;
+            const sorteoId = orden.sorteo_id || '0'; 
 
             let acciones = estado === 'reportado' ? 
-                `<button class="btn-accion validar" onclick="validarYAsignar(${ordenId}, ${cantidadBoletos}, ${sorteoId})">✔ Validar</button>
+                // Nótese el uso de comillas simples en el onclick para los UUIDs
+                `<button class="btn-accion validar" onclick="validarYAsignar('${ordenId}', ${cantidadBoletos}, '${sorteoId}')">✔ Validar</button>
                  <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>` 
                 : orden.estado.toUpperCase();
 
@@ -155,8 +159,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- FUNCIÓN PRINCIPAL: ASIGNAR NÚMEROS Y VALIDAR ORDEN ---
     window.validarYAsignar = async function(ordenId, cantidad, sorteoId) {
-        if(cantidad === 0 || sorteoId === 0) {
-            alert("Error: Datos de la orden incompletos. Por favor, revise la BD.");
+        if(cantidad === 0 || sorteoId === '0') {
+            alert("Error: Datos de la orden incompletos. Por favor, revise la BD (cantidad_boletos o sorteo_id están nulos/cero).");
             return;
         }
 
@@ -166,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: sorteo, error: sorteoError } = await supabase.from('sorteos').select('total_boletos').eq('id', sorteoId).single();
         
         if (sorteoError) {
-            alert("Error al obtener datos del sorteo. Verifique sus permisos RLS en la tabla 'sorteos'.");
+            alert("Error al obtener datos del sorteo. Verifique sus permisos RLS en la tabla 'sorteos' o la existencia del sorteo.");
             console.error(sorteoError);
             return;
         }
@@ -233,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.actualizarEstado = async function(id, nuevoEstado) {
-        if(!confirm(`¿Marcar como ${nuevoEstado}?`)) return;
+        if(!confirm(`¿Marcar la orden ${id} como ${nuevoEstado}?`)) return;
         const { error } = await supabase.from('boletos').update({ estado: nuevoEstado }).eq('id', id);
         if (error) alert(error.message); else cargarPagos(filtroActual);
     }

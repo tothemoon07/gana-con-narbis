@@ -1,6 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - VERSIÓN FINAL COMPLETA
-// Incluye: Subida Segura (URL Firmada) + Barra de Progreso + Total Dinámico
+// Archivo: sorteo_script.js - CORREGIDO (SUMA REAL DE BOLETOS)
 // ==========================================================
 
 // Variables de estado
@@ -63,15 +62,20 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // 2. Calcular Progreso (Boletos vendidos reales)
-        const { count: vendidos } = await supabase
+        // 2. CALCULAR PROGRESO (CORREGIDO: SUMAR BOLETOS, NO CONTAR FILAS)
+        const { data: ventas, error: errorVentas } = await supabase
             .from('boletos')
-            .select('*', { count: 'exact', head: true })
+            .select('cantidad_boletos') // Traemos solo la columna de cantidad
             .eq('sorteo_id', id)
             .neq('estado', 'rechazado');
 
-        const totalTickets = sorteo.total_boletos || 10000; // Usa el valor de BD o 10000
-        const boletosVendidos = vendidos || 0;
+        // Sumar todas las cantidades de las órdenes
+        // Si hay ventas, usamos reduce para sumar. Si no, es 0.
+        const boletosVendidos = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
+
+        const totalTickets = sorteo.total_boletos || 10000; 
+        
+        // Calculamos %
         let porcentaje = Math.round((boletosVendidos / totalTickets) * 100);
         const boletosRestantes = totalTickets - boletosVendidos;
 
@@ -82,11 +86,11 @@ async function cargarDetalleSorteo(id) {
 
         document.getElementById('sorteo-title').textContent = `${sorteo.titulo} | Gana con Narbis`;
         
-        // Imagen del premio (si existe)
+        // Imagen del premio
         const imgHtml = sorteo.imagen_url ? 
             `<img src="${sorteo.imagen_url}" style="width:100%; max-width:500px; border-radius:10px; display:block; margin:0 auto 20px auto; box-shadow:0 4px 10px rgba(0,0,0,0.1);">` : '';
 
-        // Renderizado HTML con Barra de Progreso
+        // Renderizado HTML
         container.innerHTML = `
             ${imgHtml}
             <h2 style="text-align: center;">${sorteo.titulo}</h2>

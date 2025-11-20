@@ -1,15 +1,15 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CÓDIGO CON URL FIRMADA (Service Key Temporal)
-// CORRECCIÓN FINAL: Arreglado el typo 'boletosSeleletosCount'
+// Archivo: sorteo_script.js - VERSIÓN FINAL COMPLETA
+// Incluye: Subida Segura (URL Firmada) + Barra de Progreso + Total Dinámico
 // ==========================================================
 
 // Variables de estado
 let sorteoActual = null;
 let precioUnitario = 0;
 let boletosSeleccionados = 1;
-let referenciaUnica = null; // Código de 6 dígitos que va en codigo_concepto
+let referenciaUnica = null; 
 
-// Elementos del DOM para el contador y totales
+// Elementos del DOM
 const inputCantidad = document.getElementById('tickets-input');
 const displayTicketsCount = document.getElementById('tickets-count-display');
 const displayPrecioBoleto = document.getElementById('precio-por-boleto');
@@ -19,25 +19,21 @@ const displayMontoFinalPago = document.getElementById('monto-final-pago');
 const codigoReferenciaPago = document.getElementById('codigo-referencia');
 const codigoReferenciaDisplay = document.getElementById('codigo-referencia-display');
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtener el ID del sorteo desde la URL
     const urlParams = new URLSearchParams(window.location.search);
     const sorteoId = urlParams.get('id');
 
-    // VERIFICACIÓN: Supabase debe estar definido en supabase-config.js
     if (typeof supabase === 'undefined') {
-        console.error("Error: Supabase no está definido. Revise supabase-config.js.");
+        console.error("Error: Supabase no está definido.");
         return;
     }
 
     if (sorteoId) {
         cargarDetalleSorteo(sorteoId);
     } else {
-        document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID de sorteo no encontrado.</h3>';
+        document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID no encontrado.</h3>';
     }
 
-    // 2. Configurar todos los eventos interactivos
     configurarContador();
     configurarBotonesCompraRapida();
     configurarModales();
@@ -45,13 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================
-// A. Carga de Datos del Sorteo
+// A. Carga de Datos y Barra de Progreso
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
     const container = document.getElementById('sorteo-detalle-content');
     
     try {
+        // 1. Obtener datos del sorteo
         const { data: sorteo, error } = await supabase
             .from('sorteos')
             .select('*')
@@ -60,30 +57,55 @@ async function cargarDetalleSorteo(id) {
         
         if (error || !sorteo) {
             container.innerHTML = '<h3 style="text-align: center; color: red;">Sorteo no encontrado.</h3>';
-            console.error("Error al cargar sorteo:", error);
             return;
         }
 
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
-        
+
+        // 2. Calcular Progreso (Boletos vendidos reales)
+        const { count: vendidos } = await supabase
+            .from('boletos')
+            .select('*', { count: 'exact', head: true })
+            .eq('sorteo_id', id)
+            .neq('estado', 'rechazado');
+
+        const totalTickets = sorteo.total_boletos || 10000; // Usa el valor de BD o 10000
+        const boletosVendidos = vendidos || 0;
+        let porcentaje = Math.round((boletosVendidos / totalTickets) * 100);
+        const boletosRestantes = totalTickets - boletosVendidos;
+
+        // Fecha formateada
         const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
         document.getElementById('sorteo-title').textContent = `${sorteo.titulo} | Gana con Narbis`;
         
-        // Renderizar detalles del sorteo
+        // Imagen del premio (si existe)
+        const imgHtml = sorteo.imagen_url ? 
+            `<img src="${sorteo.imagen_url}" style="width:100%; max-width:500px; border-radius:10px; display:block; margin:0 auto 20px auto; box-shadow:0 4px 10px rgba(0,0,0,0.1);">` : '';
+
+        // Renderizado HTML con Barra de Progreso
         container.innerHTML = `
+            ${imgHtml}
             <h2 style="text-align: center;">${sorteo.titulo}</h2>
+            
+            <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
+                <p class="stats-text" style="text-align:center; margin-bottom:5px; font-size:0.9rem; color:#555;">
+                    🔥 ¡Se han vendido <strong>${boletosVendidos}</strong> boletos! Solo quedan <strong>${boletosRestantes}</strong>.
+                </p>
+                <div class="progress-wrapper" style="width:100%; background:#e0e0e0; border-radius:20px; height:20px; overflow:hidden;">
+                    <div class="progress-bar" style="width:${porcentaje}%; background:linear-gradient(90deg, #ff4b1f, #ff9068); height:100%; text-align:center; color:white; font-size:12px; line-height:20px; font-weight:bold; min-width: 20px;">
+                        ${porcentaje}%
+                    </div>
+                </div>
+            </div>
+
             <div class="sorteo-info">
-                <p>📅 Fecha y Hora: <strong>${fecha}</strong></p>
-                <p>💰 Precio por boleto: <strong>Bs. ${precioUnitario}</strong></p>
-                <p class="detalle-desc">${sorteo.descripcion_larga || sorteo.descripcion_corta || 'Sin descripción detallada.'}</p>
+                <p>📅 Fecha: <strong>${fecha}</strong></p>
+                <p>💰 Precio: <strong>Bs. ${precioUnitario}</strong></p>
+                <p class="detalle-desc">${sorteo.descripcion_larga || sorteo.descripcion_corta || 'Sin descripción.'}</p>
             </div>
         `;
         
@@ -93,21 +115,19 @@ async function cargarDetalleSorteo(id) {
 
     } catch (err) {
         container.innerHTML = '<h3 style="text-align: center; color: red;">Error de conexión.</h3>';
-        console.error("Error de conexión:", err);
+        console.error(err);
     }
 }
 
 // ==========================================================
-// B. Lógica de Contador y Precio
+// B. Lógica de Contador y Totales
 // ==========================================================
 
 function actualizarTotales() {
     boletosSeleccionados = parseInt(inputCantidad.value);
     const total = (boletosSeleccionados * precioUnitario).toFixed(2);
     
-    // CORRECCIÓN DEL TYPO: Se asegura que se usa displayTicketsCount
     displayTicketsCount.textContent = boletosSeleccionados;
-    
     displayCantidadSummary.textContent = boletosSeleccionados;
     displayTotalPagar.textContent = `Bs. ${total}`;
     displayMontoFinalPago.textContent = total;
@@ -159,56 +179,41 @@ function configurarModales() {
     const modalReporte = document.getElementById('modal-reporte-pago');
 
     document.getElementById('btn-comprar-boletos').addEventListener('click', () => {
-        if (!sorteoActual) {
-            alert('Aún cargando información del sorteo. Intente de nuevo.');
-            return;
-        }
+        if (!sorteoActual) { alert('Cargando información...'); return; }
         actualizarTotales(); 
         modalContacto.style.display = 'flex';
     });
 
-    // Cierre de Modales
     document.getElementById('close-datos-contacto').addEventListener('click', () => modalContacto.style.display = 'none');
     document.getElementById('close-datos-pago').addEventListener('click', () => modalPago.style.display = 'none');
     document.getElementById('close-reporte-pago').addEventListener('click', () => modalReporte.style.display = 'none');
 
-    // Navegación de Modales
     document.getElementById('abrir-reporte').addEventListener('click', () => {
         modalPago.style.display = 'none';
         modalReporte.style.display = 'flex';
     });
     
-    // Configurar Copiar Código
     document.querySelector('.copy-btn').addEventListener('click', (e) => {
         const targetId = e.currentTarget.getAttribute('data-copy-target');
         const targetElement = document.getElementById(targetId);
         
         navigator.clipboard.writeText(targetElement.textContent.trim()).then(() => {
-            alert('Código de referencia copiado: ' + targetElement.textContent);
-        }).catch(err => {
-            console.error('Error al copiar:', err);
-            alert('Error al copiar el texto. Por favor, cópielo manualmente.');
-        });
+            alert('Copiado: ' + targetElement.textContent);
+        }).catch(err => console.error(err));
     });
 }
 
 function configurarFormularios() {
-    // FORMULARIO DE CONTACTO (Primer Modal)
+    // 1. Crear Orden (Pendiente)
     document.getElementById('form-datos-contacto').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        // Generar Referencia Única (6 dígitos)
         referenciaUnica = Math.floor(100000 + Math.random() * 900000); 
         
-        // Lógica de Supabase: Guardar la orden de compra como PENDIENTE
         const ordenGuardada = await guardarOrdenPendiente();
         
         if (ordenGuardada) {
-            // Actualizar el código en los modales de pago
             codigoReferenciaPago.textContent = referenciaUnica;
             codigoReferenciaDisplay.textContent = referenciaUnica;
-
-            // Cerrar modal de contacto y abrir modal de pago
             document.getElementById('modal-datos-contacto').style.display = 'none';
             document.getElementById('modal-datos-pago').style.display = 'flex';
         } else {
@@ -216,16 +221,16 @@ function configurarFormularios() {
         }
     });
     
-    // FORMULARIO DE REPORTE DE PAGO (Último Modal)
+    // 2. Reportar Pago (Subida con URL Firmada)
     document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const fileInput = document.getElementById('capture-input');
         const file = fileInput.files[0];
-        const BUCKET_NAME = 'comprobantes_narbis_v2'; // Bucket de destino final
+        const BUCKET_NAME = 'comprobantes_narbis_v2';
 
         if (!referenciaUnica || !file) {
-             alert('Error: Falta la referencia de la orden o el comprobante.');
+             alert('Falta referencia o archivo.');
              return;
         }
         
@@ -233,80 +238,46 @@ function configurarFormularios() {
         btnReportar.disabled = true;
         btnReportar.textContent = 'Procesando subida...';
 
-        // 1. Limpiar el nombre del archivo para la URL
         const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
         const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
-        
         let signedUrl = null;
 
-        // --- PASO 1: GENERAR LA URL DE SUBIDA FIRMADA (Requiere Service Key) ---
         try {
-             btnReportar.textContent = 'Generando URL segura...';
-
-             // Generamos una URL de 60 segundos que permite a cualquiera subir el archivo
-             const { data, error } = await supabase.storage.from(BUCKET_NAME)
-                 .createSignedUploadUrl(filePath);
-
+             // Paso 1: Generar URL Firmada
+             const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUploadUrl(filePath);
              if (error) throw error;
              signedUrl = data.signedUrl;
              
-        } catch (error) {
-             console.error("Error generando URL de subida (Service Key):", error);
-             alert("Error crítico al preparar la subida. Asegúrese que la clave en supabase-config.js es la Service Role Key.");
-             btnReportar.disabled = false;
-             btnReportar.textContent = 'Reportar Pago';
-             return;
-        }
+             // Paso 2: Subir (PUT)
+             const response = await fetch(signedUrl, {
+                 method: 'PUT',
+                 body: file,
+                 headers: { 'Content-Type': file.type }
+             });
 
-        // --- PASO 2: SUBIR EL ARCHIVO USANDO LA URL GENERADA ---
-        try {
-            btnReportar.textContent = 'Subiendo comprobante...';
-            
-            const response = await fetch(signedUrl, {
-                method: 'PUT',
-                body: file, // El archivo binario
-                headers: {
-                    'Content-Type': file.type,
-                },
-            });
+             if (!response.ok) throw new Error(`Fallo subida: ${response.statusText}`);
 
-            if (!response.ok) {
-                // Si la subida PUT falla, no es un error RLS, es un error de red/servidor.
-                throw new Error(`Fallo la subida (PUT): ${response.statusText}`);
-            }
-            
+             // Paso 3: Actualizar BD
+             const reporteExitoso = await actualizarOrdenConReporte(filePath); 
+             
+             if (reporteExitoso) {
+                document.getElementById('modal-reporte-pago').style.display = 'none';
+                alert(`✅ ¡Reporte exitoso! Referencia: ${referenciaUnica}.`);
+                window.location.href = 'index.html'; 
+             } else {
+                alert('Error al actualizar la orden.');
+             }
+             
         } catch (error) {
-            console.error('Error subiendo el archivo con URL firmada:', error);
-            alert('Error al subir el comprobante. El servidor rechazó el archivo. Verifique el tamaño.');
+            console.error('Error:', error);
+            alert('Error al subir. Intente de nuevo.');
             btnReportar.disabled = false;
             btnReportar.textContent = 'Reportar Pago';
-            return;
         }
-
-
-        // --- PASO 3: ACTUALIZAR EL ESTADO EN LA BD ---
-        btnReportar.textContent = 'Actualizando orden...';
-        
-        // La URL de captura es la ruta relativa del archivo en el bucket
-        const reporteExitoso = await actualizarOrdenConReporte(filePath); 
-        
-        if (reporteExitoso) {
-            document.getElementById('modal-reporte-pago').style.display = 'none';
-            alert(`✅ ¡Reporte de pago exitoso! El comprobante ha sido subido y la orden ${referenciaUnica} está reportada.`);
-            // IMPORTANTE: Volver a cambiar la Service Key por la Anon Key por seguridad.
-            window.location.href = 'index.html'; 
-        } else {
-            alert('Error al actualizar la orden con el reporte. Revise la consola.');
-        }
-        
-        btnReportar.disabled = false;
-        btnReportar.textContent = 'Reportar Pago';
     });
 
-    // Manejar el cambio de nombre del archivo
     document.getElementById('capture-input').addEventListener('change', (e) => {
-        const fileName = e.target.files.length > 0 ? e.target.files[0].name : 'Ningún archivo seleccionado.';
-        document.getElementById('file-name-display').textContent = fileName;
+        document.getElementById('file-name-display').textContent = e.target.files[0]?.name || 'Sin archivo';
     });
 }
 
@@ -317,18 +288,14 @@ function configurarFormularios() {
 async function guardarOrdenPendiente() {
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
-    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
     const datosOrden = {
         sorteo_id: sorteoActual.id,
         nombre_cliente: document.getElementById('nombre-completo').value,
         email_cliente: document.getElementById('email-contacto').value,
         telefono_cliente: document.getElementById('telefono-contacto').value,
-        
         cedula_cliente: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
-        
         estado_cliente: document.getElementById('estado-contacto').value, 
         cantidad_boletos: boletosSeleccionados, 
-        
         precio_total: total, 
         metodo_pago: 'pago_movil', 
         codigo_concepto: referenciaUnica, 
@@ -336,40 +303,25 @@ async function guardarOrdenPendiente() {
         creado_en: new Date().toISOString()
     };
     
-    const { data, error } = await supabase
-        .from('boletos') 
-        .insert([datosOrden])
-        .select();
+    const { data, error } = await supabase.from('boletos').insert([datosOrden]).select();
 
-    if (error) {
-        console.error("Error al guardar la orden:", error);
-        return false;
-    }
-    
-    referenciaUnica = data[0].codigo_concepto || referenciaUnica; 
-    console.log("Orden pendiente guardada. Referencia:", referenciaUnica);
+    if (error) { console.error(error); return false; }
+    referenciaUnica = data[0].codigo_concepto; 
     return true;
 }
 
 async function actualizarOrdenConReporte(comprobanteUrl) {
-    const telefonoPagoMovil = document.getElementById('telefono-pago-movil').value;
-    const referenciaPago = document.getElementById('referencia-pago').value;
-    
-    // USANDO LOS NOMBRES DE COLUMNA DEFINITIVOS
     const { error } = await supabase
         .from('boletos')
         .update({
-            referencia_pago: referenciaPago, 
-            telefono_pago: telefonoPagoMovil, 
+            referencia_pago: document.getElementById('referencia-pago').value, 
+            telefono_pago: document.getElementById('telefono-pago-movil').value, 
             url_capture: comprobanteUrl, 
             estado: 'reportado', 
             fecha_validacion: new Date().toISOString() 
         })
         .eq('codigo_concepto', referenciaUnica); 
         
-    if (error) {
-        console.error("Error al actualizar la orden:", error);
-        return false;
-    }
+    if (error) { console.error(error); return false; }
     return true;
 }

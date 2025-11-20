@@ -1,10 +1,9 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN FINAL CON IMÁGENES
-// Incluye: Auth, Gestión de Pagos y Gestión de Sorteos con Foto
+// Archivo: admin_script.js - VERSIÓN FINAL (CON CONTROL DE TOTAL BOLETOS)
 // ==========================================================
 
-const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; // Para ver pagos
-const BUCKET_SORTEOS = 'imagenes_sorteos';            // Para subir premios
+const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
+const BUCKET_SORTEOS = 'imagenes_sorteos';            
 let filtroActual = 'reportado'; 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -27,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("Admin autenticado.");
 
     // =================================================================
-    // VISTA 1: GESTIÓN DE SORTEOS (LISTAR Y CREAR)
+    // VISTA 1: GESTIÓN DE SORTEOS
     // =================================================================
 
     window.mostrarListaSorteos = async function() {
@@ -41,8 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <th>Imagen</th>
                         <th>Título</th>
                         <th>Precio</th>
-                        <th>Fecha Sorteo</th>
-                        <th>Estado</th>
+                        <th>Total Boletos</th> <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -53,7 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const tbody = document.getElementById('tbody-sorteos');
         
-        // Cargar sorteos de la BD
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
@@ -71,16 +68,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tbody.innerHTML = '';
         sorteos.forEach(sorteo => {
-            // Si no tiene imagen, ponemos una por defecto
-            const imgUrl = sorteo.imagen_url || 'https://via.placeholder.com/50?text=Sin+Foto';
+            let imgHtml = '<span style="color:#aaa; font-size:12px; font-style:italic;">Sin Foto</span>';
+            if (sorteo.imagen_url) {
+                imgHtml = `<img src="${sorteo.imagen_url}" width="60" height="60" style="object-fit:cover; border-radius:4px; border:1px solid #ccc;">`;
+            }
 
             const row = `
                 <tr>
-                    <td><img src="${imgUrl}" width="60" height="60" style="object-fit:cover; border-radius:4px; border:1px solid #ccc;"></td>
+                    <td style="text-align:center;">${imgHtml}</td>
                     <td><strong>${sorteo.titulo}</strong></td>
                     <td>Bs. ${sorteo.precio_bs}</td>
-                    <td>${new Date(sorteo.fecha_sorteo).toLocaleString()}</td>
-                    <td><span style="padding:4px 8px; background:#eee; border-radius:4px;">${sorteo.estado}</span></td>
+                    <td>${sorteo.total_boletos || 10000}</td> <td><span style="padding:4px 8px; background:#eee; border-radius:4px;">${sorteo.estado}</span></td>
                     <td>
                         <button class="btn-accion rechazar" onclick="eliminarSorteo(${sorteo.id})">Eliminar</button>
                     </td>
@@ -90,19 +88,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Función para eliminar sorteo
     window.eliminarSorteo = async function(id) {
-        if(!confirm("⚠️ ¿PELIGRO: Estás seguro de eliminar este sorteo? \n\nSe borrarán todos los datos asociados. Esta acción no se puede deshacer.")) return;
-        
+        if(!confirm("⚠️ ¿PELIGRO: Estás seguro de eliminar este sorteo? \n\nSe borrarán todos los datos asociados.")) return;
         const { error } = await supabase.from('sorteos').delete().eq('id', id);
-        if(error) alert("Error al eliminar: " + error.message);
-        else {
-            alert("Sorteo eliminado.");
-            mostrarListaSorteos();
-        }
+        if(error) alert("Error: " + error.message);
+        else { alert("Sorteo eliminado."); mostrarListaSorteos(); }
     }
 
-    // Vista del Formulario de Nuevo Sorteo
     window.mostrarNuevoSorteo = function() {
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
@@ -110,13 +102,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             <form id="form-nuevo-sorteo" style="max-width:500px; background:white; padding:20px; border-radius:8px; border:1px solid #ddd;">
                 <label style="font-weight:bold;">Título del Sorteo:</label>
-                <input type="text" id="titulo" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+                <input type="text" id="titulo" required style="width:100%; padding:8px; margin-bottom:15px;">
 
                 <label style="font-weight:bold;">Precio por Boleto (Bs.):</label>
-                <input type="number" step="0.01" id="precio_bs" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+                <input type="number" step="0.01" id="precio_bs" required style="width:100%; padding:8px; margin-bottom:15px;">
                 
+                <label style="font-weight:bold;">Cantidad Total de Boletos:</label>
+                <input type="number" id="total_boletos" value="10000" required style="width:100%; padding:8px; margin-bottom:15px;">
+
                 <label style="font-weight:bold;">Fecha del Sorteo:</label>
-                <input type="datetime-local" id="fecha_sorteo" required style="width:100%; padding:8px; margin-bottom:15px; box-sizing:border-box;">
+                <input type="datetime-local" id="fecha_sorteo" required style="width:100%; padding:8px; margin-bottom:15px;">
 
                 <label style="font-weight:bold; color:#b70014;">Imagen del Premio:</label>
                 <input type="file" id="imagen_sorteo" accept="image/*" required style="width:100%; margin-bottom:20px;">
@@ -125,7 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </form>
         `;
 
-        // Manejar el envío del formulario
         document.getElementById('form-nuevo-sorteo').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-guardar-sorteo');
@@ -134,39 +128,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const titulo = document.getElementById('titulo').value;
             const precio_bs = document.getElementById('precio_bs').value;
+            const total_boletos = document.getElementById('total_boletos').value; // Nuevo valor capturado
             const fecha_sorteo = new Date(document.getElementById('fecha_sorteo').value).toISOString();
             const file = document.getElementById('imagen_sorteo').files[0];
 
             try {
-                // 1. Subir Imagen al Bucket 'imagenes_sorteos'
-                // Limpiamos el nombre para evitar errores
                 const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_');
                 const fileName = `premio-${Date.now()}-${cleanName}`;
                 
-                const { data: dataImg, error: errorImg } = await supabase.storage
-                    .from(BUCKET_SORTEOS)
-                    .upload(fileName, file);
-
+                const { error: errorImg } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
                 if (errorImg) throw new Error("Error subiendo imagen: " + errorImg.message);
 
-                // 2. Obtener URL pública
-                const { data: { publicUrl } } = supabase.storage
-                    .from(BUCKET_SORTEOS)
-                    .getPublicUrl(fileName);
+                const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
 
                 btn.textContent = "Guardando datos...";
 
-                // 3. Guardar en Base de Datos
-                const { error: errorDB } = await supabase
-                    .from('sorteos')
-                    .insert([{ 
-                        titulo: titulo, 
-                        precio_bs: precio_bs,
-                        fecha_sorteo: fecha_sorteo,
-                        imagen_url: publicUrl, // Guardamos el link de la foto
-                        creado_en: new Date(), 
-                        estado: 'activo'
-                    }]);
+                // Insertamos incluyendo el total_boletos
+                const { error: errorDB } = await supabase.from('sorteos').insert([{ 
+                    titulo, precio_bs, fecha_sorteo, 
+                    imagen_url: publicUrl, 
+                    total_boletos: total_boletos, 
+                    creado_en: new Date(), estado: 'activo'
+                }]);
 
                 if (errorDB) throw new Error("Error guardando en BD: " + errorDB.message);
 
@@ -177,76 +160,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert(error.message);
                 btn.disabled = false;
                 btn.textContent = "Guardar Sorteo";
-                console.error(error);
             }
         });
     }
 
     // =================================================================
-    // VISTA 2: GESTIÓN DE PAGOS (BOLETOS VENDIDOS)
+    // VISTA 2: GESTIÓN DE PAGOS
     // =================================================================
 
     window.mostrarBoletosVendidos = function() {
         adminView.innerHTML = `
             <h2>Gestión de Pagos y Boletos</h2>
-            
             <div class="filtros-container">
-                <button class="btn-filtro ${filtroActual === 'reportado' ? 'activo' : ''}" onclick="cambiarFiltro('reportado')">Pendientes (Reportados)</button>
+                <button class="btn-filtro ${filtroActual === 'reportado' ? 'activo' : ''}" onclick="cambiarFiltro('reportado')">Pendientes</button>
                 <button class="btn-filtro ${filtroActual === 'validado' ? 'activo' : ''}" onclick="cambiarFiltro('validado')">Validados</button>
                 <button class="btn-filtro ${filtroActual === 'rechazado' ? 'activo' : ''}" onclick="cambiarFiltro('rechazado')">Rechazados</button>
             </div>
-
             <table class="tabla-reportes">
                 <thead>
-                    <tr>
-                        <th>Ref. Orden</th>
-                        <th>Cliente</th>
-                        <th>Teléfono</th>
-                        <th>Monto</th>
-                        <th>Ref. Banco</th>
-                        <th>Captura</th>
-                        <th>Acciones</th>
-                    </tr>
+                    <tr><th>Ref.</th><th>Cliente</th><th>Teléfono</th><th>Monto</th><th>Ref. Banco</th><th>Captura</th><th>Acciones</th></tr>
                 </thead>
-                <tbody id="tbody-pagos">
-                    <tr><td colspan="7">Cargando pagos...</td></tr>
-                </tbody>
+                <tbody id="tbody-pagos"><tr><td colspan="7">Cargando...</td></tr></tbody>
             </table>
         `;
-        
         cargarPagos(filtroActual);
     }
 
-    window.cambiarFiltro = function(nuevoEstado) {
-        filtroActual = nuevoEstado;
-        mostrarBoletosVendidos(); 
-    }
+    window.cambiarFiltro = function(nuevoEstado) { filtroActual = nuevoEstado; mostrarBoletosVendidos(); }
 
     async function cargarPagos(estado) {
         const tbody = document.getElementById('tbody-pagos');
         if(!tbody) return;
+        const { data: ordenes, error } = await supabase.from('boletos').select('*').eq('estado', estado).order('creado_en', { ascending: false });
 
-        const { data: ordenes, error } = await supabase
-            .from('boletos')
-            .select('*')
-            .eq('estado', estado)
-            .order('creado_en', { ascending: false });
-
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`;
-            return;
-        }
-
-        if (ordenes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center">No hay órdenes en estado: ${estado}</td></tr>`;
-            return;
-        }
+        if (error) { tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`; return; }
+        if (ordenes.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center">No hay órdenes: ${estado}</td></tr>`; return; }
 
         tbody.innerHTML = ''; 
-
         ordenes.forEach(orden => {
             let captureHtml = '<span style="color:gray">Sin captura</span>';
-            
             if (orden.url_capture) {
                 if (orden.url_capture.startsWith('http') || orden.url_capture.includes('WhatsApp')) {
                     captureHtml = `<span title="${orden.url_capture}">📲 WhatsApp/Ext</span>`;
@@ -255,74 +207,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                     captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
                 }
             }
+            
+            // CORRECCIÓN DE COMILLAS EN ID
+            let botonesHtml = estado === 'reportado' ? 
+                `<button class="btn-accion validar" onclick="actualizarEstado('${orden.id}', 'validado')">✔</button>
+                 <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>` 
+                : `<span style="font-weight:bold;">${orden.estado.toUpperCase()}</span>`;
 
-            let botonesHtml = '';
-            if (estado === 'reportado') {
-                botonesHtml = `
-                    <button class="btn-accion validar" onclick="actualizarEstado('${orden.id}', 'validado')">✔</button>
-                    <button class="btn-accion rechazar" onclick="actualizarEstado('${orden.id}', 'rechazado')">✖</button>
-                `;
-            } else {
-                botonesHtml = `<span style="font-weight:bold;">${orden.estado.toUpperCase()}</span>`;
-            }
-
-            const row = `
-                <tr>
-                    <td>${orden.codigo_concepto}</td>
-                    <td>${orden.nombre_cliente}</td>
-                    <td>${orden.telefono_cliente}</td>
-                    <td>Bs. ${orden.precio_total}</td>
-                    <td>${orden.referencia_pago || 'N/A'}</td>
-                    <td>${captureHtml}</td>
-                    <td>${botonesHtml}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
+            tbody.innerHTML += `<tr><td>${orden.codigo_concepto}</td><td>${orden.nombre_cliente}</td><td>${orden.telefono_cliente}</td><td>Bs. ${orden.precio_total}</td><td>${orden.referencia_pago || '-'}</td><td>${captureHtml}</td><td>${botonesHtml}</td></tr>`;
         });
     }
 
     window.actualizarEstado = async function(id, nuevoEstado) {
         if(!confirm(`¿Cambiar estado a ${nuevoEstado}?`)) return;
-
-        const { error } = await supabase
-            .from('boletos')
-            .update({ estado: nuevoEstado })
-            .eq('id', id);
-
-        if (error) {
-            alert('Error al actualizar: ' + error.message);
-        } else {
-            cargarPagos(filtroActual); 
-        }
+        const { error } = await supabase.from('boletos').update({ estado: nuevoEstado }).eq('id', id);
+        if (error) alert('Error: ' + error.message); else cargarPagos(filtroActual);
     }
 
-    function mostrarMetodosDePago() {
-        adminView.innerHTML = '<h2>Vista de Métodos de Pago</h2><p>Próximamente...</p>';
-    }
+    function mostrarMetodosDePago() { adminView.innerHTML = '<h2>Vista de Métodos de Pago</h2><p>Próximamente...</p>'; }
 
-    // ==========================================
-    // EVENT LISTENERS (MENÚ LATERAL)
-    // ==========================================
-
-    document.getElementById('sorteos-link')?.addEventListener('click', (e) => {
-        e.preventDefault(); mostrarListaSorteos();
-    });
-
-    document.getElementById('boletos-link')?.addEventListener('click', (e) => {
-        e.preventDefault(); mostrarBoletosVendidos();
-    });
-
-    document.getElementById('pagos-link')?.addEventListener('click', (e) => {
-        e.preventDefault(); mostrarMetodosDePago();
-    });
-
+    document.getElementById('sorteos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarListaSorteos(); });
+    document.getElementById('boletos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarBoletosVendidos(); });
+    document.getElementById('pagos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarMetodosDePago(); });
     document.getElementById('nuevo-sorteo-btn')?.addEventListener('click', mostrarNuevoSorteo);
-
-    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        window.location.href = 'admin_login.html';
-    });
+    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'admin_login.html'; });
     
-    // Carga inicial por defecto
     mostrarListaSorteos();
 });

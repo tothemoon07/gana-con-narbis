@@ -1,8 +1,9 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN FINAL Y CORREGIDA
+// Archivo: admin_script.js - VERSIÓN FINAL Y COMPLETA (CORREGIDA PARA STORAGE 400)
 // ==========================================================
 
-// Asegúrate de que estos nombres de bucket coincidan exactamente con tu Storage de Supabase.
+// ¡IMPORTANTE! Estos nombres de bucket DEBEN COINCIDIR con tu Supabase Storage.
+// Verificado: 'comprobantes_narbis_v2' y 'imagenes_sorteos'
 const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
 const BUCKET_SORTEOS = 'imagenes_sorteos';            
 let filtroActual = 'reportado'; 
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =================================================================
-    // B. GESTIÓN DE PAGOS (CON GENERACIÓN DE NÚMEROS Y ARREGLO DE STORAGE)
+    // B. GESTIÓN DE PAGOS (CON ARREGLO FINAL DE STORAGE 400)
     // =================================================================
     
     window.mostrarBoletosVendidos = function() {
@@ -126,25 +127,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         tbody.innerHTML = '';
         ordenes.forEach(orden => {
             let captureHtml = 'Sin foto';
+            
             if (orden.url_capture) {
-                if (orden.url_capture.includes('WhatsApp')) captureHtml = `📲 WhatsApp`;
-                else {
-                    // **ARREGLO DEL BUG 400/404 DE STORAGE**
-                    // Se usa el bucket definido BUCKET_COMPROBANTES, haciendo fallback solo si es necesario.
-                    const bucket = orden.url_capture.startsWith(BUCKET_COMPROBANTES + '/') ? BUCKET_COMPROBANTES : 'comprobantes_narbis'; 
-                    const fileName = orden.url_capture.includes('/') ? orden.url_capture.split('/').pop() : orden.url_capture;
+                if (orden.url_capture.includes('WhatsApp')) {
+                    captureHtml = `📲 WhatsApp`;
+                } else {
+                    // --- ARREGLO FINAL PARA EL ERROR 400 ---
+                    // 1. Extraemos solo el nombre del archivo.
+                    const fileOrPath = orden.url_capture.split('?')[0];
+                    const fileName = fileOrPath.includes('/') ? fileOrPath.split('/').pop() : fileOrPath;
                     
-                    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
-                    captureHtml = `<a href="${data.publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
+                    // 2. FORZAMOS el uso de BUCKET_COMPROBANTES (comprobantes_narbis_v2)
+                    try {
+                        const { data: { publicUrl } } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(fileName);
+                        
+                        if (publicUrl) {
+                            captureHtml = `<a href="${publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
+                        } else {
+                            captureHtml = `<span style="color:red;">Error URL</span>`;
+                        }
+                    } catch (e) {
+                         console.error("Error al generar URL pública:", e);
+                         captureHtml = `<span style="color:red;">Error Gén.</span>`;
+                    }
+                    // ----------------------------------------
                 }
             }
-
+            
             // Mostrar números asignados si ya están validados
             let numerosHtml = orden.numeros_asignados ? 
                 `<span style="font-size:12px; color:green; font-weight:bold;">${orden.numeros_asignados}</span>` : 
                 '<span style="color:#999;">Pendiente</span>';
 
-            // --- CORRECCIÓN CLAVE: Pasamos los UUIDs ('orden.id' y 'orden.sorteo_id') como STRINGS ---
             const ordenId = orden.id;
             const cantidadBoletos = orden.cantidad_boletos || 0;
             const sorteoId = orden.sorteo_id; 
@@ -201,7 +215,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const maxIntentos = maxBoletos * 2;
 
         while (nuevosNumeros.length < cantidad && intentos < maxIntentos) { 
-            // Genera un número entre 1 y maxBoletos (inclusive)
             let num = Math.floor(Math.random() * maxBoletos) + 1; 
             
             if (!setOcupados.has(num) && !nuevosNumeros.includes(num)) {

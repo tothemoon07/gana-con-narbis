@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CORREGIDO FINAL (Botón de Consulta)
+// Archivo: sorteo_script.js - CORREGIDO: Lógica de Consulta de Tickets Local
 // ==========================================================
 
 // Variables de estado
@@ -8,7 +8,7 @@ let precioUnitario = 0;
 let boletosSeleccionados = 1;
 let referenciaUnica = null; 
 
-// Elementos del DOM (Asegúrate de que existan en el HTML si los usas)
+// Elementos del DOM de Compra
 const inputCantidad = document.getElementById('tickets-input');
 const displayTicketsCount = document.getElementById('tickets-count-display');
 const displayPrecioBoleto = document.getElementById('precio-por-boleto');
@@ -17,7 +17,15 @@ const displayTotalPagar = document.getElementById('total-a-pagar');
 const displayMontoFinalPago = document.getElementById('monto-final-pago');
 const codigoReferenciaPago = document.getElementById('codigo-referencia');
 const codigoReferenciaDisplay = document.getElementById('codigo-referencia-display');
-// <--- LA VARIABLE botonConsultarTicketsNavbar FUE ELIMINADA DE AQUÍ
+
+// Elementos del DOM de Consulta de Tickets
+const modalConsultaTickets = document.getElementById('modal-consultar-tickets');
+const btnConsultaNavbar = document.getElementById('consultar-tickets-navbar-btn');
+const btnCerrarConsulta = document.getElementById('close-consultar-tickets');
+const btnCerrarVisible = document.getElementById('btn-cerrar-consulta-visible');
+const formConsultarTickets = document.getElementById('form-consultar-tickets');
+const resultadosConsultaDiv = document.getElementById('resultados-consulta');
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarModales();
     configurarFormularios();
     
-    // 🔑 AHORA SE LLAMA LA FUNCIÓN DESPUÉS DE LA CARGA COMPLETA
+    // 🔑 Configurar el botón de consulta de tickets (Ahora abre el modal local)
     configurarBotonConsultaTickets(); 
 });
 
@@ -211,21 +219,98 @@ function configurarModales() {
     });
 }
 
-// 🔑 FUNCIÓN CORREGIDA: Selecciona el elemento en el momento adecuado
-function configurarBotonConsultaTickets() {
-    // 🔑 Aquí se inicializa la variable de forma segura
-    const botonConsultarTicketsNavbar = document.getElementById('consultar-tickets-navbar-btn'); 
+// ==========================================================
+// D. LÓGICA DE CONSULTA DE TICKETS (NUEVA FUNCIÓN LOCAL)
+// ==========================================================
 
-    if (botonConsultarTicketsNavbar) {
-        botonConsultarTicketsNavbar.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Redirigir a index.html y pasar un parámetro para que el script de index abra el modal
-            window.location.href = 'index.html?action=show_tickets';
-        });
-    } else {
-        console.error("Error: Botón de consulta de tickets no encontrado en la barra de navegación.");
+function abrirModalConsultaTickets() {
+    if (modalConsultaTickets) {
+        resultadosConsultaDiv.innerHTML = ''; // Limpia resultados anteriores
+        modalConsultaTickets.style.display = 'flex'; 
     }
 }
+
+function cerrarModalConsultaTickets() {
+    if (modalConsultaTickets) {
+        modalConsultaTickets.style.display = 'none';
+        resultadosConsultaDiv.innerHTML = ''; 
+    }
+}
+
+function configurarBotonConsultaTickets() {
+    if (btnConsultaNavbar) {
+        btnConsultaNavbar.addEventListener('click', abrirModalConsultaTickets);
+    }
+    if (btnCerrarConsulta) {
+        btnCerrarConsulta.addEventListener('click', cerrarModalConsultaTickets);
+    }
+    if (btnCerrarVisible) {
+        btnCerrarVisible.addEventListener('click', cerrarModalConsultaTickets);
+    }
+    
+    // Conectar el formulario de consulta
+    if (formConsultarTickets) {
+        formConsultarTickets.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const identificador = document.getElementById('identificador-consulta').value.trim();
+            
+            if (identificador) {
+                await consultarBoletosValidos(identificador);
+            }
+        });
+    }
+}
+
+async function consultarBoletosValidos(identificador) {
+    resultadosConsultaDiv.innerHTML = '<p style="text-align:center;">Buscando boletos...</p>';
+    
+    // Normalizar el identificador (ej: quitar guiones, poner mayúsculas)
+    const idNormalizado = identificador.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    try {
+        // La consulta debe buscar tanto por teléfono_cliente como por cedula_cliente
+        const { data: boletos, error } = await supabase
+            .from('boletos')
+            .select('cantidad_boletos, codigo_concepto, sorteo_id, creado_en') 
+            .eq('estado', 'validado') // Solo boletos que ya están VALIDADOS
+            .or(`telefono_cliente.eq.${idNormalizado},cedula_cliente.eq.${idNormalizado}`); 
+
+        if (error) throw error;
+        
+        if (boletos && boletos.length > 0) {
+            let htmlContent = '<h4>¡Boletos Encontrados! (Validados)</h4>';
+            let totalBoletos = 0;
+            
+            boletos.forEach(boleto => {
+                totalBoletos += boleto.cantidad_boletos;
+                const fecha = new Date(boleto.creado_en).toLocaleDateString('es-VE');
+                
+                htmlContent += `
+                    <div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px; background:#f9f9f9;">
+                        <p><strong>Orden #${boleto.codigo_concepto}</strong></p>
+                        <p>Boletos: <strong>${boleto.cantidad_boletos}</strong></p>
+                        <p>Sorteo ID: ${boleto.sorteo_id}</p>
+                        <p>Fecha Compra: ${fecha}</p>
+                    </div>
+                `;
+            });
+            
+            htmlContent = `<h3 style="color:green;">Total Boletos Validados: ${totalBoletos}</h3>` + htmlContent;
+            resultadosConsultaDiv.innerHTML = htmlContent;
+            
+        } else {
+            resultadosConsultaDiv.innerHTML = '<p style="color:red; text-align:center;">No se encontraron boletos validados con ese identificador.</p>';
+        }
+
+    } catch (error) {
+        console.error('Error al consultar boletos:', error);
+        resultadosConsultaDiv.innerHTML = '<p style="color:red; text-align:center;">Error al buscar. Revise su conexión o políticas RLS de Select.</p>';
+    }
+}
+
+// ==========================================================
+// E. Formularios y Subida de Archivos
+// ==========================================================
 
 function configurarFormularios() {
     // 1. Crear Orden (Pendiente)
@@ -290,6 +375,7 @@ function configurarFormularios() {
             if (reporteExitoso) {
                 document.getElementById('modal-reporte-pago').style.display = 'none';
                 alert(`✅ ¡Reporte exitoso! Referencia: ${referenciaUnica}.`);
+                // Redirigir a index.html después de la compra
                 window.location.href = 'index.html'; 
             } else {
                 alert('Error al actualizar la orden.');
@@ -318,7 +404,7 @@ function configurarFormularios() {
 }
 
 // ==========================================================
-// D. Funciones de Base de Datos
+// F. Funciones de Base de Datos
 // ==========================================================
 
 async function guardarOrdenPendiente() {

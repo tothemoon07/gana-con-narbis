@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CORREGIDO Y OPTIMIZADO (Subida Pública + Manejo de Errores de Sesión)
+// Archivo: sorteo_script.js - CORREGIDO FINAL (Botón de Consulta)
 // ==========================================================
 
 // Variables de estado
@@ -8,7 +8,7 @@ let precioUnitario = 0;
 let boletosSeleccionados = 1;
 let referenciaUnica = null; 
 
-// Elementos del DOM
+// Elementos del DOM (Asegúrate de que existan en el HTML si los usas)
 const inputCantidad = document.getElementById('tickets-input');
 const displayTicketsCount = document.getElementById('tickets-count-display');
 const displayPrecioBoleto = document.getElementById('precio-por-boleto');
@@ -17,6 +17,7 @@ const displayTotalPagar = document.getElementById('total-a-pagar');
 const displayMontoFinalPago = document.getElementById('monto-final-pago');
 const codigoReferenciaPago = document.getElementById('codigo-referencia');
 const codigoReferenciaDisplay = document.getElementById('codigo-referencia-display');
+// <--- LA VARIABLE botonConsultarTicketsNavbar FUE ELIMINADA DE AQUÍ
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -37,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarBotonesCompraRapida();
     configurarModales();
     configurarFormularios();
+    
+    // 🔑 AHORA SE LLAMA LA FUNCIÓN DESPUÉS DE LA CARGA COMPLETA
+    configurarBotonConsultaTickets(); 
 });
 
 // ==========================================================
@@ -205,6 +209,22 @@ function configurarModales() {
             alert('Copiado: ' + targetElement.textContent);
         }).catch(err => console.error(err));
     });
+}
+
+// 🔑 FUNCIÓN CORREGIDA: Selecciona el elemento en el momento adecuado
+function configurarBotonConsultaTickets() {
+    // 🔑 Aquí se inicializa la variable de forma segura
+    const botonConsultarTicketsNavbar = document.getElementById('consultar-tickets-navbar-btn'); 
+
+    if (botonConsultarTicketsNavbar) {
+        botonConsultarTicketsNavbar.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Redirigir a index.html y pasar un parámetro para que el script de index abra el modal
+            window.location.href = 'index.html?action=show_tickets';
+        });
+    } else {
+        console.error("Error: Botón de consulta de tickets no encontrado en la barra de navegación.");
+    }
 }
 
 function configurarFormularios() {

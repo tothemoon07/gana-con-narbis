@@ -3,77 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gana con Narbis - Sorteos en Línea</title>
+    <title>Inicio - Sorteos</title>
     <link rel="stylesheet" href="styles.css"> 
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
 </head>
 <body>
-    <header>
-        <h1>🏆 Gana con Narbis</h1>
-        <nav>
-            <a href="index.html">Sorteos</a>
-            <a href="resultados.html">Resultados</a>
-            <a href="#" id="consultar-tickets-btn">Consultar Tickets</a> 
-            <a href="contacto.html">Contacto</a>
-            <a href="admin.html" style="margin-left: 20px;">Acceso Admin</a>
-        </nav>
+
+    <header class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo de Sorteos" class="logo">
+            <nav>
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="#" class="nav-link">Contacto</a>
+            </nav>
+        </div>
+        <div>
+            <button class="consulta-btn" id="consultar-tickets-btn">Consultar Tickets</button>
+        </div>
     </header>
 
-    <main>
-        <section class="hero">
-            <h2>¡Participa y Gana Grandes Premios!</h2>
-            <p>Selecciona tu sorteo favorito y compra tus boletos al instante.</p>
-        </section>
+    <section class="sorteos-header-section">
+        <h2>🎉 Sorteos Activos Ahora Mismo</h2>
+        <p>¡No pierdas la oportunidad de ganar! Selecciona tu sorteo favorito y participa.</p>
+    </section>
 
-        <section class="sorteos-activos-section">
-            <h2>Sorteos Activos</h2>
-            <div id="sorteos-container" class="sorteos-grid">
-                <p>Cargando sorteos disponibles...</p> 
-            </div>
-        </section>
-        <section class="instrucciones">
-            <h2>¿Cómo Participar?</h2>
-            <ol>
-                <li>Elige el sorteo que más te guste.</li>
-                <li>Selecciona la cantidad de boletos.</li>
-                <li>Realiza el pago de forma segura.</li>
-                <li>¡Espera el día del sorteo y gana!</li>
-            </ol>
-        </section>
+    <main class="sorteos-grid" id="sorteos-container">
+        <p>Cargando sorteos...</p>
     </main>
 
-    <footer>
-        <p>© 2025 Gana con Narbis. Todos los derechos reservados.</p>
+    <section class="banner-invitacion">
+        <h3>¿Quieres ser el próximo ganador?</h3>
+        <p>Compra tus boletos hoy mismo y sé parte de la emoción.</p>
+    </section>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Acerca de Nosotros</h4>
+                <p>Somos la plataforma líder en sorteos, ofreciendo premios transparentes y emocionantes a nuestra comunidad.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="index.html" style="color: #ccc; text-decoration: none;">Inicio</a></li>
+                    <li><a href="#" style="color: #ccc; text-decoration: none;">Términos y Condiciones</a></li>
+                    <li><a href="#" style="color: #ccc; text-decoration: none;">Política de Privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        <p class="copyright">&copy; 2025 Todos los derechos reservados.</p>
     </footer>
 
     <div id="modal-consultar-tickets" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
-            <span class="close-btn" id="close-consultar-tickets" style="position: absolute; top: 10px; right: 20px; font-size: 24px; cursor: pointer;">&times;</span>
-            <h3>🔍 Consultar Mis Boletos</h3>
-            <p style="text-align: center; margin-bottom: 20px; font-size: 0.9em;">Ingresa tu número de teléfono o cédula para ver tus tickets validados.</p>
+            <span class="close-btn-pago" id="close-consultar-tickets">&times;</span>
             
+            <h4>Consultar Mis Tickets Validados</h4>
+
             <form id="form-consultar-tickets">
-                <input type="text" id="identificador-consulta" placeholder="Teléfono (ej: 04121234567) o Cédula (ej: V12345678)" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <button type="submit" id="btn-buscar-tickets" class="btn-primary" style="width: 100%; padding: 10px; background: #ff4b1f; color: white; border: none; border-radius: 4px; cursor: pointer;">Buscar Boletos</button>
+                <p>Introduce tu **Teléfono** o **Cédula** (V/E + número) para ver tus boletos activos:</p>
+                <input 
+                    type="text" 
+                    id="identificador-consulta" 
+                    placeholder="Ej: 04121234567 o V12345678" 
+                    required
+                >
+                <button type="submit" class="btn-pago-movil" style="background-color: #008CBA;">Buscar Boletos</button>
             </form>
 
-            <div id="resultados-consulta" style="margin-top: 20px;">
-                </div>
+            <div id="resultados-consulta-scroll">
+                <div id="resultados-consulta" style="margin-top: 20px;">
+                    </div>
+            </div>
+            <button class="btn-cerrar-modal" id="btn-cerrar-consulta-visible">Cerrar Consulta</button>
+            
         </div>
     </div>
-
-    <style>
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); display: none; 
-            justify-content: center; align-items: center; z-index: 9999;
-        }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 8px; position: relative;
-        }
-    </style>
+    <script src="supabase-config.js"></script> 
     <script src="script.js"></script>
 </body>
 </html>

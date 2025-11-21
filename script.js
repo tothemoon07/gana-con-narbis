@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: script.js - VERSIÓN FINAL CON CORRECCIÓN DE CÉDULA ROBUSTA
+// Archivo: script.js - VERSIÓN FINAL CON SCROLL Y CIERRE
 // ==========================================================
 
 // ==========================================================
@@ -8,6 +8,7 @@
 async function cargarSorteos() {
     console.log("Intentando cargar sorteos desde Supabase...");
     
+    // Asumimos que 'supabase' está definido en supabase-config.js y cargado
     if (typeof supabase === 'undefined') {
         console.error("Error: Supabase no está definido. Revise la carga de librerías.");
         return;
@@ -33,6 +34,7 @@ async function cargarSorteos() {
         if (sorteos.length === 0) {
             container.innerHTML = '<p>No hay sorteos activos disponibles por el momento.</p>';
         } else {
+            // MOSTRAR los sorteos en el HTML
             sorteos.forEach(sorteo => {
                 const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
                     year: 'numeric', 
@@ -83,21 +85,21 @@ async function buscarBoletosCliente(identificador) {
     // 1. Limpiamos el identificador de caracteres especiales
     const identificadorLimpio = identificador.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     
-    // 2. Definimos las posibilidades de búsqueda para la cédula
+    // 2. Definimos las posibilidades de búsqueda iniciales
     let posiblesBusquedas = [
-        `telefono_cliente.eq.${identificadorLimpio}`, // Teléfono (siempre debe buscarse así)
-        `cedula_cliente.eq.${identificadorLimpio}`   // Cédula: V12345678 (si el usuario la escribió con V) o 12345678 (si la base de datos la tiene solo con números)
+        `telefono_cliente.eq.${identificadorLimpio}`, // Teléfono o cédula completa (ej: V12345678)
+        `cedula_cliente.eq.${identificadorLimpio}`   
     ];
 
-    // 3. Si la entrada no tiene prefijo (V, E, P) y es lo suficientemente larga para ser una cédula...
+    // 3. Si la entrada es un número sin prefijo y es larga, añadimos los prefijos comunes (V y E)
     const primerCaracter = identificadorLimpio.charAt(0);
     if (!['V', 'E', 'P'].includes(primerCaracter) && identificadorLimpio.length >= 5) {
-        // Agregamos la búsqueda con los prefijos más comunes (V y E)
+        // Agregamos la búsqueda con los prefijos más comunes
         posiblesBusquedas.push(`cedula_cliente.eq.V${identificadorLimpio}`);
         posiblesBusquedas.push(`cedula_cliente.eq.E${identificadorLimpio}`);
     }
     
-    // 4. Construimos la cláusula OR que Supabase puede entender
+    // 4. Construimos la cláusula OR
     const orClauses = posiblesBusquedas.join(',');
 
     try {
@@ -105,7 +107,7 @@ async function buscarBoletosCliente(identificador) {
             .from('boletos')
             .select('id, sorteo_id, cantidad_boletos, numeros_asignados, estado, sorteos(titulo)')
             .eq('estado', 'validado') 
-            .or(orClauses); // Usamos la cadena de ORs
+            .or(orClauses); 
 
         if (error) {
              console.error("Error de Supabase al consultar boletos:", error);
@@ -124,7 +126,7 @@ async function buscarBoletosCliente(identificador) {
             const tituloSorteo = orden.sorteos ? orden.sorteos.titulo : 'Sorteo Desconocido';
 
             html += `
-                <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px; background: #f9f9f9;">
+                <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 8px; border-radius: 5px; background: #fdfdfd;">
                     <p>🏆 Sorteo: <strong>${tituloSorteo}</strong></p>
                     <p>🎟 Cantidad: <strong>${orden.cantidad_boletos}</strong></p>
                     <p>🔢 Números: <span style="font-weight: bold; color: green; display: block; margin-top: 5px; word-wrap: break-word; font-size: 0.9em;">${numeros}</span></p>
@@ -148,9 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConsulta = document.getElementById('modal-consultar-tickets');
     const btnAbrirConsulta = document.getElementById('consultar-tickets-btn');
     const btnCerrarConsulta = document.getElementById('close-consultar-tickets');
+    const btnCerrarConsultaVisible = document.getElementById('btn-cerrar-consulta-visible'); // NUEVO BOTÓN
     const formConsulta = document.getElementById('form-consultar-tickets');
     const resultadosDiv = document.getElementById('resultados-consulta');
     
+    // Configurar Abrir Modal
     btnAbrirConsulta?.addEventListener('click', (e) => {
         e.preventDefault(); 
         if(modalConsulta) {
@@ -161,10 +165,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    btnCerrarConsulta?.addEventListener('click', () => {
+    // Función para Cerrar Modal
+    const cerrarModal = () => {
         if(modalConsulta) modalConsulta.style.display = 'none';
-    });
+    }
 
+    // Configurar Cerrar Modal (X)
+    btnCerrarConsulta?.addEventListener('click', cerrarModal);
+    
+    // Configurar Cerrar Modal (Botón Visible)
+    btnCerrarConsultaVisible?.addEventListener('click', cerrarModal); // NUEVO LISTENER
+
+    // Configurar Cierre al hacer click fuera del contenido (solo si existe el modal)
+    if(modalConsulta) {
+        modalConsulta.addEventListener('click', (e) => {
+            if (e.target.id === 'modal-consultar-tickets') {
+                cerrarModal();
+            }
+        });
+    }
+
+    // Configurar Formulario de Búsqueda
     formConsulta?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const identificador = document.getElementById('identificador-consulta').value.trim();

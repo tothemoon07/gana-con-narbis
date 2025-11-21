@@ -638,7 +638,8 @@ body {
         padding: 10px 5%;
     }
 
-    .navbar div:nth-child(2) { /* Contenedor de enlaces (Inicio, Sorteos Activos) */
+    /* Target the navigation links container */
+    .navbar div:nth-child(2) { 
         display: flex;
         flex-direction: column;
         align-items: flex-start;

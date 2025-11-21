@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CORREGIDO Y OPTIMIZADO (Subida Pública)
+// Archivo: sorteo_script.js - CORREGIDO Y OPTIMIZADO (Subida Pública + Manejo de Errores de Sesión)
 // ==========================================================
 
 // Variables de estado
@@ -231,7 +231,7 @@ function configurarFormularios() {
         
         const fileInput = document.getElementById('capture-input');
         const file = fileInput.files[0];
-        const BUCKET_NAME = 'comprobantes_narbis_v2'; // Esto ya estaba correcto
+        const BUCKET_NAME = 'comprobantes_narbis_v2';
 
         if (!referenciaUnica || !file) {
             alert('Falta referencia o archivo.');
@@ -249,13 +249,12 @@ function configurarFormularios() {
         let fileUrl = null;
 
         try {
-            // CORRECCIÓN CLAVE: Usar 'upload' y forzar 'public: true'
+            // Paso 1: Subida de archivo
             const { error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
                 .upload(filePath, file, { 
                     cacheControl: '3600', 
                     upsert: false,
-                    // ESTO ES LO QUE HACE QUE EL ARCHIVO SEA PÚBLICO:
                     public: true 
                 });
 
@@ -278,7 +277,16 @@ function configurarFormularios() {
             
         } catch (error) {
             console.error('Error al subir comprobante:', error);
-            alert('Error al subir. Revise su conexión o las políticas RLS de INSERT en Supabase.');
+            
+            let mensajeUsuario = 'Error al subir. Revise su conexión o las políticas RLS de INSERT en Supabase.';
+
+            // MANEJO DE ERROR AMIGABLE PARA EL USUARIO FINAL (Mitigación)
+            if (error && (error.message.includes('row-level security policy') || error.message.includes('Bad Request'))) {
+                 // Si falla por RLS o por una petición mal formada (típico de token obsoleto)
+                mensajeUsuario = '⚠️ Hubo un error de sesión. Por favor, **recargue la página** (F5) e inténtelo de nuevo.';
+            }
+
+            alert(mensajeUsuario);
             btnReportar.disabled = false;
             btnReportar.textContent = 'Reportar Pago';
         }

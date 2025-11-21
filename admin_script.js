@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const file = document.getElementById('imagen_sorteo').files[0];
                 const fileName = `premio-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '_')}`;
                 
-                const { error: errImg } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
+                // Nota: Los archivos de sorteo generalmente deben ser públicos.
+                const { error: errImg } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file, { public: true }); 
                 if (errImg) throw errImg;
                 
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
@@ -98,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =================================================================
-    // B. GESTIÓN DE PAGOS (CON ARREGLO FINAL DE STORAGE 400)
+    // B. GESTIÓN DE PAGOS 
     // =================================================================
     
     window.mostrarBoletosVendidos = function() {
@@ -132,23 +133,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (orden.url_capture.includes('WhatsApp')) {
                     captureHtml = `📲 WhatsApp`;
                 } else {
-                    // --- ARREGLO FINAL PARA EL ERROR 400 ---
+                    // --- OBTENCIÓN DE URL (FUNCIONARÁ CON LAS NUEVAS SUBIDAS CORREGIDAS) ---
                     // 1. Extraemos solo el nombre del archivo.
                     const fileOrPath = orden.url_capture.split('?')[0];
                     const fileName = fileOrPath.includes('/') ? fileOrPath.split('/').pop() : fileOrPath;
                     
-                    // 2. FORZAMOS el uso de BUCKET_COMPROBANTES (comprobantes_narbis_v2)
-                    try {
-                        const { data: { publicUrl } } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(fileName);
-                        
-                        if (publicUrl) {
+                    // 2. Usamos la URL almacenada, que ahora es pública (o el getPublicUrl si es solo el nombre)
+                    // Si la BD guarda la URL completa:
+                    if (orden.url_capture.startsWith('http')) {
+                        captureHtml = `<a href="${orden.url_capture}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
+                    } else {
+                        // Si la BD solo guardó el nombre (esto es menos probable, pero seguro)
+                        try {
+                            const { data: { publicUrl } } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(fileName);
                             captureHtml = `<a href="${publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
-                        } else {
-                            captureHtml = `<span style="color:red;">Error URL</span>`;
+                        } catch (e) {
+                            captureHtml = `<span style="color:red;">Error Gén.</span>`;
                         }
-                    } catch (e) {
-                         console.error("Error al generar URL pública:", e);
-                         captureHtml = `<span style="color:red;">Error Gén.</span>`;
                     }
                     // ----------------------------------------
                 }

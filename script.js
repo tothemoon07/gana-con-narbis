@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: script.js - VERSIÓN FINAL CON CONSULTA DE TICKETS Y CARGA DE SORTEOS
+// Archivo: script.js - VERSIÓN FINAL CON CORRECCIÓN DE CÉDULA ROBUSTA
 // ==========================================================
 
 // ==========================================================
@@ -8,14 +8,12 @@
 async function cargarSorteos() {
     console.log("Intentando cargar sorteos desde Supabase...");
     
-    // Asumimos que 'supabase' está definido en supabase-config.js y cargado
     if (typeof supabase === 'undefined') {
         console.error("Error: Supabase no está definido. Revise la carga de librerías.");
         return;
     }
 
     try {
-        // Obtenemos los sorteos activos
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
@@ -35,23 +33,19 @@ async function cargarSorteos() {
         if (sorteos.length === 0) {
             container.innerHTML = '<p>No hay sorteos activos disponibles por el momento.</p>';
         } else {
-            // MOSTRAR los sorteos en el HTML
             sorteos.forEach(sorteo => {
-                // Formatear la fecha para que se vea bien
                 const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
                 });
                 
-                // Construcción de la tarjeta
-                const card = document.createElement('div');
-                card.className = 'sorteo-card'; 
-                
-                // Imagen del premio (si existe)
                 const imgHtml = sorteo.imagen_url ? 
                     `<img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" style="width:100%; height:auto; border-radius:8px; margin-bottom:10px;">` : '';
 
+
+                const card = document.createElement('div');
+                card.className = 'sorteo-card'; 
 
                 card.innerHTML = `
                     <div class="sorteo-contenido">
@@ -68,7 +62,6 @@ async function cargarSorteos() {
                 container.appendChild(card);
             });
             
-            // Añadir el mensaje de éxito después de cargar todo
             const mensajeExito = document.createElement('p');
             mensajeExito.innerHTML = `✅ Se encontraron ${sorteos.length} sorteo(s) activo(s).`;
             container.prepend(mensajeExito); 
@@ -80,31 +73,43 @@ async function cargarSorteos() {
 }
 
 // ==========================================================
-// FUNCIÓN DE CONSULTA DE TICKETS (NUEVO)
+// FUNCIÓN DE CONSULTA DE TICKETS (CORREGIDA PARA CÉDULA ROBUSTA)
 // ==========================================================
 
 async function buscarBoletosCliente(identificador) {
     const resultadosDiv = document.getElementById('resultados-consulta');
     resultadosDiv.innerHTML = '<p style="text-align:center;">Buscando...</p>';
 
-    // Quita cualquier caracter no alfanumérico para buscar (ej. guiones o espacios)
-    const identificadorNormalizado = identificador.replace(/[^a-zA-Z0-9]/g, '');
+    // 1. Limpiamos el identificador de caracteres especiales
+    const identificadorLimpio = identificador.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
+    // 2. Definimos las posibilidades de búsqueda para la cédula
+    let posiblesBusquedas = [
+        `telefono_cliente.eq.${identificadorLimpio}`, // Teléfono (siempre debe buscarse así)
+        `cedula_cliente.eq.${identificadorLimpio}`   // Cédula: V12345678 (si el usuario la escribió con V) o 12345678 (si la base de datos la tiene solo con números)
+    ];
+
+    // 3. Si la entrada no tiene prefijo (V, E, P) y es lo suficientemente larga para ser una cédula...
+    const primerCaracter = identificadorLimpio.charAt(0);
+    if (!['V', 'E', 'P'].includes(primerCaracter) && identificadorLimpio.length >= 5) {
+        // Agregamos la búsqueda con los prefijos más comunes (V y E)
+        posiblesBusquedas.push(`cedula_cliente.eq.V${identificadorLimpio}`);
+        posiblesBusquedas.push(`cedula_cliente.eq.E${identificadorLimpio}`);
+    }
+    
+    // 4. Construimos la cláusula OR que Supabase puede entender
+    const orClauses = posiblesBusquedas.join(',');
 
     try {
-        // Obtenemos los datos de los boletos y el título del sorteo
         const { data: ordenes, error } = await supabase
             .from('boletos')
-            // Incluimos el sorteos(titulo) para mostrar el nombre del premio
             .select('id, sorteo_id, cantidad_boletos, numeros_asignados, estado, sorteos(titulo)')
-            // IMPORTANTE: solo muestra los validados.
             .eq('estado', 'validado') 
-            // Usa .or() para buscar por teléfono O cédula
-            .or(`telefono_cliente.eq.${identificadorNormalizado},cedula_cliente.eq.${identificadorNormalizado}`);
+            .or(orClauses); // Usamos la cadena de ORs
 
         if (error) {
-             // Este error suele ser el RLS si es la primera vez que se ejecuta
              console.error("Error de Supabase al consultar boletos:", error);
-             resultadosDiv.innerHTML = '<p style="color: red; text-align: center; margin-top: 15px;">Error al conectar. ¿Ya configuró la política RLS SELECT para la tabla "boletos"?</p>';
+             resultadosDiv.innerHTML = '<p style="color: red; text-align: center; margin-top: 15px;">Error al conectar. ¿La política RLS SELECT en "boletos" está en true?</p>';
              return;
         }
 
@@ -116,7 +121,6 @@ async function buscarBoletosCliente(identificador) {
         let html = '<h4>✅ Boletos Encontrados:</h4>';
         ordenes.forEach(orden => {
             const numeros = orden.numeros_asignados || 'Pendiente (Error de asignación)';
-            // Si el join fue exitoso, el título está en .sorteos.titulo
             const tituloSorteo = orden.sorteos ? orden.sorteos.titulo : 'Sorteo Desconocido';
 
             html += `
@@ -141,19 +145,16 @@ async function buscarBoletosCliente(identificador) {
 document.addEventListener('DOMContentLoaded', () => {
     cargarSorteos();
     
-    // Lógica para el modal de consulta de tickets (añadida en index.html)
     const modalConsulta = document.getElementById('modal-consultar-tickets');
     const btnAbrirConsulta = document.getElementById('consultar-tickets-btn');
     const btnCerrarConsulta = document.getElementById('close-consultar-tickets');
     const formConsulta = document.getElementById('form-consultar-tickets');
     const resultadosDiv = document.getElementById('resultados-consulta');
     
-    // Configurar Modales
     btnAbrirConsulta?.addEventListener('click', (e) => {
         e.preventDefault(); 
         if(modalConsulta) {
             modalConsulta.style.display = 'flex';
-            // Limpiar resultados al abrir
             if(resultadosDiv) resultadosDiv.innerHTML = ''; 
             const input = document.getElementById('identificador-consulta');
             if(input) input.value = ''; 
@@ -164,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(modalConsulta) modalConsulta.style.display = 'none';
     });
 
-    // Configurar Formulario de Búsqueda
     formConsulta?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const identificador = document.getElementById('identificador-consulta').value.trim();

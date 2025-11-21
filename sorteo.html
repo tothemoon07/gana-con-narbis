@@ -11,177 +11,200 @@
 
 <body>
 
-    <nav class="navbar">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo Narbis" class="logo">
-        </div>
-        <div>
-            <a href="index.html" class="nav-link">Inicio</a>
-            <a href="index.html#sorteos-activos" class="nav-link">Sorteos Activos</a>
-        </div>
-        <button class="consulta-btn" id="consultar-tickets-navbar-btn">
-            <i class="fas fa-search"></i> Consultar Mis Tickets
-        </button>
-    </nav>
+    <nav class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo Narbis" class="logo">
+        </div>
+        <div>
+            <a href="index.html" class="nav-link">Inicio</a>
+            <a href="index.html#sorteos-activos" class="nav-link">Sorteos Activos</a>
+        </div>
+        <button class="consulta-btn" id="consultar-tickets-navbar-btn">
+            <i class="fas fa-search"></i> Consultar Mis Tickets
+        </button>
+    </nav>
 
-    <div class="detail-container">
-        <div class="detail-header">
-            <a href="index.html" style="float: left; font-size: 24px; color: var(--primary-color); text-decoration: none;">&larr;</a>
-            <h2>Detalle del Sorteo</h2>
-        </div>
+    <div class="detail-container">
+        <div class="detail-header">
+            <a href="index.html" style="float: left; font-size: 24px; color: var(--primary-color); text-decoration: none;">&larr;</a>
+            <h2>Detalle del Sorteo</h2>
+        </div>
 
-        <div id="sorteo-detalle-content">
-            <h3 style="text-align: center;">Cargando detalle del sorteo...</h3>
-        </div>
+        <div id="sorteo-detalle-content">
+            <h3 style="text-align: center;">Cargando detalle del sorteo...</h3>
+        </div>
 
-        <div class="compra-section">
-            <h3>Compra aquí tus boletos</h3>
-            <div class="buy-options-grid">
-                <button class="buy-option-btn" data-tickets="2">+2</button>
-                <button class="buy-option-btn popular" data-tickets="5">+5</button>
-                <button class="buy-option-btn" data-tickets="10">+10</button>
-                <button class="buy-option-btn" data-tickets="20">+20</button>
-                <button class="buy-option-btn" data-tickets="30">+30</button>
-                <button class="buy-option-btn" data-tickets="50">+50</button>
-            </div>
-             
-            <div class="ticket-counter">
-                <button class="counter-btn" id="decrement-btn">-</button>
-                <input type="number" id="tickets-input" class="counter-input" value="1" min="1" max="10000" readonly>
-                <button class="counter-btn" id="increment-btn">+</button>
-            </div>
+        <div class="compra-section">
+            <h3>Compra aquí tus boletos</h3>
+            <div class="buy-options-grid">
+                <button class="buy-option-btn" data-tickets="2">+2</button>
+                <button class="buy-option-btn popular" data-tickets="5">+5</button>
+                <button class="buy-option-btn" data-tickets="10">+10</button>
+                <button class="buy-option-btn" data-tickets="20">+20</button>
+                <button class="buy-option-btn" data-tickets="30">+30</button>
+                <button class="buy-option-btn" data-tickets="50">+50</button>
+            </div>
+             
+            <div class="ticket-counter">
+                <button class="counter-btn" id="decrement-btn">-</button>
+                <input type="number" id="tickets-input" class="counter-input" value="1" min="1" max="10000" readonly>
+                <button class="counter-btn" id="increment-btn">+</button>
+            </div>
 
-            <button class="btn-comprar-final" id="btn-comprar-boletos">
-                🛒 Comprar <span id="tickets-count-display">1</span> boletos
-            </button>
-        </div>
-         
-        <div id="premios-detalle-container">
-            <h3>Detalles del sorteo</h3>
-        </div>
-         
-    </div>
+            <button class="btn-comprar-final" id="btn-comprar-boletos">
+                🛒 Comprar <span id="tickets-count-display">1</span> boletos
+            </button>
+        </div>
+         
+        <div id="premios-detalle-container">
+            <h3>Detalles del sorteo</h3>
+        </div>
+         
+    </div>
 
-    <div id="modal-datos-contacto" class="modal-overlay-pago">
-        <div class="modal-pago-content">
-            <span class="close-btn-pago" id="close-datos-contacto">&times;</span>
-            <h4>Por favor verifica antes de continuar</h4>
-            <p>Tus datos de contacto</p>
+                <div id="modal-consultar-tickets" class="modal-overlay-pago">
+        <div class="modal-pago-content" style="max-width: 400px;">
+            <span class="close-btn-pago" id="close-consultar-tickets">&times;</span>
+            <h4>Consultar Mis Tickets Validados</h4>
 
-            <form id="form-datos-contacto">
-                <input type="text" id="nombre-completo" placeholder="Nombre Completo *" required>
-                <input type="email" id="email-contacto" placeholder="Email *" required>
-                <input type="tel" id="telefono-contacto" placeholder="Teléfono: +58 424 1234567 *" required>
-                 
-                <select id="estado-contacto" required>
-                    <option value="">Selecciona tu estado *</option>
-                    <option value="Distrito Capital">Distrito Capital</option>
-                    <option value="Miranda">Miranda</option>
-                    <option value="Carabobo">Carabobo</option>
-                    <option value="Zulia">Zulia</option>
-                    <option value="Otro">Otro</option>
-                </select>
-                 
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <select id="cedula-prefijo" style="width: 25%;">
-                        <option value="V">V</option>
-                        <option value="E">E</option>
-                    </select>
-                    <input type="text" id="cedula-numero" placeholder="1234567 *" required style="width: 75%; margin-bottom: 0;">
-                </div>
+            <form id="form-consultar-tickets">
+                <p>Introduce tu **Teléfono** o **Cédula** (V/E + número) para ver tus boletos activos:</p>
+                <input 
+                    type="text" 
+                    id="identificador-consulta" 
+                    placeholder="Ej: 04121234567 o V12345678" 
+                    required
+                >
+                <button type="submit" class="btn-pago-movil" style="background-color: #008CBA;">Buscar Boletos</button>
+            </form>
 
-                <div class="total-summary">
-                    <p>Precio por boleto: <span id="precio-por-boleto">Bs. 0.00</span></p>
-                    <p>Cantidad de boletos: <span id="cantidad-boletos-summary">1</span></p>
-                    <p class="total">Total a pagar: <span id="total-a-pagar">Bs. 0.00</span></p>
-                </div>
-                 
-                <button type="submit" class="btn-pago-movil">
-                    <span style="font-size: 20px;">💳</span> Pagar con Pago Móvil Seguro + Rápido
-                </button>
-            </form>
-        </div>
-    </div>
+            <div id="resultados-consulta-scroll">
+                <div id="resultados-consulta" style="margin-top: 20px;">
+                </div>
+            </div>
+            <button class="btn-cerrar-modal" id="btn-cerrar-consulta-visible">Cerrar Consulta</button>
+        </div>
+    </div>
+        <div id="modal-datos-contacto" class="modal-overlay-pago">
+        <div class="modal-pago-content">
+            <span class="close-btn-pago" id="close-datos-contacto">&times;</span>
+            <h4>Por favor verifica antes de continuar</h4>
+            <p>Tus datos de contacto</p>
 
-    <div id="modal-datos-pago" class="modal-overlay-pago">
-        <div class="modal-pago-content">
-            <span class="close-btn-pago" id="close-datos-pago">&times;</span>
-            <h4>Pago Móvil</h4>
+            <form id="form-datos-contacto">
+                <input type="text" id="nombre-completo" placeholder="Nombre Completo *" required>
+                <input type="email" id="email-contacto" placeholder="Email *" required>
+                <input type="tel" id="telefono-contacto" placeholder="Teléfono: +58 424 1234567 *" required>
+                 
+                <select id="estado-contacto" required>
+                    <option value="">Selecciona tu estado *</option>
+                    <option value="Distrito Capital">Distrito Capital</option>
+                    <option value="Miranda">Miranda</option>
+                    <option value="Carabobo">Carabobo</option>
+                    <option value="Zulia">Zulia</option>
+                    <option value="Otro">Otro</option>
+                </select>
+                 
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <select id="cedula-prefijo" style="width: 25%;">
+                        <option value="V">V</option>
+                        <option value="E">E</option>
+                    </select>
+                    <input type="text" id="cedula-numero" placeholder="1234567 *" required style="width: 75%; margin-bottom: 0;">
+                </div>
 
-            <div class="datos-pago-movil" id="metodo-pago-info">
-                <p>Banco: **Banesco**</p>
-                <p>C.I.: **V-12.345.678**</p>
-                <p>Teléfono: **0414-1234567**</p>
-            </div>
+                <div class="total-summary">
+                    <p>Precio por boleto: <span id="precio-por-boleto">Bs. 0.00</span></p>
+                    <p>Cantidad de boletos: <span id="cantidad-boletos-summary">1</span></p>
+                    <p class="total">Total a pagar: <span id="total-a-pagar">Bs. 0.00</span></p>
+                </div>
+                 
+                <button type="submit" class="btn-pago-movil">
+                    <span style="font-size: 20px;">💳</span> Pagar con Pago Móvil Seguro + Rápido
+                </button>
+            </form>
+        </div>
+    </div>
 
-            <div style="text-align: center; margin-bottom: 20px;">
-                <p style="margin: 0;">Monto a pagar:</p>
-                <h3 style="color: var(--primary-color); font-size: 28px;">Bs. <span id="monto-final-pago">0.00</span></h3>
-            </div>
+    <div id="modal-datos-pago" class="modal-overlay-pago">
+        <div class="modal-pago-content">
+            <span class="close-btn-pago" id="close-datos-pago">&times;</span>
+            <h4>Pago Móvil</h4>
 
-            <div class="verification-code-box">
-                <p style="color: red; font-weight: bold; margin-bottom: 5px;">
-                    ⚠️ DEBE COLOCAR EN CONCEPTO ESTE CÓDIGO PARA VERIFICAR SU PAGO MÁS RÁPIDO
-                </p>
-                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-                    <span id="codigo-referencia" class="code">000000</span>
-                    <button class="copy-btn" data-copy-target="codigo-referencia">Copiar</button>
-                </div>
-            </div>
+            <div class="datos-pago-movil" id="metodo-pago-info">
+                <p>Banco: **Banesco**</p>
+                <p>C.I.: **V-12.345.678**</p>
+                <p>Teléfono: **0414-1234567**</p>
+            </div>
 
-            <button id="abrir-reporte" class="btn-reportar-pago" style="margin-top: 25px;">
-                Reportar Pago (Continuar)
-            </button>
-        </div>
-    </div>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <p style="margin: 0;">Monto a pagar:</p>
+                <h3 style="color: var(--primary-color); font-size: 28px;">Bs. <span id="monto-final-pago">0.00</span></h3>
+            </div>
 
-    <div id="modal-reporte-pago" class="modal-overlay-pago">
-        <div class="modal-pago-content">
-            <span class="close-btn-pago" id="close-reporte-pago">&times;</span>
-            <h4>Reportar Pago</h4>
+            <div class="verification-code-box">
+                <p style="color: red; font-weight: bold; margin-bottom: 5px;">
+                    ⚠️ DEBE COLOCAR EN CONCEPTO ESTE CÓDIGO PARA VERIFICAR SU PAGO MÁS RÁPIDO
+                </p>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <span id="codigo-referencia" class="code">000000</span>
+                    <button class="copy-btn" data-copy-target="codigo-referencia">Copiar</button>
+                </div>
+            </div>
 
-            <div style="text-align: center;">
-                <h3 style="color: red;">Código de Referencia: <span id="codigo-referencia-display">000000</span></h3>
-                <p>¿NO PUDISTE REGISTRAR TU PAGO AUTOMATIZADO?</p>
-                <p style="font-size: 14px;">Puedes registrarlo manualmente:</p>
-            </div>
+            <button id="abrir-reporte" class="btn-reportar-pago" style="margin-top: 25px;">
+                Reportar Pago (Continuar)
+            </button>
+        </div>
+    </div>
 
-            <form id="form-reporte-pago">
-                <input type="text" id="referencia-pago" placeholder="Últimos 6 dígitos de la referencia (Ej: 123456)" maxlength="6" pattern="\d{6}" required>
-                <input type="tel" id="telefono-pago-movil" placeholder="Teléfono desde donde pagaste (Ej: 04241234567)" required>
-                 
-                <div class="form-group">
-                    <label for="capture-input" class="file-upload-label">
-                        <span id="capture-label-text">Subir Capture / Comprobante de Pago *</span>
-                    </label>
-                    <input type="file" id="capture-input" accept="image/*" required>
-                    <p class="file-name-display" id="file-name-display">Ningún archivo seleccionado.</p>
-                </div>
+    <div id="modal-reporte-pago" class="modal-overlay-pago">
+        <div class="modal-pago-content">
+            <span class="close-btn-pago" id="close-reporte-pago">&times;</span>
+            <h4>Reportar Pago</h4>
 
-                <button type="submit" class="btn-reportar-pago">
-                    Reportar Pago
-                </button>
-                 
-                <p style="font-size: 12px; margin-top: 10px;">
-                    Validaremos tu pago en máximo 12 horas y te enviaremos tus tickets por WhatsApp.
-                </p>
-            </form>
-        </div>
-    </div>
+            <div style="text-align: center;">
+                <h3 style="color: red;">Código de Referencia: <span id="codigo-referencia-display">000000</span></h3>
+                <p>¿NO PUDISTE REGISTRAR TU PAGO AUTOMATIZADO?</p>
+                <p style="font-size: 14px;">Puedes registrarlo manualmente:</p>
+            </div>
 
-    <footer class="main-footer" style="margin-top: 50px;">
-        <div class="footer-content">
-            <div class="footer-section"><h4>Autorizado por:</h4><p>CONALOT</p></div>
-            <div class="footer-section"><h4>Únete al Movimiento</h4><p>#ganaconnarbis</p></div>
-            <div class="footer-section"><h4>Contáctanos</h4><p>Chacao, Caracas, Venezuela</p></div>
-        </div>
-        <div class="copyright">© 2025 Gana con Narbis. Todos los derechos reservados</div>
-    </footer>
+            <form id="form-reporte-pago">
+                <input type="text" id="referencia-pago" placeholder="Últimos 6 dígitos de la referencia (Ej: 123456)" maxlength="6" pattern="\d{6}" required>
+                <input type="tel" id="telefono-pago-movil" placeholder="Teléfono desde donde pagaste (Ej: 04241234567)" required>
+                 
+                <div class="form-group">
+                    <label for="capture-input" class="file-upload-label">
+                        <span id="capture-label-text">Subir Capture / Comprobante de Pago *</span>
+                    </label>
+                    <input type="file" id="capture-input" accept="image/*" required>
+                    <p class="file-name-display" id="file-name-display">Ningún archivo seleccionado.</p>
+                </div>
+
+                <button type="submit" class="btn-reportar-pago">
+                    Reportar Pago
+                </button>
+                 
+                <p style="font-size: 12px; margin-top: 10px;">
+                    Validaremos tu pago en máximo 12 horas y te enviaremos tus tickets por WhatsApp.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <footer class="main-footer" style="margin-top: 50px;">
+        <div class="footer-content">
+            <div class="footer-section"><h4>Autorizado por:</h4><p>CONALOT</p></div>
+            <div class="footer-section"><h4>Únete al Movimiento</h4><p>#ganaconnarbis</p></div>
+            <div class="footer-section"><h4>Contáctanos</h4><p>Chacao, Caracas, Venezuela</p></div>
+        </div>
+        <div class="copyright">© 2025 Gana con Narbis. Todos los derechos reservados</div>
+    </footer>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="sorteo_script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="sorteo_script.js" defer></script>
 </body>
 
 </html>

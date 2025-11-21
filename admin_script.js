@@ -1,35 +1,45 @@
 // ==========================================================
-// Archivo: admin_script.js - VERSIÓN FINAL Y COMPLETA (CORREGIDA PARA STORAGE 400)
+// Archivo: admin_script.js - CORREGIDO (Problema de Redirección)
 // ==========================================================
 
 // ¡IMPORTANTE! Estos nombres de bucket DEBEN COINCIDIR con tu Supabase Storage.
-// Verificado: 'comprobantes_narbis_v2' y 'imagenes_sorteos'
 const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2'; 
-const BUCKET_SORTEOS = 'imagenes_sorteos';            
+const BUCKET_SORTEOS = 'imagenes_sorteos';          
 let filtroActual = 'reportado'; 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (typeof supabase === 'undefined') {
-        console.error("Error: 'supabase' no definido.");
+    // 1. Verificación de inicialización de Supabase (debe ser global en supabase-admin-config.js)
+    if (typeof supabase === 'undefined' || supabase === null) {
+        console.error("Error Crítico: El cliente de Supabase no está disponible.");
+        document.getElementById('content').innerHTML = "Error de configuración. Verifique la consola.";
         return;
     }
 
-    // Verificar autenticación
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // 2. Comprobación de autenticación (MÉTODO MÁS ROBUSTO)
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if (authError || !user) {
+        // Si hay error o no hay usuario, redirigir
+        console.log("Usuario no autenticado, redirigiendo.");
         window.location.href = 'admin_login.html'; 
         return; 
     }
 
+    // Si pasamos la verificación, el usuario está logueado.
     const adminView = document.getElementById('admin-view');
-    console.log("Admin autenticado. Cargando panel.");
+    console.log("Admin autenticado. Cargando panel para:", user.email);
+    
+    // Cargar la vista inicial
+    mostrarListaSorteos();
     
     // =================================================================
     // A. GESTIÓN DE SORTEOS
     // =================================================================
     
     window.mostrarListaSorteos = async function() {
+        document.getElementById('content').querySelector('h1').textContent = 'Gestión de Sorteos';
+        document.getElementById('nuevo-sorteo-btn').style.display = 'inline-block';
+        
         adminView.innerHTML = `
             <h2>Administrar Sorteos</h2>
             <button onclick="mostrarNuevoSorteo()" style="background:#b70014; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px;">+ Crear Nuevo Sorteo</button>
@@ -59,6 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.mostrarNuevoSorteo = function() {
+        document.getElementById('content').querySelector('h1').textContent = 'Crear Nuevo Sorteo';
+        document.getElementById('nuevo-sorteo-btn').style.display = 'none';
+
         adminView.innerHTML = `
             <h2>Crear Nuevo Sorteo</h2>
             <button onclick="mostrarListaSorteos()">← Volver</button>
@@ -103,6 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // =================================================================
     
     window.mostrarBoletosVendidos = function() {
+        document.getElementById('content').querySelector('h1').textContent = 'Gestión de Pagos';
+        document.getElementById('nuevo-sorteo-btn').style.display = 'none';
+
         adminView.innerHTML = `
             <h2>Gestión de Pagos</h2>
             <div class="filtros-container">
@@ -134,11 +150,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     captureHtml = `📲 WhatsApp`;
                 } else {
                     // --- OBTENCIÓN DE URL (FUNCIONARÁ CON LAS NUEVAS SUBIDAS CORREGIDAS) ---
-                    // 1. Extraemos solo el nombre del archivo.
                     const fileOrPath = orden.url_capture.split('?')[0];
                     const fileName = fileOrPath.includes('/') ? fileOrPath.split('/').pop() : fileOrPath;
                     
-                    // 2. Usamos la URL almacenada, que ahora es pública (o el getPublicUrl si es solo el nombre)
                     // Si la BD guarda la URL completa:
                     if (orden.url_capture.startsWith('http')) {
                         captureHtml = `<a href="${orden.url_capture}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
@@ -263,11 +277,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // C. EVENT LISTENERS Y CARGA INICIAL
     // =================================================================
     
-    document.getElementById('sorteos-link')?.addEventListener('click', () => mostrarListaSorteos());
-    document.getElementById('boletos-link')?.addEventListener('click', () => mostrarBoletosVendidos());
+    document.getElementById('sorteos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarListaSorteos(); });
+    document.getElementById('boletos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarBoletosVendidos(); });
     document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
         await supabase.auth.signOut(); window.location.href = 'admin_login.html';
     });
-
-    mostrarListaSorteos();
 });

@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CORREGIDO (SUMA REAL DE BOLETOS)
+// Archivo: sorteo_script.js - CORREGIDO Y OPTIMIZADO (Subida Pública)
 // ==========================================================
 
 // Variables de estado
@@ -63,20 +63,20 @@ async function cargarDetalleSorteo(id) {
         precioUnitario = sorteo.precio_bs;
 
         // 2. CALCULAR PROGRESO (CORREGIDO: SUMAR BOLETOS, NO CONTAR FILAS)
-        const { data: ventas, error: errorVentas } = await supabase
+        const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos') // Traemos solo la columna de cantidad
             .eq('sorteo_id', id)
             .neq('estado', 'rechazado');
 
         // Sumar todas las cantidades de las órdenes
-        // Si hay ventas, usamos reduce para sumar. Si no, es 0.
         const boletosVendidos = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
 
         const totalTickets = sorteo.total_boletos || 10000; 
         
         // Calculamos %
         let porcentaje = Math.round((boletosVendidos / totalTickets) * 100);
+        if (porcentaje > 100) porcentaje = 100;
         const boletosRestantes = totalTickets - boletosVendidos;
 
         // Fecha formateada
@@ -221,21 +221,21 @@ function configurarFormularios() {
             document.getElementById('modal-datos-contacto').style.display = 'none';
             document.getElementById('modal-datos-pago').style.display = 'flex';
         } else {
-             alert('Error al crear la orden. Intente de nuevo.');
+            alert('Error al crear la orden. Intente de nuevo.');
         }
     });
     
-    // 2. Reportar Pago (Subida con URL Firmada)
+    // 2. Reportar Pago (Subida **Directa y Pública** - CORREGIDO)
     document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const fileInput = document.getElementById('capture-input');
         const file = fileInput.files[0];
-        const BUCKET_NAME = 'comprobantes_narbis_v2';
+        const BUCKET_NAME = 'comprobantes_narbis_v2'; // Esto ya estaba correcto
 
         if (!referenciaUnica || !file) {
-             alert('Falta referencia o archivo.');
-             return;
+            alert('Falta referencia o archivo.');
+            return;
         }
         
         const btnReportar = e.submitter;
@@ -243,38 +243,42 @@ function configurarFormularios() {
         btnReportar.textContent = 'Procesando subida...';
 
         const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.]/g, '_'); 
-        const filePath = `reportes/${referenciaUnica}-${Date.now()}-${cleanFileName}`;
-        let signedUrl = null;
+        const fileExtension = cleanFileName.split('.').pop();
+        // Usaremos el código de concepto y la fecha para asegurar un nombre único
+        const filePath = `${referenciaUnica}-${Date.now()}-cap.${fileExtension}`;
+        let fileUrl = null;
 
         try {
-             // Paso 1: Generar URL Firmada
-             const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUploadUrl(filePath);
-             if (error) throw error;
-             signedUrl = data.signedUrl;
-             
-             // Paso 2: Subir (PUT)
-             const response = await fetch(signedUrl, {
-                 method: 'PUT',
-                 body: file,
-                 headers: { 'Content-Type': file.type }
-             });
+            // CORRECCIÓN CLAVE: Usar 'upload' y forzar 'public: true'
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file, { 
+                    cacheControl: '3600', 
+                    upsert: false,
+                    // ESTO ES LO QUE HACE QUE EL ARCHIVO SEA PÚBLICO:
+                    public: true 
+                });
 
-             if (!response.ok) throw new Error(`Fallo subida: ${response.statusText}`);
+            if (uploadError) throw uploadError;
 
-             // Paso 3: Actualizar BD
-             const reporteExitoso = await actualizarOrdenConReporte(filePath); 
-             
-             if (reporteExitoso) {
+            // Paso 2: Obtener la URL pública para la BD
+            const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+            fileUrl = publicUrl;
+            
+            // Paso 3: Actualizar BD con la URL pública
+            const reporteExitoso = await actualizarOrdenConReporte(fileUrl); 
+            
+            if (reporteExitoso) {
                 document.getElementById('modal-reporte-pago').style.display = 'none';
                 alert(`✅ ¡Reporte exitoso! Referencia: ${referenciaUnica}.`);
                 window.location.href = 'index.html'; 
-             } else {
+            } else {
                 alert('Error al actualizar la orden.');
-             }
-             
+            }
+            
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error al subir. Intente de nuevo.');
+            console.error('Error al subir comprobante:', error);
+            alert('Error al subir. Revise su conexión o las políticas RLS de INSERT en Supabase.');
             btnReportar.disabled = false;
             btnReportar.textContent = 'Reportar Pago';
         }
@@ -320,7 +324,7 @@ async function actualizarOrdenConReporte(comprobanteUrl) {
         .update({
             referencia_pago: document.getElementById('referencia-pago').value, 
             telefono_pago: document.getElementById('telefono-pago-movil').value, 
-            url_capture: comprobanteUrl, 
+            url_capture: comprobanteUrl, // Ahora guarda la URL pública
             estado: 'reportado', 
             fecha_validacion: new Date().toISOString() 
         })

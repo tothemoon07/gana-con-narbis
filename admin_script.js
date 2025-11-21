@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: admin_script.js - CORREGIDO (Problema de Redirección)
+// Archivo: admin_script.js - CORREGIDO FINAL (Usando onAuthStateChange)
 // ==========================================================
 
 // ¡IMPORTANTE! Estos nombres de bucket DEBEN COINCIDIR con tu Supabase Storage.
@@ -7,33 +7,56 @@ const BUCKET_COMPROBANTES = 'comprobantes_narbis_v2';
 const BUCKET_SORTEOS = 'imagenes_sorteos';          
 let filtroActual = 'reportado'; 
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Verificación de inicialización de Supabase (debe ser global en supabase-admin-config.js)
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Verificación de inicialización de Supabase
     if (typeof supabase === 'undefined' || supabase === null) {
         console.error("Error Crítico: El cliente de Supabase no está disponible.");
         document.getElementById('content').innerHTML = "Error de configuración. Verifique la consola.";
         return;
     }
 
-    // 2. Comprobación de autenticación (MÉTODO MÁS ROBUSTO)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // 2. CONFIGURAR EL MONITOR DE ESTADO DE SESIÓN (SOLUCIÓN CLAVE)
+    // Esto se ejecuta inmediatamente al cargar y cada vez que el estado de autenticación cambia.
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || session) {
+            // El usuario está logueado o acaba de iniciar sesión. Cargar el panel.
+            console.log("Monitor: Usuario autenticado. Cargando panel.");
+            cargarPanelAdmin(session.user);
+        } else {
+            // El usuario no está logueado (SIGNED_OUT) o la sesión no es válida.
+            console.log("Monitor: Usuario desautenticado o sesión expirada. Redirigiendo al login.");
+            window.location.href = 'admin_login.html';
+        }
+    });
+});
 
-    if (authError || !user) {
-        // Si hay error o no hay usuario, redirigir
-        console.log("Usuario no autenticado, redirigiendo.");
-        window.location.href = 'admin_login.html'; 
-        return; 
-    }
+// =================================================================
+// FUNCIÓN PRINCIPAL: CONTENEDOR DE TODA LA LÓGICA DEL PANEL
+// =================================================================
 
-    // Si pasamos la verificación, el usuario está logueado.
+function cargarPanelAdmin(user) {
     const adminView = document.getElementById('admin-view');
-    console.log("Admin autenticado. Cargando panel para:", user.email);
+    console.log("Panel cargado para:", user.email);
+
+    // Si el panel ya está cargado, no hacer nada (para evitar duplicados)
+    if (document.getElementById('sorteos-link').hasAttribute('data-initialized')) {
+        return;
+    }
+    document.getElementById('sorteos-link').setAttribute('data-initialized', 'true');
     
-    // Cargar la vista inicial
+    // Configuración de Event Listeners y Carga Inicial
+    document.getElementById('sorteos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarListaSorteos(); });
+    document.getElementById('boletos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarBoletosVendidos(); });
+    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
+        // Al cerrar sesión, el onAuthStateChange detectará 'SIGNED_OUT' y redirigirá.
+        await supabase.auth.signOut();
+    });
+
+    // Cargar la vista por defecto (Sorteos)
     mostrarListaSorteos();
     
     // =================================================================
-    // A. GESTIÓN DE SORTEOS
+    // A. GESTIÓN DE SORTEOS (SIN CAMBIOS DE LÓGICA INTERNA)
     // =================================================================
     
     window.mostrarListaSorteos = async function() {
@@ -92,7 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const file = document.getElementById('imagen_sorteo').files[0];
                 const fileName = `premio-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '_')}`;
                 
-                // Nota: Los archivos de sorteo generalmente deben ser públicos.
                 const { error: errImg } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file, { public: true }); 
                 if (errImg) throw errImg;
                 
@@ -112,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =================================================================
-    // B. GESTIÓN DE PAGOS 
+    // B. GESTIÓN DE PAGOS (SIN CAMBIOS DE LÓGICA INTERNA)
     // =================================================================
     
     window.mostrarBoletosVendidos = function() {
@@ -149,15 +171,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (orden.url_capture.includes('WhatsApp')) {
                     captureHtml = `📲 WhatsApp`;
                 } else {
-                    // --- OBTENCIÓN DE URL (FUNCIONARÁ CON LAS NUEVAS SUBIDAS CORREGIDAS) ---
                     const fileOrPath = orden.url_capture.split('?')[0];
                     const fileName = fileOrPath.includes('/') ? fileOrPath.split('/').pop() : fileOrPath;
                     
-                    // Si la BD guarda la URL completa:
                     if (orden.url_capture.startsWith('http')) {
                         captureHtml = `<a href="${orden.url_capture}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
                     } else {
-                        // Si la BD solo guardó el nombre (esto es menos probable, pero seguro)
                         try {
                             const { data: { publicUrl } } = supabase.storage.from(BUCKET_COMPROBANTES).getPublicUrl(fileName);
                             captureHtml = `<a href="${publicUrl}" target="_blank" style="color:blue; font-weight:bold;">Ver Foto</a>`;
@@ -165,11 +184,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             captureHtml = `<span style="color:red;">Error Gén.</span>`;
                         }
                     }
-                    // ----------------------------------------
                 }
             }
             
-            // Mostrar números asignados si ya están validados
             let numerosHtml = orden.numeros_asignados ? 
                 `<span style="font-size:12px; color:green; font-weight:bold;">${orden.numeros_asignados}</span>` : 
                 '<span style="color:#999;">Pendiente</span>';
@@ -179,7 +196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sorteoId = orden.sorteo_id; 
 
             let acciones = estado === 'reportado' ? 
-                // Uso de comillas simples en el onclick para pasar UUIDs:
                 `<button class="btn-accion validar" onclick="validarYAsignar('${ordenId}', ${cantidadBoletos}, '${sorteoId}')">✔ Validar</button>
                  <button class="btn-accion rechazar" onclick="actualizarEstado('${ordenId}', 'rechazado')">✖</button>` 
                 : orden.estado.toUpperCase();
@@ -197,7 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if(!confirm(`¿Validar orden ${ordenId} y asignar ${cantidad} números automáticamente?`)) return;
         
-        // 1. Obtener el total de boletos del sorteo (para el límite, ej: 10000)
         const { data: sorteo, error: sorteoError } = await supabase.from('sorteos').select('total_boletos').eq('id', sorteoId).single();
         
         if (sorteoError) {
@@ -208,7 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const maxBoletos = sorteo.total_boletos || 10000;
 
-        // 2. Obtener TODOS los números ya ocupados de este sorteo
         const { data: ocupados } = await supabase
             .from('boletos')
             .select('numeros_asignados')
@@ -216,7 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             .neq('estado', 'rechazado') 
             .not('numeros_asignados', 'is', null);
 
-        // Crear una lista única (Set) de números ocupados
         let setOcupados = new Set();
         ocupados.forEach(row => {
             if(row.numeros_asignados) {
@@ -224,7 +237,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 3. Generar números aleatorios únicos
         let nuevosNumeros = [];
         let intentos = 0;
         const maxIntentos = maxBoletos * 2;
@@ -243,11 +255,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Formatear números (ej: 0005)
         const paddingLength = maxBoletos.toString().length;
         const numerosString = nuevosNumeros.map(n => n.toString().padStart(paddingLength, '0')).join(', ');
 
-        // 4. Guardar en Base de Datos
         const { error: updateError } = await supabase
             .from('boletos')
             .update({ 
@@ -272,14 +282,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error } = await supabase.from('boletos').update({ estado: nuevoEstado }).eq('id', id);
         if (error) alert(error.message); else cargarPagos(filtroActual);
     }
-
-    // =================================================================
-    // C. EVENT LISTENERS Y CARGA INICIAL
-    // =================================================================
-    
-    document.getElementById('sorteos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarListaSorteos(); });
-    document.getElementById('boletos-link')?.addEventListener('click', (e) => { e.preventDefault(); mostrarBoletosVendidos(); });
-    document.getElementById('cerrar-sesion-btn')?.addEventListener('click', async () => {
-        await supabase.auth.signOut(); window.location.href = 'admin_login.html';
-    });
-});
+}

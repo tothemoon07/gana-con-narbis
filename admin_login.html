@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="admin_styles.css"> 
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    
+    <script src="supabase-admin-config.js"></script>
     
     <style>
         /* Estilos básicos para el formulario de login */
@@ -83,6 +84,12 @@
             const errorMessage = document.getElementById('error-message');
             errorMessage.textContent = ''; // Limpiar mensaje de error anterior
 
+            // Verificar si supabase está disponible
+            if (typeof supabase === 'undefined' || supabase === null) {
+                errorMessage.textContent = 'Error de configuración. Supabase no está cargado.';
+                return;
+            }
+
             try {
                 // Función clave: Intenta iniciar sesión con el método signInWithPassword
                 const { error } = await supabase.auth.signInWithPassword({
@@ -95,8 +102,11 @@
                     console.error('Error de autenticación:', error);
                 } else {
                     alert('¡Inicio de sesión exitoso! Redirigiendo al panel.');
-                    // Redirige al panel de administración principal
-                    window.location.href = 'admin.html';
+                    
+                    // 🔑 SOLUCIÓN CLAVE: Retraso de 500ms para permitir que Supabase guarde el token antes de la redirección.
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 500); // Espera 500 milisegundos
                 }
             } catch (err) {
                 errorMessage.textContent = 'Ocurrió un error inesperado de conexión.';

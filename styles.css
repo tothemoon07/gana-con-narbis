@@ -1,8 +1,9 @@
 :root {
-    --primary-color: #e50914; /* Rojo Netflix */
-    --secondary-color: #f1f1f1;
-    --text-color: #333;
-    --dark-color: #1a1a1a;
+    --primary-color: #e50914; /* Rojo Netflix/Acción */
+    --secondary-color: #f1f1f1; /* Fondo principal claro */
+    --text-color: #333; /* Texto principal */
+    --dark-color: #1a1a1a; /* Elementos oscuros (Navbar/Footer) */
+    --action-button-color: #008CBA; /* Color de botón de acción (Azul) */
     --font-family: 'Arial', sans-serif;
 }
 
@@ -128,7 +129,7 @@ body {
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: red;
+    background-color: var(--primary-color);
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
@@ -417,22 +418,10 @@ body {
     color: gold;
 }
 
-/* --- MODALES GENERALES (CONSULTA DE TICKETS) --- */
-/* NOTA: Se unifican los estilos de modal-overlay-pago y modal-overlay */
-.modal-overlay { 
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Asegura que esté por encima de todo */
-}
+/* --- MODALES GENERALES --- */
 
-/* MODAL DE PAGO (mantiene z-index más alto para estar sobre el de consulta) */
+/* Base para ambos Modales (Consulta y Pago) */
+.modal-overlay,
 .modal-overlay-pago {
     position: fixed;
     top: 0;
@@ -443,9 +432,13 @@ body {
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 3000; /* Z-index superior */
 }
 
+/* Niveles Z-Index */
+.modal-overlay { z-index: 2000; } /* Modal de Consulta */
+.modal-overlay-pago { z-index: 3000; } /* Modal de Pago (superior) */
+
+.modal-overlay.active,
 .modal-overlay-pago.active {
     display: flex;
 }
@@ -458,15 +451,15 @@ body {
     border-radius: 10px;
     max-width: 450px;
     width: 90%;
-    position: relative; /* Esencial para posicionar el botón de cierre */
+    position: relative;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    /* Nuevos estilos para permitir scroll */
     max-height: 90vh; 
-    overflow-y: auto; /* Permite scroll si el contenido es muy alto */
+    overflow-y: auto;
 }
 
-/* ESTILO NUEVO 1: Botón de Cierre (X) para el modal de Consulta */
-.close-btn { 
+/* Botón de Cierre (X) unificado para ambos modales */
+.close-btn,
+.close-btn-pago { 
     position: absolute;
     top: 10px;
     right: 15px;
@@ -474,24 +467,13 @@ body {
     font-weight: bold;
     color: #aaa;
     cursor: pointer;
-    line-height: 1; /* Mejora la alineación de la X */
+    line-height: 1;
     transition: color 0.2s;
 }
 
-.close-btn:hover {
+.close-btn:hover,
+.close-btn-pago:hover {
     color: var(--primary-color);
-}
-
-/* MODAL DE PAGO (mantiene sus estilos específicos) */
-.close-btn-pago {
-    /* Usaremos .close-btn en index.html, pero mantenemos este estilo por si acaso */
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #aaa;
-    cursor: pointer;
 }
 
 .modal-pago-content h4 {
@@ -501,11 +483,8 @@ body {
     margin-top: 0;
 }
 
-/* 🔑 CORRECCIÓN CRÍTICA: Asegura que todos los inputs y selects dentro del modal tengan estilos */
-.modal-pago-content input, 
-.modal-pago-content input[type="text"],
-.modal-pago-content input[type="email"],
-.modal-pago-content input[type="tel"],
+/* 🔑 Inputs dentro del modal de pago */
+.modal-pago-content input:not([type="checkbox"]),
 .modal-pago-content select {
     width: 100%;
     padding: 10px;
@@ -515,23 +494,21 @@ body {
     box-sizing: border-box;
 }
 
-/* Estilo específico para el campo numérico de la cédula para que no se herede width:100% */
+/* Estilo específico para el campo numérico de la cédula */
 #cedula-numero {
-    width: 75% !important; /* Mantiene la proporción en el modal de contacto */
-    margin-bottom: 0 !important; /* Mantiene el margin que se definió en el HTML inline */
+    width: 75% !important;
+    margin-bottom: 0 !important;
 }
 
 
-/* ESTILO NUEVO 2: Contenedor de Resultados con Scroll (para la lista de tickets) */
+/* Contenedor de Resultados con Scroll (para la lista de tickets) */
 #resultados-consulta-scroll {
-    /* La altura máxima que debe tener el área de resultados antes de hacer scroll */
-    max-height: 300px; /* Reducido un poco para que quepa bien en el modal principal */
-    overflow-y: auto; /* Habilita la barra de desplazamiento vertical */
-    padding-right: 10px; /* Espacio para la barra de desplazamiento si aparece */
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
     margin-top: 15px;
     margin-bottom: 15px;
 }
-/* FIN ESTILOS NUEVOS PARA EL SCROLL */
 
 
 .total-summary {
@@ -559,7 +536,7 @@ body {
 .btn-pago-movil {
     width: 100%;
     padding: 15px;
-    background-color: #008CBA; /* Color de botón de acción */
+    background-color: var(--action-button-color); /* Usando variable */
     color: white;
     border: none;
     border-radius: 5px;
@@ -601,6 +578,7 @@ body {
     padding: 15px;
     border-radius: 5px;
     text-align: center;
+    margin-bottom: 15px;
 }
 .verification-code-box .code {
     font-size: 24px;
@@ -621,96 +599,119 @@ body {
 }
 
 /* Estilo para el input de archivo */
+.file-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .file-upload-label {
-    display: block;
+    flex-shrink: 0;
     background-color: #4CAF50;
     color: white;
     padding: 10px;
     border-radius: 5px;
     text-align: center;
     cursor: pointer;
-    margin-bottom: 5px;
+    transition: background-color 0.2s;
+}
+.file-upload-label:hover {
+    background-color: #45a049;
 }
 #capture-input {
     display: none;
 }
 .file-name-display {
+    flex-grow: 1;
     font-size: 12px;
     color: gray;
     text-align: left;
-    margin-top: 0;
 }
+/* FIN ESTILO ARCHIVO */
 
 /* --- RESPONSIVE DESIGN (Media Queries) --- */
 @media (max-width: 768px) {
-    /* 1. Navbar: Pasa de ser horizontal a apilado para evitar desbordamiento */
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 10px 5%;
-    }
+    /* 1. Navbar: Pasa de ser horizontal a apilado para evitar desbordamiento */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 5%;
+    }
 
-    .navbar div:nth-child(2) { /* Contenedor de enlaces (Inicio, Sorteos Activos) */
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-        margin: 10px 0;
-    }
+    .navbar div:nth-child(2) { /* Contenedor de enlaces (Inicio, Sorteos Activos) */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        margin: 10px 0;
+    }
 
-    .nav-link {
-        padding: 5px 0;
-        width: 100%;
-        text-align: left;
-    }
+    .nav-link {
+        padding: 5px 0;
+        width: 100%;
+        text-align: left;
+    }
 
-    .consulta-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        width: 100%;
-        justify-content: center;
-    }
+    .consulta-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .logo-container {
+        width: 100%;
+        justify-content: center;
+    }
 
-    /* 2. Grid de Sorteos: Asegura que solo haya 1 columna */
-    .sorteos-grid {
-        grid-template-columns: 1fr;
-        padding: 0 10px;
-    }
+    /* 2. Grid de Sorteos: Asegura que solo haya 1 columna */
+    .sorteos-grid {
+        grid-template-columns: 1fr;
+        padding: 0 10px;
+    }
 
-    /* 3. Footer: Ajusta las secciones para mejor lectura */
-    .footer-content {
-        flex-direction: column;
-    }
-    .footer-section {
-        min-width: unset;
-        text-align: center;
-        margin: 10px 0;
-    }
+    /* 3. Footer: Ajusta las secciones para mejor lectura */
+    .footer-content {
+        flex-direction: column;
+    }
+    .footer-section {
+        min-width: unset;
+        text-align: center;
+        margin: 10px 0;
+    }
 
-    /* 4. Contenido Principal/Detalle */
-    .detail-container {
-        margin: 10px;
-        padding: 15px;
-    }
-    
-    /* 5. Opciones de Compra */
-    .buy-options-grid {
-        /* Permite que se envuelvan si hay muchos botones */
-        justify-content: space-around;
-    }
-    
-    /* 6. Modales */
-    .modal-pago-content {
-        /* Ocupa más ancho en móvil */
-        width: 95%;
-        padding: 20px;
-    }
-    
-    /* Corrige el input del contador para no ser demasiado pequeño */
-    .counter-input {
-        width: 60px;
-    }
+    /* 4. Contenido Principal/Detalle */
+    .detail-container {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    /* 5. Opciones de Compra */
+    .buy-options-grid {
+        /* Permite que se envuelvan si hay muchos botones */
+        justify-content: space-around;
+    }
+    
+    /* 6. Modales */
+    .modal-content,
+    .modal-pago-content {
+        /* Ocupa más ancho en móvil */
+        width: 95%;
+        padding: 20px;
+    }
+    
+    /* Corrige el input del contador para no ser demasiado pequeño */
+    .counter-input {
+        width: 60px;
+    }
+    
+    /* Ajuste para que la cédula se vea bien en móvil */
+    .cedula-inputs {
+        display: flex;
+        gap: 5px;
+    }
+    #cedula-prefijo {
+        width: 25% !important;
+    }
+    #cedula-numero {
+        width: 75% !important;
+    }
 }

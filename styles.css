@@ -1,633 +1,635 @@
 :root {
-    --primary-color: #e50914; /* Rojo Netflix */
-    --secondary-color: #f1f1f1;
-    --text-color: #333;
-    --dark-color: #1a1a1a;
-    --font-family: 'Arial', sans-serif;
+    --primary-color: #e50914; /* Rojo Netflix */
+    --secondary-color: #f1f1f1;
+    --text-color: #333;
+    --dark-color: #1a1a1a;
+    --font-family: 'Arial', sans-serif;
 }
 
 body {
-    font-family: var(--font-family);
-    margin: 0;
-    padding: 0;
-    background-color: var(--secondary-color);
-    color: var(--text-color);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
 }
 
 /* --- 1. BARRA DE NAVEGACIÓN --- */
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 5%;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 5%;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .logo-container {
-    display: flex;
-    align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .logo {
-    height: 40px;
-    margin-right: 20px;
+    height: 40px;
+    margin-right: 20px;
 }
 
 .nav-link {
-    text-decoration: none;
-    color: var(--text-color);
-    padding: 10px 15px;
-    font-weight: bold;
-    transition: color 0.3s;
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    font-weight: bold;
+    transition: color 0.3s;
 }
 
 .nav-link:hover {
-    color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .consulta-btn {
-    background-color: var(--dark-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
+    background-color: var(--dark-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
 }
 
 .consulta-btn:hover {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
 /* --- 2. SECCIÓN DE SORTEOS (GRID) --- */
 .sorteos-header-section {
-    text-align: center;
-    padding: 40px 5%;
-    background-color: white;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    text-align: center;
+    padding: 40px 5%;
+    background-color: white;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
 }
 
 .sorteos-header-section h2 {
-    color: var(--primary-color);
-    margin-bottom: 5px;
+    color: var(--primary-color);
+    margin-bottom: 5px;
 }
 
 .sorteos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    padding: 0 5%;
-    max-width: 1200px;
-    margin: 0 auto 50px auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 0 5%;
+    max-width: 1200px;
+    margin: 0 auto 50px auto;
 }
 
 .sorteo-card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .sorteo-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .sorteo-img-container {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
+    position: relative;
+    height: 200px;
+    overflow: hidden;
 }
 
 .sorteo-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .tag-popular {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: gold;
-    color: var(--dark-color);
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 12px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: gold;
+    color: var(--dark-color);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 12px;
 }
 .tag-vendido {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: red;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 12px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 12px;
 }
 
 .sorteo-info {
-    padding: 15px;
+    padding: 15px;
 }
 
 .sorteo-info h3 {
-    margin: 5px 0 10px 0;
-    color: var(--dark-color);
+    margin: 5px 0 10px 0;
+    color: var(--dark-color);
 }
 
 .price {
-    font-size: 1.5em;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin: 10px 0;
+    font-size: 1.5em;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin: 10px 0;
 }
 
 .btn-participar {
-    display: block;
-    width: 100%;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    display: block;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .btn-participar:hover:not(:disabled) {
-    background-color: #ff3842;
+    background-color: #ff3842;
 }
 
 .btn-participar:disabled {
-    background-color: #aaa;
-    cursor: not-allowed;
+    background-color: #aaa;
+    cursor: not-allowed;
 }
 
 
 /* --- 3. PROGRESO --- */
 .progress-bar-container {
-    background-color: #ddd;
-    border-radius: 5px;
-    height: 10px;
-    margin-bottom: 10px;
-    overflow: hidden;
+    background-color: #ddd;
+    border-radius: 5px;
+    height: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
 }
 
 .progress-bar {
-    height: 100%;
-    background-color: green;
-    transition: width 0.5s ease-in-out;
+    height: 100%;
+    background-color: green;
+    transition: width 0.5s ease-in-out;
 }
 
 /* --- 4. BANNER --- */
 .banner-invitacion {
-    background-color: var(--dark-color);
-    color: white;
-    text-align: center;
-    padding: 40px 5%;
-    margin-top: 30px;
+    background-color: var(--dark-color);
+    color: white;
+    text-align: center;
+    padding: 40px 5%;
+    margin-top: 30px;
 }
 
 /* --- 5. FOOTER --- */
 .main-footer {
-    background-color: var(--dark-color);
-    color: #ccc;
-    padding: 40px 5% 20px 5%;
+    background-color: var(--dark-color);
+    color: #ccc;
+    padding: 40px 5% 20px 5%;
 }
 
 .footer-content {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    border-bottom: 1px solid #444;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #444;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .footer-section {
-    flex: 1;
-    min-width: 250px;
-    margin: 10px;
+    flex: 1;
+    min-width: 250px;
+    margin: 10px;
 }
 
 .footer-section h4 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
+    color: var(--primary-color);
+    margin-bottom: 10px;
 }
 
 .copyright {
-    text-align: center;
-    font-size: 0.8em;
-    color: #777;
+    text-align: center;
+    font-size: 0.8em;
+    color: #777;
 }
 
 /* --- PÁGINA DE DETALLE (sorteo.html) --- */
 
 .detail-container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .detail-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 30px;
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
 }
 
 .detail-header h2 {
-    color: var(--dark-color);
-    margin: 0;
+    color: var(--dark-color);
+    margin: 0;
 }
 
 .detail-img-container {
-    max-height: 400px;
-    overflow: hidden;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 20px;
 }
 
 .detail-img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
 }
 
 .price-detail {
-    font-size: 1.8em;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin: 10px 0 20px 0;
+    font-size: 1.8em;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin: 10px 0 20px 0;
 }
 
 .progress-section {
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
 }
 
 .progress-text {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
 /* --- SECCIÓN DE COMPRA --- */
 .compra-section {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #fff8e1; /* Color suave para destacar */
-    border-radius: 10px;
-    border: 1px solid #ffecb3;
-    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #fff8e1; /* Color suave para destacar */
+    border-radius: 10px;
+    border: 1px solid #ffecb3;
+    text-align: center;
 }
 
 .compra-section h3 {
-    color: var(--dark-color);
-    margin-top: 0;
+    color: var(--dark-color);
+    margin-top: 0;
 }
 
 .buy-options-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .buy-option-btn {
-    background-color: white;
-    color: var(--dark-color);
-    border: 1px solid #ddd;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    min-width: 60px;
+    background-color: white;
+    color: var(--dark-color);
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-width: 60px;
 }
 
 .buy-option-btn:hover {
-    background-color: #f0f0f0;
+    background-color: #f0f0f0;
 }
 
 .buy-option-btn.popular {
-    background-color: #ffe0b2;
-    border-color: #ffb74d;
+    background-color: #ffe0b2;
+    border-color: #ffb74d;
 }
 
 /* Contador */
 .ticket-counter {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .counter-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 20px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.2s;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 20px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
 }
 
 .counter-btn:first-child {
-    border-radius: 5px 0 0 5px;
+    border-radius: 5px 0 0 5px;
 }
 .counter-btn:last-child {
-    border-radius: 0 5px 5px 0;
+    border-radius: 0 5px 5px 0;
 }
 
 .counter-input {
-    width: 80px;
-    text-align: center;
-    padding: 10px 5px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 0;
-    -moz-appearance: textfield; /* Para Firefox */
+    width: 80px;
+    text-align: center;
+    padding: 10px 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 0;
+    -moz-appearance: textfield; /* Para Firefox */
 }
 .counter-input::-webkit-outer-spin-button,
 .counter-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .btn-comprar-final {
-    width: 100%;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .btn-comprar-final:hover {
-    background-color: #ff3842;
+    background-color: #ff3842;
 }
 
 /* --- DETALLE DE PREMIOS --- */
 #premios-detalle-container h3 {
-    margin-top: 40px;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 10px;
-    color: var(--dark-color);
+    margin-top: 40px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    color: var(--dark-color);
 }
 
 .premio-card {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px dashed #ddd;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px dashed #ddd;
 }
 
 .premio-icon {
-    font-size: 24px;
-    color: gold;
+    font-size: 24px;
+    color: gold;
 }
 
 /* --- MODALES GENERALES (CONSULTA DE TICKETS) --- */
 /* NOTA: Se unifican los estilos de modal-overlay-pago y modal-overlay */
-.modal-overlay { 
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Asegura que esté por encima de todo */
+.modal-overlay { 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Asegura que esté por encima de todo */
 }
 
 /* MODAL DE PAGO (mantiene z-index más alto para estar sobre el de consulta) */
 .modal-overlay-pago {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 3000; /* Z-index superior */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000; /* Z-index superior */
 }
 
 .modal-overlay-pago.active {
-    display: flex;
+    display: flex;
 }
 
 /* CONTENIDO DEL MODAL DE CONSULTA Y PAGO */
 .modal-content,
 .modal-pago-content {
-    background-color: white;
-    padding: 30px;
-    border-radius: 10px;
-    max-width: 450px;
-    width: 90%;
-    position: relative; /* Esencial para posicionar el botón de cierre */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    /* Nuevos estilos para permitir scroll */
-    max-height: 90vh; 
-    overflow-y: auto; /* Permite scroll si el contenido es muy alto */
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 450px;
+    width: 90%;
+    position: relative; /* Esencial para posicionar el botón de cierre */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* Nuevos estilos para permitir scroll */
+    max-height: 90vh; 
+    overflow-y: auto; /* Permite scroll si el contenido es muy alto */
 }
 
 /* ESTILO NUEVO 1: Botón de Cierre (X) para el modal de Consulta */
-.close-btn { 
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #aaa;
-    cursor: pointer;
-    line-height: 1; /* Mejora la alineación de la X */
-    transition: color 0.2s;
+.close-btn { 
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1; /* Mejora la alineación de la X */
+    transition: color 0.2s;
 }
 
 .close-btn:hover {
-    color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* MODAL DE PAGO (mantiene sus estilos específicos) */
 .close-btn-pago {
-    /* Usaremos .close-btn en index.html, pero mantenemos este estilo por si acaso */
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #aaa;
-    cursor: pointer;
+    /* Usaremos .close-btn en index.html, pero mantenemos este estilo por si acaso */
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
 }
 
 .modal-pago-content h4 {
-    color: var(--primary-color);
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 0;
 }
 
+/* 🔑 CORRECCIÓN CRÍTICA: AÑADIDO 'input' sin especificar type para el modal de consulta */
+.modal-pago-content input, 
 .modal-pago-content input[type="text"],
 .modal-pago-content input[type="email"],
 .modal-pago-content input[type="tel"],
 .modal-pago-content select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
 /* ESTILO NUEVO 2: Contenedor de Resultados con Scroll (para la lista de tickets) */
 #resultados-consulta-scroll {
-    /* La altura máxima que debe tener el área de resultados antes de hacer scroll */
-    max-height: 300px; /* Reducido un poco para que quepa bien en el modal principal */
-    overflow-y: auto; /* Habilita la barra de desplazamiento vertical */
-    padding-right: 10px; /* Espacio para la barra de desplazamiento si aparece */
-    margin-top: 15px;
-    margin-bottom: 15px;
+    /* La altura máxima que debe tener el área de resultados antes de hacer scroll */
+    max-height: 300px; /* Reducido un poco para que quepa bien en el modal principal */
+    overflow-y: auto; /* Habilita la barra de desplazamiento vertical */
+    padding-right: 10px; /* Espacio para la barra de desplazamiento si aparece */
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 /* FIN ESTILOS NUEVOS PARA EL SCROLL */
 
 
 .total-summary {
-    background-color: #f0f0f0;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
 }
 
 .total-summary p {
-    margin: 5px 0;
-    display: flex;
-    justify-content: space-between;
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
 }
 
 .total-summary .total {
-    font-weight: bold;
-    color: var(--primary-color);
-    font-size: 1.1em;
-    border-top: 1px solid #ccc;
-    padding-top: 5px;
-    margin-top: 5px;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1em;
+    border-top: 1px solid #ccc;
+    padding-top: 5px;
+    margin-top: 5px;
 }
 
 .btn-pago-movil {
-    width: 100%;
-    padding: 15px;
-    background-color: #008CBA; /* Color de botón de acción */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    width: 100%;
+    padding: 15px;
+    background-color: #008CBA; /* Color de botón de acción */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .btn-reportar-pago {
-    width: 100%;
-    padding: 15px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .datos-pago-movil {
-    background-color: #ffe0b2;
-    border: 1px solid #ffb74d;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    font-size: 15px;
+    background-color: #ffe0b2;
+    border: 1px solid #ffb74d;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-size: 15px;
 }
 .datos-pago-movil p {
-    margin: 5px 0;
+    margin: 5px 0;
 }
 
 .verification-code-box {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 5px;
-    text-align: center;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
 }
 .verification-code-box .code {
-    font-size: 24px;
-    font-weight: bold;
-    color: #721c24;
-    border: 1px dashed #721c24;
-    padding: 5px 10px;
-    border-radius: 5px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #721c24;
+    border: 1px dashed #721c24;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 .copy-btn {
-    background-color: #721c24;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
+    background-color: #721c24;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 /* Estilo para el input de archivo */
 .file-upload-label {
-    display: block;
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
-    margin-bottom: 5px;
+    display: block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 5px;
 }
 #capture-input {
-    display: none;
+    display: none;
 }
 .file-name-display {
-    font-size: 12px;
-    color: gray;
-    text-align: left;
-    margin-top: 0;
+    font-size: 12px;
+    color: gray;
+    text-align: left;
+    margin-top: 0;
 }

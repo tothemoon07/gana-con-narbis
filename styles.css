@@ -1,4 +1,3 @@
-
 :root {
     --primary-color: #e50914; /* Rojo Netflix */
     --secondary-color: #f1f1f1;
@@ -418,7 +417,22 @@ body {
     color: gold;
 }
 
-/* --- MODALES DE PAGO --- */
+/* --- MODALES GENERALES (CONSULTA DE TICKETS) --- */
+/* NOTA: Se unifican los estilos de modal-overlay-pago y modal-overlay */
+.modal-overlay { 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Asegura que esté por encima de todo */
+}
+
+/* MODAL DE PAGO (mantiene z-index más alto para estar sobre el de consulta) */
 .modal-overlay-pago {
     position: fixed;
     top: 0;
@@ -429,24 +443,48 @@ body {
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 3000; /* Z-index superior */
 }
 
 .modal-overlay-pago.active {
     display: flex;
 }
 
+/* CONTENIDO DEL MODAL DE CONSULTA Y PAGO */
+.modal-content,
 .modal-pago-content {
     background-color: white;
     padding: 30px;
     border-radius: 10px;
     max-width: 450px;
     width: 90%;
-    position: relative;
+    position: relative; /* Esencial para posicionar el botón de cierre */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* Nuevos estilos para permitir scroll */
+    max-height: 90vh; 
+    overflow-y: auto; /* Permite scroll si el contenido es muy alto */
 }
 
+/* ESTILO NUEVO 1: Botón de Cierre (X) para el modal de Consulta */
+.close-btn { 
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1; /* Mejora la alineación de la X */
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--primary-color);
+}
+
+/* MODAL DE PAGO (mantiene sus estilos específicos) */
 .close-btn-pago {
+    /* Usaremos .close-btn en index.html, pero mantenemos este estilo por si acaso */
     position: absolute;
     top: 10px;
     right: 15px;
@@ -474,6 +512,18 @@ body {
     border-radius: 5px;
     box-sizing: border-box;
 }
+
+/* ESTILO NUEVO 2: Contenedor de Resultados con Scroll (para la lista de tickets) */
+#resultados-consulta-scroll {
+    /* La altura máxima que debe tener el área de resultados antes de hacer scroll */
+    max-height: 300px; /* Reducido un poco para que quepa bien en el modal principal */
+    overflow-y: auto; /* Habilita la barra de desplazamiento vertical */
+    padding-right: 10px; /* Espacio para la barra de desplazamiento si aparece */
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+/* FIN ESTILOS NUEVOS PARA EL SCROLL */
+
 
 .total-summary {
     background-color: #f0f0f0;

@@ -102,41 +102,7 @@ body {
     font-size: 12px;
 }
 
-/* --- Banner de Invitación --- */
-.banner-invitacion {
-    background-color: var(--primary-color);
-    color: white;
-    text-align: center;
-    padding: 40px;
-    margin-top: 30px;
-    border-radius: 8px;
-}
-
-/* --- Footer --- */
-.main-footer {
-    background-color: #333;
-    color: #ccc;
-    padding: 40px 5%;
-    text-align: center;
-}
-
-.footer-content {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-}
-
-.footer-section {
-    flex: 1;
-    min-width: 250px;
-}
-
-.copyright {
-    font-size: 0.8em;
-}
-
-/* --- Modales --- */
+/* --- Modal de Consultar Tickets --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -176,7 +142,31 @@ body {
     color: var(--primary-color);
 }
 
-/* --- Diseño Responsivo --- */
+/* --- Footer --- */
+.main-footer {
+    background-color: #333;
+    color: #ccc;
+    padding: 40px 5%;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+}
+
+.copyright {
+    font-size: 0.8em;
+}
+
+/* --- Responsive --- */
 @media (max-width: 768px) {
     .navbar {
         flex-direction: column;

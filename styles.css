@@ -501,8 +501,8 @@ body {
     margin-top: 0;
 }
 
-/* 🔑 CORRECCIÓN CRÍTICA: AÑADIDO 'input' sin especificar type para el modal de consulta */
-.modal-pago-content input, 
+/* 🔑 CORRECCIÓN CRÍTICA: Asegura que todos los inputs y selects dentro del modal tengan estilos */
+.modal-pago-content input, 
 .modal-pago-content input[type="text"],
 .modal-pago-content input[type="email"],
 .modal-pago-content input[type="tel"],
@@ -514,6 +514,13 @@ body {
     border-radius: 5px;
     box-sizing: border-box;
 }
+
+/* Estilo específico para el campo numérico de la cédula para que no se herede width:100% */
+#cedula-numero {
+    width: 75% !important; /* Mantiene la proporción en el modal de contacto */
+    margin-bottom: 0 !important; /* Mantiene el margin que se definió en el HTML inline */
+}
+
 
 /* ESTILO NUEVO 2: Contenedor de Resultados con Scroll (para la lista de tickets) */
 #resultados-consulta-scroll {
@@ -632,4 +639,78 @@ body {
     color: gray;
     text-align: left;
     margin-top: 0;
+}
+
+/* --- RESPONSIVE DESIGN (Media Queries) --- */
+@media (max-width: 768px) {
+    /* 1. Navbar: Pasa de ser horizontal a apilado para evitar desbordamiento */
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 5%;
+    }
+
+    .navbar div:nth-child(2) { /* Contenedor de enlaces (Inicio, Sorteos Activos) */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .nav-link {
+        padding: 5px 0;
+        width: 100%;
+        text-align: left;
+    }
+
+    .consulta-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .logo-container {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 2. Grid de Sorteos: Asegura que solo haya 1 columna */
+    .sorteos-grid {
+        grid-template-columns: 1fr;
+        padding: 0 10px;
+    }
+
+    /* 3. Footer: Ajusta las secciones para mejor lectura */
+    .footer-content {
+        flex-direction: column;
+    }
+    .footer-section {
+        min-width: unset;
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    /* 4. Contenido Principal/Detalle */
+    .detail-container {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    /* 5. Opciones de Compra */
+    .buy-options-grid {
+        /* Permite que se envuelvan si hay muchos botones */
+        justify-content: space-around;
+    }
+    
+    /* 6. Modales */
+    .modal-pago-content {
+        /* Ocupa más ancho en móvil */
+        width: 95%;
+        padding: 20px;
+    }
+    
+    /* Corrige el input del contador para no ser demasiado pequeño */
+    .counter-input {
+        width: 60px;
+    }
 }

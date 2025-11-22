@@ -1,234 +1,172 @@
-// ==========================================================
-// Archivo: script.js (EXCLUSIVO PARA INDEX.HTML)
-// ==========================================================
+// script.js
+// IMPORTANTE: Este archivo asume que la variable 'supabase' está definida en tu 'supabase-config.js'
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Cargar las tarjetas de sorteos
-    cargarSorteos();
+const sorteosContainer = document.getElementById('sorteos-container');
+const toastNotification = document.getElementById('toastNotification');
 
-    // 2. Configurar el Modal de Consulta (Búsqueda)
-    configurarModalConsulta();
-});
+// ===========================================
+// Funciones de Utilidad
+// ===========================================
 
-// ==========================================================
-// FUNCIÓN: CARGAR SORTEOS (CON BARRA DE PROGRESO)
-// ==========================================================
+/**
+ * Muestra una notificación temporal tipo "Toast" en la parte inferior.
+ * @param {string} message El mensaje a mostrar.
+ * @param {string} type El tipo de notificación ('success', 'error', 'info').
+ */
+function showToast(message, type = 'success') {
+    if (toastNotification) {
+        toastNotification.textContent = message;
+        toastNotification.className = `toast show ${type}`;
+        setTimeout(() => {
+            // Ocultar la notificación después de 3 segundos
+            toastNotification.className = toastNotification.className.replace("show", "");
+        }, 3000);
+    }
+}
+
+// ===========================================
+// Lógica Principal de Carga de Sorteos
+// ===========================================
+
+/**
+ * Carga los sorteos desde Supabase y los renderiza en la cuadrícula.
+ */
 async function cargarSorteos() {
-    const container = document.getElementById('sorteos-container');
-    if (!container) {
-        console.error("No se encontró el contenedor 'sorteos-container' en el HTML.");
+    if (!sorteosContainer) {
+        console.error("Contenedor 'sorteos-container' no encontrado. Asegúrate de que el ID es correcto en index.html");
         return;
     }
 
-    container.innerHTML = '<div class="loading" style="text-align:center; width:100%;"></div><p style="text-align: center;">Cargando sorteos...</p>';
-
-    if (typeof supabase === 'undefined') {
-        container.innerHTML = '<p style="color: red; text-align: center;">Error: Supabase no está conectado.</p>';
-        return;
-    }
+    // 1. Mostrar el estado de carga inicial
+    sorteosContainer.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando sorteos...</p>
+        </div>
+    `;
 
     try {
-        // Obtener sorteos activos
+        // 2. Consulta a Supabase
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
-            .eq('estado', 'activo') // Asegúrate que en tu BD la columna sea 'estado' o 'activo'
-            .order('fecha_sorteo', { ascending: true });
+            .eq('activo', true) // Filtra solo los sorteos marcados como activos
+            .order('fecha_sorteo', { ascending: true }); // Ordena por fecha más cercana
 
-        if (error) throw error;
-
-        if (!sorteos || sorteos.length === 0) {
-            container.innerHTML = '<p style="text-align: center; width: 100%;">No hay sorteos activos disponibles.</p>';
+        if (error) {
+            console.error('Error al cargar sorteos:', error.message);
+            sorteosContainer.innerHTML = `
+                <div class="error-state">
+                    <p>⚠️ Error al cargar los sorteos: ${error.message}</p>
+                </div>
+            `;
+            showToast('Error de conexión con la base de datos.', 'error');
             return;
         }
 
-        container.innerHTML = ''; // Limpiar loading
-
-        // Mensaje de éxito
-        const mensajeExito = document.createElement('p');
-        mensajeExito.innerHTML = `✅ Se encontraron ${sorteos.length} sorteo(s) activo(s).`;
-        container.parentElement.insertBefore(mensajeExito, container);
-
-        // Renderizar cada tarjeta
-        for (const sorteo of sorteos) {
-            const sorteoId = sorteo.id;
-
-            // Consultar ventas para calcular progreso
-            const { data: ventas } = await supabase
-                .from('boletos')
-                .select('cantidad_boletos')
-                .eq('sorteo_id', sorteoId)
-                .neq('estado', 'rechazado');
-
-            const boletosVendidos = ventas ? ventas.reduce((sum, o) => sum + o.cantidad_boletos, 0) : 0;
-            const totalTickets = sorteo.total_boletos || 10000;
-            
-            let porcentaje = (boletosVendidos / totalTickets) * 100;
-            if (porcentaje > 100) porcentaje = 100;
-            
-            const boletosRestantes = Math.max(0, totalTickets - boletosVendidos);
-            const porcentajeDisplay = porcentaje.toFixed(2);
-            
-            const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
-                day: 'numeric', month: 'long', year: 'numeric' 
-            });
-
-            // Definir HTML de la barra según estado
-            let progresoHTML = '';
-            let btnTexto = 'Participar ahora';
-            let tagHTML = '';
-            let imgStyle = '';
-            let btnClass = 'btn-ver-detalle';
-
-            if (porcentaje >= 100) {
-                tagHTML = '<div class="tag-vendido">VENDIDO</div>';
-                imgStyle = 'filter: grayscale(100%);';
-                btnTexto = 'Rifa Vendida';
-                btnClass += ' btn-vendido';
-                progresoHTML = `
-                    <p class="progress-text" style="color: var(--primary-color);">Vendido 100%</p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: 100%; background: var(--primary-color);"></div>
-                    </div>
-                `;
-            } else {
-                if (sorteo.es_popular) tagHTML = '<div class="tag-popular">¡Más Popular!</div>';
-                progresoHTML = `
-                    <p class="progress-text">Progreso ${porcentajeDisplay}%</p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${porcentaje}%;"></div>
-                    </div>
-                    <div class="boletos-restantes-tag">Solo quedan ${boletosRestantes} boletos</div>
-                `;
-            }
-
-            // Crear Tarjeta
-            const card = document.createElement('div');
-            card.className = 'sorteo-card';
-            card.innerHTML = `
-                ${tagHTML}
-                <div class="sorteo-img-container">
-                    <img src="${sorteo.imagen_url || 'placeholder.png'}" class="sorteo-img" style="${imgStyle}" alt="${sorteo.titulo}">
-                </div>
-                <div class="sorteo-info">
-                    <p class="fecha-card">📅 ${fecha}</p>
-                    <h3 class="titulo-card">${sorteo.titulo}</h3>
-                    
-                    <div class="progress-wrapper">
-                        ${progresoHTML}
-                    </div>
-
-                    <p class="precio-card">Bs. ${sorteo.precio_bs.toFixed(2)}</p>
-                    
-                    <a href="sorteo.html?id=${sorteoId}" class="${btnClass}">
-                        ${btnTexto}
-                    </a>
+        // 3. Manejar caso sin sorteos
+        if (sorteos.length === 0) {
+            sorteosContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <h3>¡Vaya! No hay sorteos activos.</h3>
+                    <p>Vuelve pronto, estaremos actualizando nuestra lista de premios.</p>
                 </div>
             `;
-            container.appendChild(card);
+            return;
         }
 
-    } catch (err) {
-        console.error("Error:", err);
-        container.innerHTML = '<p style="color: red; text-align: center;">Error al cargar los sorteos.</p>';
+        // 4. Generar el HTML de las tarjetas
+        let htmlContent = '';
+        
+        sorteos.forEach(sorteo => {
+            // --- Lógica para el BADGE (Etiqueta de tipo) y Clase de Tarjeta ---
+            let badgeHTML = '';
+            let claseCard = '';
+            
+            if (sorteo.tipo && sorteo.tipo.toLowerCase() === 'premium') {
+                badgeHTML = `<span class="raffle-badge premium">PREMIUM</span>`;
+                claseCard = 'premium-card';
+            } else if (sorteo.tipo && sorteo.tipo.toLowerCase() === 'express') {
+                badgeHTML = `<span class="raffle-badge express">EXPRESS</span>`;
+                claseCard = 'express-card';
+            } else {
+                badgeHTML = `<span class="raffle-badge normal">ACTIVO</span>`;
+                claseCard = 'normal-card';
+            }
+            
+            // --- Formato de Fecha y Moneda ---
+            const fechaSorteo = new Date(sorteo.fecha_sorteo);
+            // Configuración para el formato de fecha (ej: "25 nov. 2025, 18:30")
+            const opcionesFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const fechaFormateada = fechaSorteo.toLocaleDateString('es-ES', opcionesFecha);
+            
+            // Usar toFixed(2) para asegurar dos decimales en el precio
+            const precioFormateado = sorteo.precio_ticket ? sorteo.precio_ticket.toFixed(2) : '0.00';
+
+            // --- Cálculo del Progreso ---
+            const progreso = (sorteo.tickets_vendidos / sorteo.tickets_totales) * 100;
+            const ticketsRestantes = sorteo.tickets_totales - sorteo.tickets_vendidos;
+
+            const cardHtml = `
+                <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
+                    <div class="raffle-image-container">
+                        <img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" class="raffle-image">
+                        ${badgeHTML}
+                        <div class="raffle-card-overlay">
+                            <div class="overlay-button">Ver Detalles</div>
+                        </div>
+                    </div>
+                    
+                    <div class="raffle-details-inner">
+                        <h3 class="raffle-title-card">${sorteo.titulo}</h3>
+                        
+                        <div class="raffle-status-bar">
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progreso}%;"></div>
+                                </div>
+                                <span class="progress-text">${Math.round(progreso)}% Vendido</span>
+                            </div>
+                            <span class="tickets-left-text">${ticketsRestantes} tickets restantes</span>
+                        </div>
+
+                        <div class="raffle-info-grid">
+                            <div class="info-item price-item">
+                                <i class="fas fa-ticket-alt"></i>
+                                <span class="info-label">Precio Ticket</span>
+                                <span class="info-value price-value">$${precioFormateado}</span>
+                            </div>
+                            <div class="info-item date-item">
+                                <i class="fas fa-clock"></i>
+                                <span class="info-label">Fecha Sorteo</span>
+                                <span class="info-value date-value">${fechaFormateada}</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-main-card" onclick="event.stopPropagation(); verDetalle('${sorteo.id}')">
+                            ¡COMPRAR TICKET AHORA!
+                        </button>
+                    </div>
+                </div>
+            `;
+            htmlContent += cardHtml;
+        });
+
+        // 5. Inyectar el HTML final y mostrar éxito
+        sorteosContainer.innerHTML = htmlContent;
+        showToast('Sorteos cargados exitosamente.');
+
+    } catch (error) {
+        console.error('Error fatal al ejecutar la carga de sorteos:', error);
+        sorteosContainer.innerHTML = `
+            <div class="error-state">
+                <p>❌ Algo salió muy mal. Revisa la consola y la configuración de Supabase.</p>
+            </div>
+        `;
+        showToast('Error interno. Intenta más tarde.', 'error');
     }
 }
 
-// ==========================================================
-// FUNCIÓN: BÚSQUEDA DE TICKETS
-// ==========================================================
-async function buscarBoletosCliente(identificador, tipoBusqueda) {
-    const resultadosDiv = document.getElementById('resultados-consulta');
-    resultadosDiv.innerHTML = '<p style="text-align:center;">Buscando...</p>';
-
-    let query = supabase.from('boletos')
-        .select('cantidad_boletos, numeros_asignados, sorteos(titulo)')
-        .eq('estado', 'validado');
-
-    if (tipoBusqueda === 'email') {
-        query = query.eq('email_cliente', identificador.toLowerCase());
-    } else {
-        const idLimpio = identificador.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        // Búsqueda flexible para cédula/teléfono
-        query = query.or(`telefono_cliente.eq.${idLimpio},cedula_cliente.eq.${idLimpio},cedula_cliente.eq.V${idLimpio},cedula_cliente.eq.E${idLimpio}`);
-    }
-
-    const { data: ordenes, error } = await query;
-
-    if (error || !ordenes || ordenes.length === 0) {
-        resultadosDiv.innerHTML = '<p style="color: var(--primary-color); text-align: center; margin-top: 10px;">No se encontraron boletos validados.</p>';
-        return;
-    }
-
-    let html = '<h4 style="margin-top:15px;">✅ Boletos Encontrados:</h4>';
-    ordenes.forEach(orden => {
-        const titulo = orden.sorteos?.titulo || 'Sorteo';
-        html += `
-            <div style="border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:5px; background:#f9f9f9;">
-                <p><strong>${titulo}</strong></p>
-                <p>Boletos: <strong>${orden.cantidad_boletos}</strong></p>
-                <p style="font-size:0.9em; color:green; word-break:break-all;"># ${orden.numeros_asignados}</p>
-            </div>`;
-    });
-    resultadosDiv.innerHTML = html;
-}
-
-// ==========================================================
-// CONFIGURACIÓN DEL MODAL Y EVENTOS
-// ==========================================================
-function configurarModalConsulta() {
-    const modal = document.getElementById('modal-consultar-tickets');
-    const btnAbrir = document.getElementById('consultar-tickets-btn');
-    const btnCerrarX = document.getElementById('close-consultar-tickets');
-    const btnCerrarBtn = document.getElementById('btn-cerrar-consulta-visible');
-    
-    // Pestañas
-    const tabTel = document.getElementById('tab-telefono');
-    const tabEmail = document.getElementById('tab-email');
-    const groupTel = document.getElementById('consulta-telefono-group');
-    const groupEmail = document.getElementById('consulta-email-group');
-    const inputTel = document.getElementById('telefono-consulta');
-    const inputEmail = document.getElementById('email-consulta');
-
-    // Abrir
-    btnAbrir?.addEventListener('click', () => {
-        modal.classList.add('active'); // Usamos la clase .active del CSS
-    });
-
-    // Cerrar
-    const cerrar = () => modal.classList.remove('active');
-    btnCerrarX?.addEventListener('click', cerrar);
-    btnCerrarBtn?.addEventListener('click', cerrar);
-
-    // Cambio de Pestaña
-    const activarPestana = (esTelefono) => {
-        if (esTelefono) {
-            tabTel.classList.add('active');
-            tabEmail.classList.remove('active');
-            groupTel.style.display = 'block';
-            groupEmail.style.display = 'none';
-            inputTel.setAttribute('required', 'true');
-            inputEmail.removeAttribute('required');
-        } else {
-            tabEmail.classList.add('active');
-            tabTel.classList.remove('active');
-            groupEmail.style.display = 'block';
-            groupTel.style.display = 'none';
-            inputEmail.setAttribute('required', 'true');
-            inputTel.removeAttribute('required');
-        }
-    };
-
-    tabTel?.addEventListener('click', () => activarPestana(true));
-    tabEmail?.addEventListener('click', () => activarPestana(false));
-
-    // Submit Formulario
-    document.getElementById('form-consultar-tickets')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (groupTel.style.display !== 'none') {
-            buscarBoletosCliente(inputTel.value.trim(), 'telefono');
-        } else {
-            buscarBoletosCliente(inputEmail.value.trim(), 'email');
-        }
-    });
-}
+// Iniciar la carga de sorteos cuando el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', cargarSorteos);

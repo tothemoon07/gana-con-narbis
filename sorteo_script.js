@@ -1,23 +1,23 @@
 // ==========================================================
-// Archivo: sorteo_script.js - VERSIÓN FINAL (MIN 2, SIN LÍMITE, INPUT MANUAL)
+// Archivo: sorteo_script.js - VALIDACIÓN STOCK EN TIEMPO REAL
 // ==========================================================
 
-// Variable para exponer la función de consulta globalmente
 window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
 
 // Variables de estado
 let sorteoActual = null;
 let precioUnitario = 0;
-let boletosSeleccionados = 2; // INICIA EN 2 (REGLA DE NEGOCIO)
+let boletosSeleccionados = 2; 
+let maxDisponible = 0; // NUEVA VARIABLE PARA CONTROLAR EL STOCK REAL
 let referenciaUnica = null;
 
-// Variables para la lógica de botones (Auto-repetición)
+// Variables botones
 let intervalId = null;
 let timeoutId = null;
 const REPEAT_SPEED = 100; 
 const INITIAL_DELAY = 400; 
 
-// Elementos del DOM Compra
+// DOM Elements
 const inputCantidad = document.getElementById('tickets-input');
 const displayTicketsCount = document.getElementById('tickets-count-display'); 
 const displayPrecioBoleto = document.getElementById('precio-por-boleto');
@@ -27,15 +27,13 @@ const codigoReferenciaPago = document.getElementById('codigo-referencia');
 const codigoReferenciaDisplay = document.getElementById('codigo-referencia-display');
 const btnComprarBoletos = document.getElementById('btn-comprar-boletos');
 
-// Elementos Consulta
+// Consulta DOM
 const modalConsultaTickets = document.getElementById('modal-consultar-tickets');
 const btnConsultaNavbar = document.getElementById('consultar-tickets-navbar-btn');
 const btnCerrarConsulta = document.getElementById('close-consultar-tickets');
 const btnCerrarVisible = document.getElementById('btn-cerrar-consulta-visible');
 const formConsultarTickets = document.getElementById('form-consultar-tickets');
 const resultadosConsultaDiv = document.getElementById('resultados-consulta');
-
-// Pestañas Consulta
 const tabTelefono = document.getElementById('tab-telefono');
 const tabEmail = document.getElementById('tab-email');
 const groupTelefono = document.getElementById('consulta-telefono-group');
@@ -53,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // ACTIVAR INPUT MANUAL
     activarModoEscrituraManual();
 
     if (sorteoId) {
@@ -62,52 +59,60 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID no encontrado.</h3>';
     }
 
-    // Configuración de botones
     configurarBotonesCantidad();
     configurarBotonesCompraRapida();
-    
     configurarModales();
     configurarFormularios();
     configurarBotonConsultaTickets(); 
 });
 
 // ==========================================================
-// FUNCIÓN NUEVA: ACTIVAR ESCRITURA MANUAL
+// ACTIVAR ESCRITURA MANUAL CON LÍMITE DE STOCK
 // ==========================================================
 function activarModoEscrituraManual() {
-    // Ocultamos el div de texto fijo
     if(displayTicketsCount) displayTicketsCount.style.display = 'none';
     
-    // Mostramos el input real y lo configuramos
     if(inputCantidad) {
-        inputCantidad.style.display = 'block'; // Hacemos visible el input
-        inputCantidad.value = 2; // Valor inicial
+        inputCantidad.style.display = 'block'; 
+        inputCantidad.value = 2; 
         
-        // Evento: Cuando el usuario escribe
         inputCantidad.addEventListener('input', (e) => {
             let valor = parseInt(e.target.value);
-            if (isNaN(valor)) valor = 0; // Manejo temporal mientras escribe
+            if (isNaN(valor)) valor = 0;
+            
+            // VALIDACIÓN EN TIEMPO REAL: NO PUEDE SUPERAR EL STOCK
+            if (maxDisponible > 0 && valor > maxDisponible) {
+                // Si escribe 10000 y hay 500, no lo bloqueamos escribiendo,
+                // pero visualmente el total se calcula con el máximo posible?
+                // Mejor estrategia: Dejar que escriba, pero validar al salir (blur) o al comprar.
+            }
+            
             boletosSeleccionados = valor;
-            actualizarSoloTotal(); // Actualizamos el precio en tiempo real
+            actualizarSoloTotal(); 
         });
 
-        // Evento: Cuando el usuario termina de escribir (pierde el foco)
         inputCantidad.addEventListener('blur', () => {
             let valor = parseInt(inputCantidad.value);
-            // Validación MÍNIMA DE 2
+            
+            // 1. Mínimo 2
             if (isNaN(valor) || valor < 2) {
                 valor = 2;
-                inputCantidad.value = 2;
             }
-            // SIN LÍMITE MÁXIMO (Eliminamos la restricción de 500)
             
+            // 2. Máximo disponible (El freno a los 10,000 tickets)
+            if (maxDisponible > 0 && valor > maxDisponible) {
+                alert(`Solo quedan ${maxDisponible} boletos disponibles.`);
+                valor = maxDisponible;
+            }
+
+            inputCantidad.value = valor;
             actualizarTotales(valor);
         });
     }
 }
 
 // ==========================================================
-// A. Carga de Datos
+// CARGA DE DATOS
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -130,19 +135,24 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
+        // Contamos Pendientes + Reportados + Validados
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos')
             .eq('sorteo_id', id)
             .in('estado', ['pendiente', 'reportado', 'validado']); 
 
-        const boletosVendidos = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
+        const boletosOcupados = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
         const totalTickets = sorteo.total_boletos || 10000; 
         
-        let porcentaje = (boletosVendidos / totalTickets) * 100;
-        if (porcentaje > 100) porcentaje = 100;
-        const boletosRestantes = Math.max(0, totalTickets - boletosVendidos);
-
+        // CÁLCULOS DE STOCK
+        maxDisponible = Math.max(0, totalTickets - boletosOcupados);
+        let porcentaje = (boletosOcupados / totalTickets) * 100;
+        
+        // CORRECCIÓN VISUAL
+        let porcentajeVisual = Math.min(porcentaje, 100);
+        
+        // Renderizado
         document.title = `${sorteo.titulo} | Detalles`;
         document.getElementById('titulo-sorteo').textContent = sorteo.titulo;
         
@@ -153,27 +163,34 @@ async function cargarDetalleSorteo(id) {
         document.getElementById('descripcion-sorteo').textContent = sorteo.descripcion_larga || sorteo.descripcion_corta || '';
         
         if(displayPrecioBoleto) displayPrecioBoleto.textContent = precioUnitario.toFixed(2);
-        
         const imgEl = document.getElementById('imagen-sorteo');
         if(imgEl) imgEl.src = sorteo.imagen_url || 'placeholder.png';
 
-        document.getElementById('porcentaje-progreso').textContent = `${porcentaje.toFixed(1)}%`;
-        document.getElementById('barra-progreso').style.width = `${porcentaje}%`;
+        document.getElementById('porcentaje-progreso').textContent = `${porcentajeVisual.toFixed(1)}%`;
+        document.getElementById('barra-progreso').style.width = `${porcentajeVisual}%`;
         const textoProgreso = document.getElementById('texto-progreso');
 
-        if (porcentaje >= 100) {
+        // ESTADO AGOTADO
+        if (boletosOcupados >= totalTickets) {
             textoProgreso.textContent = "¡Sorteo Agotado!";
             textoProgreso.style.color = "red";
-            btnComprarBoletos.textContent = "Agotado";
+            btnComprarBoletos.textContent = "AGOTADO";
             btnComprarBoletos.style.background = "#ccc";
+            btnComprarBoletos.disabled = true;
             inputCantidad.disabled = true;
+            inputCantidad.value = 0;
+            boletosSeleccionados = 0;
+            actualizarSoloTotal();
         } else {
-            textoProgreso.textContent = `Quedan ${boletosRestantes} boletos disponibles`;
+            textoProgreso.textContent = `Quedan ${maxDisponible} boletos disponibles`;
             btnComprarBoletos.textContent = "Comprar Boletos";
             btnComprarBoletos.disabled = false;
+            
+            // Ajustar valor inicial si queda menos de 2 (caso raro pero posible)
+            let inicio = 2;
+            if (maxDisponible < 2) inicio = maxDisponible;
+            actualizarTotales(inicio);
         }
-
-        actualizarTotales(2); // Iniciar con 2 boletos como mínimo
 
     } catch (err) {
         console.error(err);
@@ -182,27 +199,25 @@ async function cargarDetalleSorteo(id) {
 }
 
 // ==========================================================
-// B. Lógica de Cantidad (MODIFICADA: Min 2, Sin Max)
+// LÓGICA DE CANTIDAD
 // ==========================================================
 
 function actualizarTotales(cantidad) {
-    // Validaciones
-    if (cantidad < 2) cantidad = 2; // MÍNIMO OBLIGATORIO DE 2
-    // ELIMINADO EL LÍMITE MÁXIMO
-
-    boletosSeleccionados = cantidad;
+    // Validar contra Stock
+    if (maxDisponible > 0 && cantidad > maxDisponible) {
+        cantidad = maxDisponible;
+        alert(`Ajustado al máximo disponible: ${maxDisponible}`);
+    }
+    if (cantidad < 2 && maxDisponible >= 2) cantidad = 2;
     
-    // Actualizar Input
+    boletosSeleccionados = cantidad;
     if(inputCantidad) inputCantidad.value = cantidad;
 
-    // Actualizar Precio Total
     const total = (cantidad * precioUnitario).toFixed(2);
-    
     if(displayTotalPagar) displayTotalPagar.textContent = `Bs. ${total}`;
     if(displayMontoFinalPago) displayMontoFinalPago.textContent = total;
 }
 
-// Función auxiliar para actualizar precio mientras se escribe (sin forzar validación todavía)
 function actualizarSoloTotal() {
     let cantidad = boletosSeleccionados;
     if (cantidad < 0) cantidad = 0; 
@@ -211,11 +226,11 @@ function actualizarSoloTotal() {
 }
 
 function cambiarCantidad(step) {
-    // Calculamos el nuevo valor
-    let nuevoValor = parseInt(inputCantidad.value) + step;
+    let actual = parseInt(inputCantidad.value) || 2;
+    let nuevoValor = actual + step;
     
-    // Aplicamos validación inmediata en los botones
     if (nuevoValor < 2) nuevoValor = 2; 
+    if (maxDisponible > 0 && nuevoValor > maxDisponible) nuevoValor = maxDisponible;
 
     actualizarTotales(nuevoValor);
 }
@@ -239,7 +254,6 @@ function configurarBotonesCantidad() {
     const btnPlus = document.getElementById('increment-btn');
 
     if (btnMinus && btnPlus) {
-        // Eventos Mouse
         btnPlus.addEventListener('mousedown', () => iniciarAutoCambio(1));
         btnPlus.addEventListener('mouseup', detenerAutoCambio);
         btnPlus.addEventListener('mouseleave', detenerAutoCambio);
@@ -248,7 +262,6 @@ function configurarBotonesCantidad() {
         btnMinus.addEventListener('mouseup', detenerAutoCambio);
         btnMinus.addEventListener('mouseleave', detenerAutoCambio);
 
-        // Eventos Touch
         btnPlus.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarAutoCambio(1); });
         btnPlus.addEventListener('touchend', detenerAutoCambio);
         
@@ -262,14 +275,15 @@ function configurarBotonesCompraRapida() {
         button.addEventListener('click', (e) => {
             let cantidad = parseInt(e.currentTarget.getAttribute('data-tickets'));
             
-            // Si el botón dice "+2", "+5", queremos SUMAR a lo actual o PONER esa cantidad?
-            // Generalmente en estos botones se prefiere FIJAR la cantidad.
-            // Como el mínimo es 2, cualquier botón (2, 5, 10) es válido.
-            if (cantidad < 2) cantidad = 2; // Por seguridad
+            // Validar contra stock
+            if (maxDisponible > 0 && cantidad > maxDisponible) {
+                cantidad = maxDisponible;
+                alert("Has seleccionado más de lo disponible. Ajustamos al máximo.");
+            }
+            if (cantidad < 2) cantidad = 2;
 
             actualizarTotales(cantidad);
             
-            // Efecto visual
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.background = 'white');
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.color = 'var(--primary)');
             if(!e.currentTarget.classList.contains('popular')) {
@@ -281,7 +295,7 @@ function configurarBotonesCompraRapida() {
 }
 
 // ==========================================================
-// C. Modales y Pagos
+// Modales y Pagos (VALIDACIÓN FINAL ANTES DE ABRIR)
 // ==========================================================
 
 function configurarModales() {
@@ -291,11 +305,25 @@ function configurarModales() {
 
     btnComprarBoletos.addEventListener('click', () => {
         if (!sorteoActual) return;
+        
+        // VALIDACIÓN DE STOCK ANTES DE ABRIR MODAL
+        if (maxDisponible <= 0) {
+            alert("Lo sentimos, este sorteo está agotado.");
+            return;
+        }
+        
+        if (boletosSeleccionados > maxDisponible) {
+            alert(`Solo puedes comprar hasta ${maxDisponible} boletos.`);
+            actualizarTotales(maxDisponible);
+            return;
+        }
+
         if (boletosSeleccionados < 2) {
             alert("La compra mínima es de 2 boletos.");
             actualizarTotales(2);
             return;
         }
+        
         modalContacto.classList.add('active'); 
         modalContacto.style.display = 'flex'; 
     });
@@ -345,7 +373,7 @@ function configurarModales() {
 }
 
 // ==========================================================
-// D. Consulta de Tickets
+// CONSULTA TICKETS (Mismo código)
 // ==========================================================
 
 function switchTabConsulta(activeTab, inactiveTab, activeGroup, inactiveGroup, activeInput, inactiveInput) {
@@ -437,7 +465,7 @@ async function consultarBoletosValidos(identificador, tipoBusqueda) {
 }
 
 // ==========================================================
-// E. Base de Datos
+// Guardar Orden
 // ==========================================================
 
 async function guardarOrdenPendiente() {
@@ -473,7 +501,6 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     let fileUrl = null;
 
     if (file) {
-        // Sanitizar nombre archivo
         const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
         const fileName = `${referenciaUnica}_${Date.now()}_${cleanName}`;
         

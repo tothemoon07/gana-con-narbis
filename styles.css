@@ -187,7 +187,9 @@ body {
 
 .progress-bar {
     height: 100%;
-    background-color: green;
+    /* Usaremos el color primario (rojo) para mejor visibilidad */
+    background-color: var(--primary-color); 
+    border-radius: 5px; /* Para que coincida con el contenedor */
     transition: width 0.5s ease-in-out;
 }
 

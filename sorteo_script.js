@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - VERSIÓN FINAL Y PULIDA
+// Archivo: sorteo_script.js - VERSIÓN FINAL (MIN 2, SIN LÍMITE, INPUT MANUAL)
 // ==========================================================
 
 // Variable para exponer la función de consulta globalmente
@@ -8,18 +8,18 @@ window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
 // Variables de estado
 let sorteoActual = null;
 let precioUnitario = 0;
-let boletosSeleccionados = 1;
+let boletosSeleccionados = 2; // INICIA EN 2 (REGLA DE NEGOCIO)
 let referenciaUnica = null;
 
 // Variables para la lógica de botones (Auto-repetición)
 let intervalId = null;
 let timeoutId = null;
-const REPEAT_SPEED = 100; // Velocidad de cambio al mantener presionado
-const INITIAL_DELAY = 400; // Tiempo antes de empezar a cambiar rápido
+const REPEAT_SPEED = 100; 
+const INITIAL_DELAY = 400; 
 
 // Elementos del DOM Compra
 const inputCantidad = document.getElementById('tickets-input');
-const displayTicketsCount = document.getElementById('tickets-count-display'); // El número grande
+const displayTicketsCount = document.getElementById('tickets-count-display'); 
 const displayPrecioBoleto = document.getElementById('precio-por-boleto');
 const displayTotalPagar = document.getElementById('total-a-pagar');
 const displayMontoFinalPago = document.getElementById('monto-final-pago');
@@ -53,13 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // ACTIVAR INPUT MANUAL
+    activarModoEscrituraManual();
+
     if (sorteoId) {
         cargarDetalleSorteo(sorteoId);
     } else {
         document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID no encontrado.</h3>';
     }
 
-    // Configuración de botones mejorada (con auto-repetición)
+    // Configuración de botones
     configurarBotonesCantidad();
     configurarBotonesCompraRapida();
     
@@ -67,6 +70,41 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarFormularios();
     configurarBotonConsultaTickets(); 
 });
+
+// ==========================================================
+// FUNCIÓN NUEVA: ACTIVAR ESCRITURA MANUAL
+// ==========================================================
+function activarModoEscrituraManual() {
+    // Ocultamos el div de texto fijo
+    if(displayTicketsCount) displayTicketsCount.style.display = 'none';
+    
+    // Mostramos el input real y lo configuramos
+    if(inputCantidad) {
+        inputCantidad.style.display = 'block'; // Hacemos visible el input
+        inputCantidad.value = 2; // Valor inicial
+        
+        // Evento: Cuando el usuario escribe
+        inputCantidad.addEventListener('input', (e) => {
+            let valor = parseInt(e.target.value);
+            if (isNaN(valor)) valor = 0; // Manejo temporal mientras escribe
+            boletosSeleccionados = valor;
+            actualizarSoloTotal(); // Actualizamos el precio en tiempo real
+        });
+
+        // Evento: Cuando el usuario termina de escribir (pierde el foco)
+        inputCantidad.addEventListener('blur', () => {
+            let valor = parseInt(inputCantidad.value);
+            // Validación MÍNIMA DE 2
+            if (isNaN(valor) || valor < 2) {
+                valor = 2;
+                inputCantidad.value = 2;
+            }
+            // SIN LÍMITE MÁXIMO (Eliminamos la restricción de 500)
+            
+            actualizarTotales(valor);
+        });
+    }
+}
 
 // ==========================================================
 // A. Carga de Datos
@@ -92,7 +130,6 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // Calcular Progreso (Incluyendo pendientes y reportados para no sobre-vender)
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos')
@@ -106,7 +143,6 @@ async function cargarDetalleSorteo(id) {
         if (porcentaje > 100) porcentaje = 100;
         const boletosRestantes = Math.max(0, totalTickets - boletosVendidos);
 
-        // Actualizar DOM con textos
         document.title = `${sorteo.titulo} | Detalles`;
         document.getElementById('titulo-sorteo').textContent = sorteo.titulo;
         
@@ -116,14 +152,11 @@ async function cargarDetalleSorteo(id) {
         document.getElementById('fecha-sorteo').textContent = fecha;
         document.getElementById('descripcion-sorteo').textContent = sorteo.descripcion_larga || sorteo.descripcion_corta || '';
         
-        // Actualizar Precios en UI
         if(displayPrecioBoleto) displayPrecioBoleto.textContent = precioUnitario.toFixed(2);
         
-        // Actualizar Imagen
         const imgEl = document.getElementById('imagen-sorteo');
         if(imgEl) imgEl.src = sorteo.imagen_url || 'placeholder.png';
 
-        // Actualizar Barra de Progreso
         document.getElementById('porcentaje-progreso').textContent = `${porcentaje.toFixed(1)}%`;
         document.getElementById('barra-progreso').style.width = `${porcentaje}%`;
         const textoProgreso = document.getElementById('texto-progreso');
@@ -133,13 +166,14 @@ async function cargarDetalleSorteo(id) {
             textoProgreso.style.color = "red";
             btnComprarBoletos.textContent = "Agotado";
             btnComprarBoletos.style.background = "#ccc";
+            inputCantidad.disabled = true;
         } else {
             textoProgreso.textContent = `Quedan ${boletosRestantes} boletos disponibles`;
             btnComprarBoletos.textContent = "Comprar Boletos";
             btnComprarBoletos.disabled = false;
         }
 
-        actualizarTotales(1); // Iniciar con 1 boleto
+        actualizarTotales(2); // Iniciar con 2 boletos como mínimo
 
     } catch (err) {
         console.error(err);
@@ -148,19 +182,18 @@ async function cargarDetalleSorteo(id) {
 }
 
 // ==========================================================
-// B. Lógica de Cantidad (MEJORADA: Auto-repetición)
+// B. Lógica de Cantidad (MODIFICADA: Min 2, Sin Max)
 // ==========================================================
 
 function actualizarTotales(cantidad) {
     // Validaciones
-    if (cantidad < 1) cantidad = 1;
-    if (cantidad > 500) cantidad = 500; // Límite de seguridad
+    if (cantidad < 2) cantidad = 2; // MÍNIMO OBLIGATORIO DE 2
+    // ELIMINADO EL LÍMITE MÁXIMO
 
     boletosSeleccionados = cantidad;
     
-    // Actualizar Input invisible y Display visible
+    // Actualizar Input
     if(inputCantidad) inputCantidad.value = cantidad;
-    if(displayTicketsCount) displayTicketsCount.textContent = cantidad;
 
     // Actualizar Precio Total
     const total = (cantidad * precioUnitario).toFixed(2);
@@ -169,16 +202,26 @@ function actualizarTotales(cantidad) {
     if(displayMontoFinalPago) displayMontoFinalPago.textContent = total;
 }
 
-// Función para cambiar cantidad (usada por botones)
-function cambiarCantidad(step) {
-    let nuevaCantidad = boletosSeleccionados + step;
-    actualizarTotales(nuevaCantidad);
+// Función auxiliar para actualizar precio mientras se escribe (sin forzar validación todavía)
+function actualizarSoloTotal() {
+    let cantidad = boletosSeleccionados;
+    if (cantidad < 0) cantidad = 0; 
+    const total = (cantidad * precioUnitario).toFixed(2);
+    if(displayTotalPagar) displayTotalPagar.textContent = `Bs. ${total}`;
 }
 
-// Lógica de mantener presionado (MouseDown / TouchStart)
-function iniciarAutoCambio(step) {
-    cambiarCantidad(step); // Cambio inmediato
+function cambiarCantidad(step) {
+    // Calculamos el nuevo valor
+    let nuevoValor = parseInt(inputCantidad.value) + step;
     
+    // Aplicamos validación inmediata en los botones
+    if (nuevoValor < 2) nuevoValor = 2; 
+
+    actualizarTotales(nuevoValor);
+}
+
+function iniciarAutoCambio(step) {
+    cambiarCantidad(step); 
     timeoutId = setTimeout(() => {
         intervalId = setInterval(() => {
             cambiarCantidad(step);
@@ -196,7 +239,7 @@ function configurarBotonesCantidad() {
     const btnPlus = document.getElementById('increment-btn');
 
     if (btnMinus && btnPlus) {
-        // Eventos Mouse (PC)
+        // Eventos Mouse
         btnPlus.addEventListener('mousedown', () => iniciarAutoCambio(1));
         btnPlus.addEventListener('mouseup', detenerAutoCambio);
         btnPlus.addEventListener('mouseleave', detenerAutoCambio);
@@ -205,7 +248,7 @@ function configurarBotonesCantidad() {
         btnMinus.addEventListener('mouseup', detenerAutoCambio);
         btnMinus.addEventListener('mouseleave', detenerAutoCambio);
 
-        // Eventos Touch (Móvil)
+        // Eventos Touch
         btnPlus.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarAutoCambio(1); });
         btnPlus.addEventListener('touchend', detenerAutoCambio);
         
@@ -217,13 +260,18 @@ function configurarBotonesCantidad() {
 function configurarBotonesCompraRapida() {
     document.querySelectorAll('.buy-option-btn').forEach(button => {
         button.addEventListener('click', (e) => {
-            const cantidad = parseInt(e.currentTarget.getAttribute('data-tickets'));
+            let cantidad = parseInt(e.currentTarget.getAttribute('data-tickets'));
+            
+            // Si el botón dice "+2", "+5", queremos SUMAR a lo actual o PONER esa cantidad?
+            // Generalmente en estos botones se prefiere FIJAR la cantidad.
+            // Como el mínimo es 2, cualquier botón (2, 5, 10) es válido.
+            if (cantidad < 2) cantidad = 2; // Por seguridad
+
             actualizarTotales(cantidad);
             
-            // Efecto visual de "seleccionado"
+            // Efecto visual
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.background = 'white');
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.color = 'var(--primary)');
-            
             if(!e.currentTarget.classList.contains('popular')) {
                 e.currentTarget.style.background = 'var(--primary)';
                 e.currentTarget.style.color = 'white';
@@ -241,15 +289,17 @@ function configurarModales() {
     const modalPago = document.getElementById('modal-datos-pago');
     const modalReporte = document.getElementById('modal-reporte-pago');
 
-    // Abrir primer modal
     btnComprarBoletos.addEventListener('click', () => {
         if (!sorteoActual) return;
-        if (boletosSeleccionados < 1) return;
-        modalContacto.classList.add('active'); // Usamos clase CSS
-        modalContacto.style.display = 'flex'; // Aseguramos display
+        if (boletosSeleccionados < 2) {
+            alert("La compra mínima es de 2 boletos.");
+            actualizarTotales(2);
+            return;
+        }
+        modalContacto.classList.add('active'); 
+        modalContacto.style.display = 'flex'; 
     });
 
-    // Cerrar modales (X)
     document.querySelectorAll('.modal-close').forEach(btn => {
         btn.addEventListener('click', function() {
             const modal = this.closest('.modal');
@@ -258,7 +308,6 @@ function configurarModales() {
         });
     });
 
-    // Navegación entre modales
     document.getElementById('form-datos-contacto').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.submitter; 
@@ -286,7 +335,6 @@ function configurarModales() {
         modalReporte.style.display = 'flex';
     });
 
-    // Copiar al portapapeles
     document.querySelectorAll('.copy-button').forEach(btn => {
         btn.addEventListener('click', () => {
             const texto = btn.getAttribute('data-copy-target');
@@ -305,8 +353,6 @@ function switchTabConsulta(activeTab, inactiveTab, activeGroup, inactiveGroup, a
     inactiveTab.classList.remove('active');
     activeGroup.style.display = 'block';
     inactiveGroup.style.display = 'none';
-    
-    // Limpiar resultados previos
     if(resultadosConsultaDiv) resultadosConsultaDiv.innerHTML = '';
 }
 
@@ -391,7 +437,7 @@ async function consultarBoletosValidos(identificador, tipoBusqueda) {
 }
 
 // ==========================================================
-// E. Base de Datos (Guardar Orden y Reporte)
+// E. Base de Datos
 // ==========================================================
 
 async function guardarOrdenPendiente() {
@@ -417,7 +463,6 @@ async function guardarOrdenPendiente() {
     return true;
 }
 
-// Subida de comprobante
 document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.submitter; 
@@ -428,7 +473,10 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     let fileUrl = null;
 
     if (file) {
-        const fileName = `${referenciaUnica}_${Date.now()}.${file.name.split('.').pop()}`;
+        // Sanitizar nombre archivo
+        const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
+        const fileName = `${referenciaUnica}_${Date.now()}_${cleanName}`;
+        
         const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(fileName, file);
         
         if (!uploadErr) {

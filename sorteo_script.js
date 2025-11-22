@@ -1,6 +1,9 @@
 // ==========================================================
-// Archivo: sorteo_script.js - VERSIÓN FINAL CON LÓGICA DE COMPRA Y CONSULTA DE TICKETS
+// Archivo: sorteo_script.js - CÓDIGO CORREGIDO PARA sorteo.html
 // ==========================================================
+
+// Variable para exponer la función de abrir modal globalmente (Para usar en index.html)
+window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
 
 // Variables de estado
 let sorteoActual = null;
@@ -27,7 +30,7 @@ const btnCerrarVisible = document.getElementById('btn-cerrar-consulta-visible');
 const formConsultarTickets = document.getElementById('form-consultar-tickets');
 const resultadosConsultaDiv = document.getElementById('resultados-consulta');
 
-// 🔑 Elementos de las pestañas de consulta (Añadidos para el fix)
+// Elementos de las pestañas de consulta
 const tabTelefono = document.getElementById('tab-telefono');
 const tabEmail = document.getElementById('tab-email');
 const groupTelefono = document.getElementById('consulta-telefono-group');
@@ -41,14 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const sorteoId = urlParams.get('id');
 
     if (typeof supabase === 'undefined') {
-        console.error("Error: Supabase no está definido.");
+        console.error("Error: Supabase no está definido. Revise el archivo supabase-config.js y la etiqueta script.");
         return;
     }
 
     if (sorteoId) {
         cargarDetalleSorteo(sorteoId);
     } else {
-        document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID no encontrado.</h3>';
+        document.getElementById('sorteo-detalle-content').innerHTML = '<h3 style="text-align: center; color: red;">Error: ID de Sorteo no encontrado en la URL.</h3>';
     }
 
     configurarContador();
@@ -61,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================
-// A. Carga de Datos y Barra de Progreso
+// A. Carga de Datos y Barra de Progreso (CORREGIDO)
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -84,12 +87,13 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // 2. CALCULAR PROGRESO 
+        // 2. CALCULAR PROGRESO - CORRECCIÓN CLAVE: Incluimos múltiples estados en la suma 
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos') 
             .eq('sorteo_id', id)
-            .neq('estado', 'rechazado');
+            // Filtramos por todos los estados que significan un boleto "apartado" o "vendido"
+            .in('estado', ['pendiente', 'reportado', 'validado']); 
 
         const boletosVendidos = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
 
@@ -427,7 +431,7 @@ function configurarFormularios() {
         const BUCKET_NAME = 'comprobantes_narbis_v2';
 
         if (!referenciaUnica || !file) {
-            alert('Falta referencia o archivo.');
+            alert('Falta la referencia o el archivo de comprobante.');
             return;
         }
         
@@ -461,7 +465,7 @@ function configurarFormularios() {
             
             if (reporteExitoso) {
                 document.getElementById('modal-reporte-pago').style.display = 'none';
-                alert(`✅ ¡Reporte exitoso! Referencia: ${referenciaUnica}.`);
+                alert(`✅ ¡Reporte exitoso! Referencia: ${referenciaUnica}. Su boleto será validado en breve.`);
                 window.location.href = 'index.html'; 
             } else {
                 alert('Error al actualizar la orden.');
@@ -507,13 +511,12 @@ async function guardarOrdenPendiente() {
         codigo_concepto: referenciaUnica, 
         estado: 'pendiente', 
         creado_en: new Date().toISOString()
+        // NOTA: 'numeros_asignados' se deja vacío o se llena después de la validación.
     };
     
-    const { data, error } = await supabase.from('boletos').insert([datosOrden]).select();
+    const { error } = await supabase.from('boletos').insert([datosOrden]);
 
     if (error) { console.error(error); return false; }
-    // En el futuro, si Supabase asigna el código_concepto automáticamente, aquí se actualiza la variable.
-    // Por ahora, usamos la variable `referenciaUnica` que generamos localmente.
     return true;
 }
 
@@ -525,7 +528,8 @@ async function actualizarOrdenConReporte(comprobanteUrl) {
             telefono_pago: document.getElementById('telefono-pago-movil').value, 
             url_capture: comprobanteUrl, 
             estado: 'reportado', 
-            fecha_validacion: new Date().toISOString() 
+            // La columna 'fecha_validacion' debería usarse cuando el pago sea validado por el administrador, 
+            // no en el momento del reporte. La quitamos de aquí, o la renombramos si es para el reporte.
         })
         .eq('codigo_concepto', referenciaUnica); 
         

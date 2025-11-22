@@ -4796,3 +4796,66 @@ h1, h2, h3, h4, h5, h6 {
 .buy-button i {
     font-size: 22px;
 }
+
+/* =================================================
+   CORRECCIÓN DE IMAGEN GRANDE (ESTILO REFERENCE)
+   ================================================= */
+
+/* 1. Quitamos el relleno de la tarjeta principal para que la imagen toque los bordes */
+.raffle-card-main {
+    padding: 0 !important; /* IMPORTANTE: Quita el espacio blanco alrededor */
+    border-radius: 20px; /* Bordes redondeados bonitos */
+    overflow: hidden; /* Asegura que la imagen respete las esquinas redondas */
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.05); /* Borde sutil */
+}
+
+/* 2. Hacemos el contenedor de la imagen GRANDE y ANCHO */
+.raffle-image-container {
+    width: 100%;
+    height: 240px; /* Altura fija alta para que se vea premium */
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* 3. La imagen se estira para cubrir todo el espacio sin deformarse */
+.raffle-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* CLAVE: Esto hace que la imagen llene todo el hueco */
+    object-position: center;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+/* Efecto Zoom suave al pasar el mouse */
+.raffle-card-main:hover .raffle-image {
+    transform: scale(1.05);
+}
+
+/* 4. Como quitamos el padding general, se lo devolvemos SOLO al texto */
+.raffle-details-inner {
+    padding: 20px 25px; /* Espacio para el título, precio y botón */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Ajuste del título para que no quede pegado arriba */
+.raffle-title-card {
+    margin-top: 5px;
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+
+/* Ajuste de las etiquetas (Vendido, Popular) para que queden bien posicionadas */
+.raffle-badge {
+    top: 15px;
+    right: 15px;
+    font-size: 12px;
+    padding: 6px 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}

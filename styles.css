@@ -4728,3 +4728,71 @@ h1, h2, h3, h4, h5, h6 {
     transform: scale(0.95);
     background: var(--primary-dark);
 }
+
+/* =========================================
+   BOTÓN DE COMPRA ESTILO REFERENCE (MEJORADO)
+   ========================================= */
+
+.buy-button {
+    width: 100%;
+    padding: 20px; /* Más alto para que destaque */
+    background: linear-gradient(135deg, #19A0D0 0%, #1489B8 100%); /* Azul Narbis Original */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 800; /* Letra bien gruesa */
+    text-transform: uppercase; /* Todo mayúscula */
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(25, 160, 208, 0.3); /* Sombra azul suave */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Espacio entre icono y texto */
+    margin-top: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efecto de brillo al pasar el mouse */
+.buy-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+}
+
+.buy-button:hover::before {
+    left: 100%;
+}
+
+.buy-button:hover {
+    transform: translateY(-4px); /* Se levanta un poco */
+    box-shadow: 0 12px 30px rgba(25, 160, 208, 0.4); /* Sombra más intensa */
+    background: linear-gradient(135deg, #1eb2e8 0%, #19A0D0 100%); /* Un poco más claro */
+}
+
+.buy-button:active {
+    transform: scale(0.98) translateY(0); /* Efecto de click */
+    box-shadow: 0 4px 10px rgba(25, 160, 208, 0.3);
+}
+
+.buy-button:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Agrandar el icono del carrito */
+.buy-button i {
+    font-size: 22px;
+}

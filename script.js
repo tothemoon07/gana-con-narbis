@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================================
-// 1. LÓGICA DE CARGA DE SORTEOS (VISUAL IDENTICA)
+// 1. LÓGICA DE CARGA DE SORTEOS (CON BOTONES PREMIUM)
 // ===========================================
 async function cargarSorteos() {
     if (!sorteosContainer) return;
@@ -19,6 +19,7 @@ async function cargarSorteos() {
     sorteosContainer.innerHTML = '<div class="loading"></div><p style="text-align:center; width:100%;">Cargando sorteos...</p>';
 
     try {
+        // Consultar sorteos activos
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
@@ -45,37 +46,37 @@ async function cargarSorteos() {
             const boletosVendidos = ventas ? ventas.reduce((sum, o) => sum + o.cantidad_boletos, 0) : 0;
             const totalBoletos = sorteo.total_boletos || 100;
             const progreso = (boletosVendidos / totalBoletos) * 100;
-            const ticketsRestantes = totalBoletos - boletosVendidos;
+            const ticketsRestantes = Math.max(0, totalBoletos - boletosVendidos);
             
             const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' });
             const precio = sorteo.precio_bs.toFixed(2);
 
-            // Definir etiquetas y estado
+            // --- ESTILOS Y ETIQUETAS ---
             let badgeHTML = `<span class="raffle-badge normal">ACTIVO</span>`;
             let claseCard = '';
-            let textoBoton = '¡COMPRAR BOLETO AHORA!';
+            let textoBoton = '¡COMPRAR BOLETO AHORA!'; // Texto en mayúsculas e imponente
             let botonDisabled = '';
+            let estiloImagen = '';
 
             if (progreso >= 100) {
                 badgeHTML = `<span class="raffle-badge" style="background:red;">VENDIDO</span>`;
                 claseCard = 'sold-out';
                 textoBoton = 'AGOTADO';
-                botonDisabled = 'disabled style="background:#ccc; cursor:not-allowed;"';
+                botonDisabled = 'disabled';
+                estiloImagen = 'filter: grayscale(100%);';
             } else if (progreso > 80) {
                 badgeHTML = `<span class="raffle-badge" style="background:#ff9800;">¡QUEDAN POCOS!</span>`;
             } else if (sorteo.es_popular) {
                 badgeHTML = `<span class="raffle-badge" style="background:#00bcd4;">POPULAR</span>`;
             }
 
-            // HTML EXACTO DE LA TARJETA REFERENCIA
+            // --- HTML DE LA TARJETA ---
             htmlContent += `
                 <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
                     <div class="raffle-image-container">
-                        <img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" class="raffle-image" style="${progreso >= 100 ? 'filter:grayscale(100%)' : ''}">
+                        <img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" class="raffle-image" style="${estiloImagen}">
                         ${badgeHTML}
-                        <div class="raffle-card-overlay">
-                            <div class="overlay-button">Ver Detalles</div>
-                        </div>
+                        <div class="raffle-card-overlay"></div>
                     </div>
                     
                     <div class="raffle-details-inner">
@@ -88,7 +89,7 @@ async function cargarSorteos() {
                                 </div>
                                 <span class="progress-text">${Math.round(progreso)}% Vendido</span>
                             </div>
-                            <span class="tickets-left-text">${Math.max(0, ticketsRestantes)} boletos restantes</span>
+                            <span class="tickets-left-text">${ticketsRestantes} boletos restantes</span>
                         </div>
 
                         <div class="raffle-info-grid">
@@ -104,8 +105,8 @@ async function cargarSorteos() {
                             </div>
                         </div>
                         
-                        <button class="btn-main-card" ${botonDisabled}>
-                            ${textoBoton}
+                        <button class="buy-button" onclick="event.stopPropagation(); verDetalle('${sorteo.id}')" ${botonDisabled} style="margin-top: 15px; font-size: 14px; padding: 15px;">
+                            ${textoBoton} <i class="fas fa-arrow-right" style="font-size: 14px;"></i>
                         </button>
                     </div>
                 </div>
@@ -125,15 +126,15 @@ function verDetalle(id) {
 }
 
 // ===========================================
-// 2. LÓGICA DEL MODAL DE CONSULTA (FUNCIONA REALMENTE)
+// 2. LÓGICA DEL MODAL DE CONSULTA
 // ===========================================
 
-// Abrir Modal (Llamado desde el botón del Header)
+// Abrir Modal
 window.abrirModalConsulta = function() {
     if (modalConsulta) {
-        modalConsulta.style.display = 'flex'; // O usa classList.add('show') si el CSS lo requiere
-        modalConsulta.classList.add('active');
-        modalConsulta.classList.add('show');
+        modalConsulta.style.display = 'flex';
+        // Pequeño timeout para permitir la transición CSS si la hay
+        setTimeout(() => modalConsulta.classList.add('active'), 10);
     } else {
         console.error("No se encontró el modal con ID 'checkTicketsModal'");
     }
@@ -142,10 +143,11 @@ window.abrirModalConsulta = function() {
 // Cerrar Modal
 window.cerrarModalConsulta = function() {
     if (modalConsulta) {
-        modalConsulta.style.display = 'none';
         modalConsulta.classList.remove('active');
-        modalConsulta.classList.remove('show');
-        if(resultadosDiv) resultadosDiv.innerHTML = '';
+        setTimeout(() => {
+            modalConsulta.style.display = 'none';
+            if(resultadosDiv) resultadosDiv.innerHTML = '';
+        }, 300); // Espera a que termine la animación
     }
 }
 
@@ -185,14 +187,13 @@ window.ejecutarBusquedaTickets = async function() {
 
     let query = supabase.from('boletos')
         .select('cantidad_boletos, numeros_asignados, estado, sorteos(titulo)')
-        .eq('estado', 'validado'); // Solo mostrar tickets validados/pagados
+        .eq('estado', 'validado'); // Solo mostrar tickets validados
 
     if (isEmail) {
         query = query.eq('email_cliente', valor.toLowerCase());
     } else {
-        // Limpiar teléfono/cédula
+        // Limpieza de caracteres para teléfono/cédula
         const valorLimpio = valor.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        // Buscar en teléfono O cédula (V/E/J)
         query = query.or(`telefono_cliente.eq.${valorLimpio},cedula_cliente.eq.${valorLimpio},cedula_cliente.eq.V${valorLimpio},cedula_cliente.eq.E${valorLimpio}`);
     }
 
@@ -214,7 +215,7 @@ window.ejecutarBusquedaTickets = async function() {
             <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
                 <h5 style="margin:0 0 5px; color:var(--primary);">${nombreSorteo}</h5>
                 <p style="margin:0; font-size: 0.9em;">Cantidad: <strong>${ticket.cantidad_boletos}</strong></p>
-                <p style="margin:5px 0 0; font-family:monospace; color:green;"># ${ticket.numeros_asignados}</p>
+                <p style="margin:5px 0 0; font-family:monospace; color:green; word-break: break-all;"># ${ticket.numeros_asignados}</p>
             </div>
         `;
     });

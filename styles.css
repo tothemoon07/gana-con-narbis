@@ -95,6 +95,7 @@ body {
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
+    position: relative; /* Necesario para el tag de VENDIDO */
 }
 
 .sorteo-card:hover {
@@ -124,6 +125,7 @@ body {
     border-radius: 5px;
     font-weight: bold;
     font-size: 12px;
+    z-index: 10;
 }
 .tag-vendido {
     position: absolute;
@@ -135,6 +137,7 @@ body {
     border-radius: 5px;
     font-weight: bold;
     font-size: 12px;
+    z-index: 10;
 }
 
 .sorteo-info {
@@ -156,7 +159,7 @@ body {
 .btn-participar {
     display: block;
     width: 100%;
-    background-color: var(--primary-color);
+    background-color: var(--action-button-color); /* Usamos el color de acción para el botón de participar */
     color: white;
     border: none;
     padding: 12px;
@@ -167,29 +170,69 @@ body {
 }
 
 .btn-participar:hover:not(:disabled) {
-    background-color: #ff3842;
+    background-color: #006b8c; /* Tono más oscuro del botón de acción */
 }
 
-.btn-participar:disabled {
+.btn-participar:disabled, .btn-vendido {
     background-color: #aaa;
     cursor: not-allowed;
 }
 
 
-/* --- 3. PROGRESO --- */
-.progress-bar-container {
-    background-color: #ddd;
-    border-radius: 5px;
-    height: 10px;
-    margin-bottom: 10px;
-    overflow: hidden;
+/* --- 3. PROGRESO (DISEÑO SOLICITADO) --- */
+.progress-wrapper {
+    margin: 10px 0;
+    padding: 0;
+    text-align: left;
 }
 
-.progress-bar {
-    height: 100%;
-    background-color: green;
-    transition: width 0.5s ease-in-out;
+/* Texto de Progreso (91.89%) */
+.progress-text {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--action-button-color); /* Color principal o de acción */
+    margin-bottom: 3px;
+    display: block; 
 }
+
+/* Contenedor de la barra de fondo (Gris, la parte más delgada) */
+.progress-bar-container {
+    width: 100%;
+    background: #e0e0e0;
+    border-radius: 5px;
+    height: 6px; /* BARRA DELGADA */
+    overflow: hidden;
+    margin: 0 auto; 
+}
+
+/* La barra de progreso activa (El relleno de color) */
+.progress-bar {
+    background-color: var(--action-button-color); /* Color sólido para el relleno */
+    height: 100%;
+    transition: width 0.5s ease-in-out;
+    border-radius: 5px;
+}
+
+/* Estilo del texto "Solo quedan X boletos" con fondo */
+.boletos-restantes-tag {
+    display: inline-block;
+    background-color: #f0f8ff; /* Fondo azul pálido */
+    color: #4a90e2; /* Color de texto azul/cielo */
+    font-size: 0.8em;
+    padding: 2px 8px;
+    border-radius: 15px;
+    margin-top: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+/* Estilos anteriores de progreso (mantener para detalle si los usa) */
+.progress-section {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
 
 /* --- 4. BANNER --- */
 .banner-invitacion {
@@ -275,20 +318,6 @@ body {
     color: var(--primary-color);
     font-weight: bold;
     margin: 10px 0 20px 0;
-}
-
-.progress-section {
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-}
-
-.progress-text {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    margin-bottom: 5px;
 }
 
 /* --- SECCIÓN DE COMPRA --- */
@@ -482,6 +511,31 @@ body {
     padding-bottom: 10px;
     margin-top: 0;
 }
+
+/* Estilos de las pestañas de consulta */
+.tab-buttons {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #ddd;
+}
+.tab-button {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #777;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+.tab-button.active {
+    color: var(--action-button-color);
+    border-bottom: 2px solid var(--action-button-color);
+}
+#consulta-email-group, #consulta-telefono-group {
+    display: none; /* Controlado por JS */
+}
+
 
 /* 🔑 Inputs dentro del modal de pago */
 .modal-pago-content input:not([type="checkbox"]),

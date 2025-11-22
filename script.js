@@ -1,4 +1,6 @@
-// script.js - CÓDIGO CORREGIDO PARA TU ESTRUCTURA DE TABLA
+// ==========================================================
+// Archivo: script.js - CÓDIGO CORREGIDO PARA INDEX.HTML
+// ==========================================================
 
 const sorteosContainer = document.getElementById('sorteos-container');
 const toastNotification = document.getElementById('toastNotification');
@@ -42,12 +44,11 @@ async function cargarSorteos() {
     `;
 
     try {
-        // 2. Consulta a Supabase - CORRECCIÓN CLAVE: Usamos 'estado' en lugar de 'activo'
+        // CORRECCIÓN PREVIA: Usamos 'estado' en lugar de 'activo'
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
-            // Suponemos que un sorteo activo/visible tiene estado='activo'. AJUSTA ESTO SI ES NECESARIO.
-            .eq('estado', 'activo') 
+            .eq('estado', 'activo') // Filtra solo los sorteos activos
             .order('fecha_sorteo', { ascending: true }); 
 
         if (error) {
@@ -75,10 +76,9 @@ async function cargarSorteos() {
         let htmlContent = '';
         
         sorteos.forEach(sorteo => {
-            // --- CORRECCIÓN DE NOMBRES DE COLUMNAS ---
+            // --- USANDO NOMBRES DE COLUMNAS DE TU BD ---
             const precio = sorteo.precio_bs || 0; 
             const totalBoletos = sorteo.total_boletos || 1;
-            // Nota: Se asume que tienes una columna 'boletos_vendidos' para el progreso, si no la tienes, el progreso será 0.
             const boletosVendidos = sorteo.boletos_vendidos || 0; 
 
             // --- Lógica para el BADGE (Etiqueta de tipo) ---
@@ -93,7 +93,7 @@ async function cargarSorteos() {
                 badgeHTML = `<span class="raffle-badge express">EXPRESS</span>`;
                 claseCard = 'express-card';
             } else {
-                badgeData = "ACTIVO";
+                let badgeData = "ACTIVO";
                 if ((boletosVendidos / totalBoletos) * 100 > 80) {
                      badgeData = "¡QUEDAN POCOS!";
                      claseCard += ' last-tickets-card';
@@ -175,11 +175,26 @@ async function cargarSorteos() {
 // Iniciar la carga de sorteos cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', cargarSorteos);
 
-// Funciones placeholder (Deben ser implementadas en app.js)
+// ===========================================
+// Funciones de Navegación (CORREGIDAS)
+// ===========================================
+
+/**
+ * Redirige a la página de detalle con el ID del sorteo en la URL.
+ */
 function verDetalle(id) {
-    console.log("Abriendo detalle del sorteo: " + id);
+    // CORRECCIÓN CLAVE: Redirige a sorteo.html con el ID
+    window.location.href = `sorteo.html?id=${id}`;
 }
 
+/**
+ * Llama a la función global de apertura del modal de consulta definida en sorteo_script.js.
+ */
 function abrirModalConsulta() {
-    console.log("Abriendo modal de consulta de boletos.");
+    // Si la función de consulta está globalmente disponible, la llamamos.
+    if (window.abrirModalConsultaTicketsGlobal) {
+        window.abrirModalConsultaTicketsGlobal();
+    } else {
+        alert("La función de consulta de tickets no está lista. Navega a un sorteo para usarla.");
+    }
 }

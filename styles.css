@@ -1,111 +1,163 @@
+/* =========================================
+   STYLES.CSS - DISEÑO REFERENCIA EXACTO
+   ========================================= */
+
+/* Reset y estilos base */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
 :root {
-    --primary-color: #e50914; /* Rojo Netflix/Acción */
-    --secondary-color: #f1f1f1; /* Fondo principal claro */
-    --text-color: #333; /* Texto principal */
-    --dark-color: #1a1a1a; /* Elementos oscuros (Navbar/Footer) */
-    --action-button-color: #008CBA; /* Color de botón de acción (Azul) */
-    --font-family: 'Arial', sans-serif;
+    /* Colores de marca Referencia */
+    --primary: #19A0D0;
+    --primary-dark: #1489B8;
+    --primary-light: #42B4E0;
+    --white: #FFFFFF;
+    --light-gray: #F8FAFC;
+    --dark: #404040;
+    
+    /* Colores adicionales */
+    --accent: #E1F4FA;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --success: #4CAF50;
+    --gray: #6B7280;
+    
+    /* Gradientes */
+    --gradient-primary: linear-gradient(135deg, #19A0D0 0%, #42B4E0 100%);
+    --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    --gradient-hover: linear-gradient(135deg, #1489B8 0%, #19A0D0 100%);
+    
+    /* Sombras */
+    --shadow: 0 4px 20px rgba(25, 160, 208, 0.1);
+    --shadow-lg: 0 10px 40px rgba(25, 160, 208, 0.15);
+    --shadow-hover: 0 8px 30px rgba(25, 160, 208, 0.2);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    
+    --radius: 16px;
+    --radius-lg: 24px;
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {
-    font-family: var(--font-family);
-    margin: 0;
-    padding: 0;
-    background-color: var(--secondary-color);
-    color: var(--text-color);
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    background: linear-gradient(135deg, #f8fafc 0%, #e1f4fa 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    min-height: 100vh;
 }
 
-/* --- 1. BARRA DE NAVEGACIÓN --- */
+/* --- NAVBAR / HEADER --- */
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 5%;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(25, 160, 208, 0.1);
 }
 
 .logo-container {
     display: flex;
     align-items: center;
+    gap: 15px;
 }
 
 .logo {
-    height: 40px;
-    margin-right: 20px;
+    height: 50px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 .nav-link {
     text-decoration: none;
-    color: var(--text-color);
+    color: var(--dark);
+    font-weight: 600;
     padding: 10px 15px;
-    font-weight: bold;
-    transition: color 0.3s;
+    transition: var(--transition);
+    position: relative;
 }
 
 .nav-link:hover {
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .consulta-btn {
-    background-color: var(--dark-color);
-    color: white;
+    padding: 12px 20px;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 12px;
     cursor: pointer;
     font-size: 14px;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
 }
 
 .consulta-btn:hover {
-    background-color: var(--primary-color);
+    background: var(--gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
 }
 
-/* --- 2. SECCIÓN DE SORTEOS (GRID) --- */
+/* --- SECCIÓN HERO Y TÍTULOS --- */
 .sorteos-header-section {
     text-align: center;
-    padding: 40px 5%;
-    background-color: white;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    padding: 60px 20px 40px;
 }
 
 .sorteos-header-section h2 {
-    color: var(--primary-color);
-    margin-bottom: 5px;
+    font-size: 42px;
+    margin-bottom: 15px;
+    color: var(--primary);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
+.sorteos-header-section p {
+    font-size: 18px;
+    color: var(--gray);
+}
+
+/* --- GRID DE SORTEOS (CARD DISEÑO EXACTO) --- */
 .sorteos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    padding: 0 5%;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 40px;
+    padding: 0 5% 60px;
     max-width: 1200px;
-    margin: 0 auto 50px auto;
+    margin: 0 auto;
 }
 
+/* La tarjeta principal adaptada a tus clases */
 .sorteo-card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: var(--gradient-card);
+    border-radius: var(--radius-lg);
     overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition);
     cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    position: relative; /* Necesario para el tag de VENDIDO */
+    position: relative;
+    border: 1px solid rgba(25, 160, 208, 0.1);
+    display: flex;
+    flex-direction: column;
 }
 
 .sorteo-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: var(--shadow-hover);
 }
 
 .sorteo-img-container {
+    height: 240px;
     position: relative;
-    height: 200px;
     overflow: hidden;
 }
 
@@ -113,664 +165,302 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: var(--transition);
 }
 
+.sorteo-card:hover .sorteo-img {
+    transform: scale(1.1);
+}
+
+/* Tags Flotantes */
 .tag-popular {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: gold;
-    color: var(--dark-color);
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: var(--primary);
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: 600;
     font-size: 12px;
     z-index: 10;
+    box-shadow: 0 4px 15px rgba(25, 160, 208, 0.2);
+    backdrop-filter: blur(5px);
 }
+
 .tag-vendido {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: var(--primary-color);
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--danger) 0%, #d32f2f 100%);
     color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: 600;
     font-size: 12px;
     z-index: 10;
 }
 
+/* Contenido de la tarjeta */
 .sorteo-info {
-    padding: 15px;
+    padding: 30px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.sorteo-info h3 {
-    margin: 5px 0 10px 0;
-    color: var(--dark-color);
+.fecha-card {
+    color: var(--gray);
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
 }
 
-.price {
-    font-size: 1.5em;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin: 10px 0;
+.titulo-card {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--dark);
+    line-height: 1.4;
 }
 
-.btn-participar {
-    display: block;
+/* --- BARRA DE PROGRESO (DISEÑO REFERENCIA) --- */
+.progress-wrapper {
+    margin-bottom: 20px;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.progress-bar-container {
+    background: #e5e7eb;
+    height: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    background: var(--gradient-primary);
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* Efecto brillo en la barra */
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.precio-card {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 20px;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Botón de la tarjeta */
+.btn-ver-detalle {
     width: 100%;
-    background-color: var(--action-button-color); /* Usamos el color de acción para el botón de participar */
+    padding: 16px;
+    background: var(--gradient-primary);
     color: white;
     border: none;
-    padding: 12px;
-    border-radius: 5px;
+    border-radius: 12px;
     font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    margin-top: auto;
 }
 
-.btn-participar:hover:not(:disabled) {
-    background-color: #006b8c; /* Tono más oscuro del botón de acción */
+.btn-ver-detalle:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
 }
 
-.btn-participar:disabled, .btn-vendido {
-    background-color: #aaa;
+.btn-vendido {
+    background: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
-
-/* --- 3. PROGRESO (DISEÑO SOLICITADO) --- */
-.progress-wrapper {
-    margin: 10px 0;
-    padding: 0;
-    text-align: left;
+/* --- MODALES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(25, 160, 208, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 3000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-/* Texto de Progreso (91.89%) */
-.progress-text {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: var(--action-button-color); /* Color principal o de acción */
-    margin-bottom: 3px;
-    display: block; 
-}
+.modal-overlay.active { display: flex; }
 
-/* Contenedor de la barra de fondo (Gris, la parte más delgada) */
-.progress-bar-container {
+.modal-content {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 30px;
     width: 100%;
-    background: #e0e0e0;
-    border-radius: 5px;
-    height: 6px; /* BARRA DELGADA */
-    overflow: hidden;
-    margin: 0 auto; 
+    max-width: 450px;
+    box-shadow: var(--shadow-lg);
+    animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-/* La barra de progreso activa (El relleno de color) */
-.progress-bar {
-    background-color: var(--action-button-color); /* Color sólido para el relleno */
-    height: 100%;
-    transition: width 0.5s ease-in-out;
-    border-radius: 5px;
-}
-
-/* Estilo del texto "Solo quedan X boletos" con fondo */
-.boletos-restantes-tag {
-    display: inline-block;
-    background-color: #f0f8ff; /* Fondo azul pálido */
-    color: #4a90e2; /* Color de texto azul/cielo */
-    font-size: 0.8em;
-    padding: 2px 8px;
-    border-radius: 15px;
-    margin-top: 5px;
-    font-weight: bold;
+.modal-content h4 {
+    font-size: 22px;
+    color: var(--primary);
+    margin-bottom: 20px;
     text-align: center;
 }
-/* Estilos anteriores de progreso (mantener para detalle si los usa) */
-.progress-section {
-    border: 1px solid #ccc;
+
+/* Inputs del Modal */
+.modal-content input {
+    width: 100%;
     padding: 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    transition: var(--transition);
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(25, 160, 208, 0.1);
+}
+
+/* Pestañas del Modal */
+.tab-buttons {
+    display: flex;
+    background: var(--light-gray);
+    padding: 5px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: var(--gray);
+    font-weight: 600;
+    cursor: pointer;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    transition: var(--transition);
 }
 
-
-/* --- 4. BANNER --- */
-.banner-invitacion {
-    background-color: var(--dark-color);
-    color: white;
-    text-align: center;
-    padding: 40px 5%;
-    margin-top: 30px;
+.tab-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-card);
 }
 
-/* --- 5. FOOTER --- */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.close-btn:hover { color: var(--danger); transform: rotate(90deg); }
+
+/* --- FOOTER (Diseño Referencia) --- */
 .main-footer {
-    background-color: var(--dark-color);
-    color: #ccc;
-    padding: 40px 5% 20px 5%;
+    background: var(--gradient-primary);
+    color: white;
+    padding: 60px 0 20px;
+    margin-top: 80px;
 }
 
 .footer-content {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    border-bottom: 1px solid #444;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-}
-
-.footer-section {
-    flex: 1;
-    min-width: 250px;
-    margin: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    gap: 40px;
 }
 
 .footer-section h4 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
 }
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 40px; height: 3px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 2px;
+}
+
+.footer-section ul li { list-style: none; margin-bottom: 10px; }
+.footer-section a { color: rgba(255,255,255,0.8); text-decoration: none; }
+.footer-section a:hover { color: white; }
 
 .copyright {
     text-align: center;
-    font-size: 0.8em;
-    color: #777;
-}
-
-/* --- PÁGINA DE DETALLE (sorteo.html) --- */
-
-.detail-container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.detail-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 30px;
-    position: relative;
-}
-
-.detail-header h2 {
-    color: var(--dark-color);
-    margin: 0;
-}
-
-.detail-img-container {
-    max-height: 400px;
-    overflow: hidden;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.detail-img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-}
-
-.price-detail {
-    font-size: 1.8em;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin: 10px 0 20px 0;
-}
-
-/* --- SECCIÓN DE COMPRA --- */
-.compra-section {
     margin-top: 40px;
-    padding: 20px;
-    background-color: #fff8e1; /* Color suave para destacar */
-    border-radius: 10px;
-    border: 1px solid #ffecb3;
-    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    font-size: 14px;
+    opacity: 0.8;
 }
 
-.compra-section h3 {
-    color: var(--dark-color);
-    margin-top: 0;
+/* Animaciones clave */
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-.buy-options-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.buy-option-btn {
-    background-color: white;
-    color: var(--dark-color);
-    border: 1px solid #ddd;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    min-width: 60px;
-}
-
-.buy-option-btn:hover {
-    background-color: #f0f0f0;
-}
-
-.buy-option-btn.popular {
-    background-color: #ffe0b2;
-    border-color: #ffb74d;
-}
-
-/* Contador */
-.ticket-counter {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.counter-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 20px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.2s;
-}
-
-.counter-btn:first-child {
-    border-radius: 5px 0 0 5px;
-}
-.counter-btn:last-child {
-    border-radius: 0 5px 5px 0;
-}
-
-.counter-input {
-    width: 80px;
-    text-align: center;
-    padding: 10px 5px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 0;
-    -moz-appearance: textfield; /* Para Firefox */
-}
-.counter-input::-webkit-outer-spin-button,
-.counter-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.btn-comprar-final {
-    width: 100%;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.btn-comprar-final:hover {
-    background-color: #ff3842;
-}
-
-/* --- DETALLE DE PREMIOS --- */
-#premios-detalle-container h3 {
-    margin-top: 40px;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 10px;
-    color: var(--dark-color);
-}
-
-.premio-card {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px dashed #ddd;
-}
-
-.premio-icon {
-    font-size: 24px;
-    color: gold;
-}
-
-/* --- MODALES GENERALES (La venta flotante) --- */
-
-/* Base para ambos Modales (Consulta y Pago) */
-.modal-overlay,
-.modal-overlay-pago {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none; /* Inicia oculto */
-    justify-content: center;
-    align-items: center;
-    overflow-y: auto; /* Permite scroll si el contenido es grande */
-}
-
-/* Niveles Z-Index */
-.modal-overlay { z-index: 2000; } /* Modal de Consulta */
-.modal-overlay-pago { z-index: 3000; } /* Modal de Pago (superior) */
-
-.modal-overlay.active,
-.modal-overlay-pago.active {
-    display: flex; /* Se muestra al activarse con JS */
-}
-
-/* CONTENIDO DEL MODAL DE CONSULTA Y PAGO */
-.modal-content,
-.modal-pago-content {
-    background-color: white;
-    padding: 30px;
-    border-radius: 10px;
-    max-width: 450px;
-    width: 90%;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    /* Retiramos max-height para que se ajuste mejor al scroll del overlay */
-}
-
-/* Botón de Cierre (X) unificado para ambos modales */
-.close-btn,
-.close-btn-pago { 
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #aaa;
-    cursor: pointer;
-    line-height: 1;
-    transition: color 0.2s;
-}
-
-.close-btn:hover,
-.close-btn-pago:hover {
-    color: var(--primary-color);
-}
-
-.modal-pago-content h4 {
-    color: var(--primary-color);
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-
-/* Estilos de las pestañas de consulta */
-.tab-buttons {
-    display: flex;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #ddd;
-}
-.tab-button {
-    flex: 1;
-    padding: 10px 0;
-    text-align: center;
-    cursor: pointer;
-    font-weight: bold;
-    color: #777;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-}
-.tab-button.active {
-    color: var(--action-button-color);
-    border-bottom: 2px solid var(--action-button-color);
-}
-#consulta-email-group, #consulta-telefono-group {
-    display: none; /* Controlado por JS */
-}
-
-
-/* 🔑 Inputs dentro del modal de pago */
-.modal-pago-content input:not([type="checkbox"]),
-.modal-pago-content select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-/* Contenedor de Resultados con Scroll (para la lista de tickets) */
-#resultados-consulta-scroll {
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 10px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-
-
-.total-summary {
-    background-color: #f0f0f0;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.total-summary p {
-    margin: 5px 0;
-    display: flex;
-    justify-content: space-between;
-}
-
-.total-summary .total {
-    font-weight: bold;
-    color: var(--primary-color);
-    font-size: 1.1em;
-    border-top: 1px solid #ccc;
-    padding-top: 5px;
-    margin-top: 5px;
-}
-
-.btn-pago-movil {
-    width: 100%;
-    padding: 15px;
-    background-color: var(--action-button-color); /* Usando variable */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.btn-reportar-pago {
-    width: 100%;
-    padding: 15px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.datos-pago-movil {
-    background-color: #ffe0b2;
-    border: 1px solid #ffb74d;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    font-size: 15px;
-}
-.datos-pago-movil p {
-    margin: 5px 0;
-}
-
-.verification-code-box {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 15px;
-}
-.verification-code-box .code {
-    font-size: 24px;
-    font-weight: bold;
-    color: #721c24;
-    border: 1px dashed #721c24;
-    padding: 5px 10px;
-    border-radius: 5px;
-}
-
-.copy-btn {
-    background-color: #721c24;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-/* Estilo para el input de archivo */
-.form-group {
-    /* Si ya tienes un contenedor flex, úsalo */
-    display: block;
-    margin-bottom: 15px;
-}
-
-.file-upload-label {
-    display: block; /* Para que ocupe todo el ancho */
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.file-upload-label:hover {
-    background-color: #45a049;
-}
-#capture-input {
-    display: none;
-}
-.file-name-display {
-    font-size: 12px;
-    color: gray;
-    text-align: left;
-    margin-top: 5px;
-}
-/* FIN ESTILO ARCHIVO */
-
-/* --- RESPONSIVE DESIGN (Media Queries) --- */
+/* Responsive */
 @media (max-width: 768px) {
-    /* 1. Navbar: Pasa de ser horizontal a apilado para evitar desbordamiento */
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 10px 5%;
-    }
-
-    /* Target the navigation links container */
-    .navbar div:nth-child(2) { 
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-        margin: 10px 0;
-    }
-
-    .nav-link {
-        padding: 5px 0;
-        width: 100%;
-        text-align: left;
-    }
-
-    .consulta-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        width: 100%;
-        justify-content: center;
-    }
-    .logo {
-        /* Restablecer margen para centrado en móvil si se usa solo el logo */
-        margin-right: 0;
-    }
-
-
-    /* 2. Grid de Sorteos: Asegura que solo haya 1 columna */
-    .sorteos-grid {
-        grid-template-columns: 1fr;
-        padding: 0 10px;
-    }
-
-    /* 3. Footer: Ajusta las secciones para mejor lectura */
-    .footer-content {
-        flex-direction: column;
-    }
-    .footer-section {
-        min-width: unset;
-        text-align: center;
-        margin: 10px 0;
-    }
-
-    /* 4. Contenido Principal/Detalle */
-    .detail-container {
-        margin: 10px;
-        padding: 15px;
-    }
-    
-    /* 5. Opciones de Compra */
-    .buy-options-grid {
-        /* Permite que se envuelvan si hay muchos botones */
-        justify-content: space-around;
-    }
-    
-    /* 6. Modales */
-    .modal-content,
-    .modal-pago-content {
-        /* Ocupa más ancho en móvil */
-        width: 95%;
-        padding: 20px;
-    }
-    
-    /* Corrige el input del contador para no ser demasiado pequeño */
-    .counter-input {
-        width: 60px;
-    }
-    
-    /* Ajuste para que la cédula se vea bien en móvil */
-    .form-group[style="display: flex; gap: 10px;"] {
-        display: flex !important;
-        gap: 5px !important;
-        /* Asegurarse de que el input tenga el margen correcto */
-        margin-bottom: 15px !important;
-    }
-
-    #cedula-prefijo {
-        width: 30% !important;
-        flex-grow: 0;
-    }
-    #cedula-numero {
-        width: 70% !important;
-        margin-bottom: 0 !important;
-        flex-grow: 1;
-    }
+    .navbar { flex-direction: column; gap: 15px; }
+    .sorteos-grid { grid-template-columns: 1fr; }
+    .footer-content { flex-direction: column; text-align: center; }
+    .footer-section h4::after { left: 50%; transform: translateX(-50%); }
 }

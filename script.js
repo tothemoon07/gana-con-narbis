@@ -1,17 +1,20 @@
 // ==========================================================
-// Archivo: script.js - CÓDIGO UNIFICADO Y FUNCIONAL
+// Archivo: script.js - CÓDIGO UNIFICADO CON TÉRMINOS Y CONDICIONES
 // ==========================================================
 
 const sorteosContainer = document.getElementById('sorteos-container');
 const modalConsulta = document.getElementById('checkTicketsModal');
 const resultadosDiv = document.getElementById('searchResults');
 
+// Variable para guardar el sorteo al que el usuario quiere ir
+let idSorteoPendiente = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     cargarSorteos();
 });
 
 // ===========================================
-// 1. LÓGICA DE CARGA DE SORTEOS (CON BOTONES PREMIUM)
+// 1. LÓGICA DE CARGA DE SORTEOS
 // ===========================================
 async function cargarSorteos() {
     if (!sorteosContainer) return;
@@ -19,7 +22,6 @@ async function cargarSorteos() {
     sorteosContainer.innerHTML = '<div class="loading"></div><p style="text-align:center; width:100%;">Cargando sorteos...</p>';
 
     try {
-        // Consultar sorteos activos
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
@@ -36,7 +38,7 @@ async function cargarSorteos() {
         let htmlContent = '';
 
         for (const sorteo of sorteos) {
-            // Consultar ventas para la barra de progreso
+            // Consultar ventas
             const { data: ventas } = await supabase
                 .from('boletos')
                 .select('cantidad_boletos')
@@ -51,10 +53,10 @@ async function cargarSorteos() {
             const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' });
             const precio = sorteo.precio_bs.toFixed(2);
 
-            // --- ESTILOS Y ETIQUETAS ---
+            // Etiquetas y estilos
             let badgeHTML = `<span class="raffle-badge normal">ACTIVO</span>`;
             let claseCard = '';
-            let textoBoton = '¡COMPRAR BOLETO AHORA!'; // Texto en mayúsculas e imponente
+            let textoBoton = '¡COMPRAR BOLETO AHORA!';
             let botonDisabled = '';
             let estiloImagen = '';
 
@@ -70,7 +72,7 @@ async function cargarSorteos() {
                 badgeHTML = `<span class="raffle-badge" style="background:#00bcd4;">POPULAR</span>`;
             }
 
-            // --- HTML DE LA TARJETA ---
+            // HTML de la tarjeta
             htmlContent += `
                 <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
                     <div class="raffle-image-container">
@@ -121,37 +123,67 @@ async function cargarSorteos() {
     }
 }
 
+// ===========================================
+// 2. LÓGICA DE TÉRMINOS Y CONDICIONES (NUEVO)
+// ===========================================
+
+// Esta función se activa al dar click en la tarjeta o el botón
 function verDetalle(id) {
-    window.location.href = `sorteo.html?id=${id}`;
-}
-
-// ===========================================
-// 2. LÓGICA DEL MODAL DE CONSULTA
-// ===========================================
-
-// Abrir Modal
-window.abrirModalConsulta = function() {
-    if (modalConsulta) {
-        modalConsulta.style.display = 'flex';
-        // Pequeño timeout para permitir la transición CSS si la hay
-        setTimeout(() => modalConsulta.classList.add('active'), 10);
+    // 1. Guardamos el ID del sorteo al que quiere ir
+    idSorteoPendiente = id;
+    
+    // 2. Abrimos el modal de términos
+    const modal = document.getElementById('modalTerminos');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Timeout para animación suave
+        setTimeout(() => modal.classList.add('active'), 10);
     } else {
-        console.error("No se encontró el modal con ID 'checkTicketsModal'");
+        // Si por alguna razón no existe el modal, vamos directo (fallback)
+        window.location.href = `sorteo.html?id=${id}`;
     }
 }
 
-// Cerrar Modal
+// Esta función se activa al dar click en "Aceptar y Continuar"
+function aceptarTerminos() {
+    if (idSorteoPendiente) {
+        window.location.href = `sorteo.html?id=${idSorteoPendiente}`;
+    }
+}
+
+// Esta función cierra el modal y limpia la variable
+function cerrarTerminos() {
+    const modal = document.getElementById('modalTerminos');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+    idSorteoPendiente = null;
+}
+
+// ===========================================
+// 3. LÓGICA DEL MODAL DE CONSULTA DE TICKETS
+// ===========================================
+
+window.abrirModalConsulta = function() {
+    if (modalConsulta) {
+        modalConsulta.style.display = 'flex';
+        setTimeout(() => modalConsulta.classList.add('active'), 10);
+    }
+}
+
 window.cerrarModalConsulta = function() {
     if (modalConsulta) {
         modalConsulta.classList.remove('active');
         setTimeout(() => {
             modalConsulta.style.display = 'none';
             if(resultadosDiv) resultadosDiv.innerHTML = '';
-        }, 300); // Espera a que termine la animación
+        }, 300);
     }
 }
 
-// Cambiar Pestañas (Email vs Teléfono)
 window.cambiarPestanaBusqueda = function(tipo) {
     const tabEmail = document.getElementById('tab-email');
     const tabPhone = document.getElementById('tab-phone');
@@ -171,7 +203,6 @@ window.cambiarPestanaBusqueda = function(tipo) {
     }
 }
 
-// Ejecutar Búsqueda en Supabase
 window.ejecutarBusquedaTickets = async function() {
     const isEmail = document.getElementById('tab-email').classList.contains('active');
     const valor = isEmail 
@@ -187,12 +218,11 @@ window.ejecutarBusquedaTickets = async function() {
 
     let query = supabase.from('boletos')
         .select('cantidad_boletos, numeros_asignados, estado, sorteos(titulo)')
-        .eq('estado', 'validado'); // Solo mostrar tickets validados
+        .eq('estado', 'validado');
 
     if (isEmail) {
         query = query.eq('email_cliente', valor.toLowerCase());
     } else {
-        // Limpieza de caracteres para teléfono/cédula
         const valorLimpio = valor.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         query = query.or(`telefono_cliente.eq.${valorLimpio},cedula_cliente.eq.${valorLimpio},cedula_cliente.eq.V${valorLimpio},cedula_cliente.eq.E${valorLimpio}`);
     }

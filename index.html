@@ -2,103 +2,150 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Sorteos</title>
-   <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Sorteos Exclusivos | Tu Sitio</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <header class="navbar">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo de Sorteos" class="logo">
-            <nav>
-                <a href="index.html" class="nav-link">Inicio</a>
-                <a href="#" class="nav-link">Contacto</a>
-            </nav>
-        </div>
-        <div>
-            <button class="consulta-btn" id="consultar-tickets-btn">Consultar Tickets</button>
+    <div id="particles-js"></div>
+
+    <header class="site-header">
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo-section">
+                        <a href="#" class="logo-link">
+                            <div class="logo-container">
+                                <img src="logo.png" alt="Logo" class="logo-img">
+                            </div>
+                            <div class="logo-text">
+                                <h1>SORTEOS</h1>
+                                <p>Premios Exclusivos</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <nav class="main-nav">
+                        <ul>
+                            <li><a href="#">Inicio</a></li>
+                            <li><a href="#sorteos-container">Sorteos Activos</a></li>
+                        </ul>
+                    </nav>
+
+                    <div class="header-actions">
+                        <button class="btn-check-tickets" onclick="abrirModalConsulta()">
+                            <i class="fas fa-search"></i> 
+                            <span>Consultar Mis Tickets</span>
+                        </button>
+                    </div>
+
+                    <button class="mobile-menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <section class="sorteos-header-section">
-        <h2>🎉 Sorteos Activos Ahora Mismo</h2>
-        <p>¡No pierdas la oportunidad de ganar! Selecciona tu sorteo favorito y participa.</p>
-    </section>
-
-    <main class="sorteos-grid" id="sorteos-container">
-        <p>Cargando sorteos...</p>
-    </main>
-
-    <section class="banner-invitacion">
-        <h3>¿Quieres ser el próximo ganador?</h3>
-        <p>Compra tus boletos hoy mismo y sé parte de la emoción.</p>
-    </section>
-
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Acerca de Nosotros</h4>
-                <p>Somos la plataforma líder en sorteos, ofreciendo premios transparentes y emocionantes a nuestra comunidad.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Enlaces Rápidos</h4>
-                <ul>
-                    <li><a href="index.html" style="color: #ccc; text-decoration: none;">Inicio</a></li>
-                    <li><a href="#" style="color: #ccc; text-decoration: none;">Términos y Condiciones</a></li>
-                    <li><a href="#" style="color: #ccc; text-decoration: none;">Política de Privacidad</a></li>
-                </ul>
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h2>¡Participa y Gana <br><span>Grandes Premios!</span></h2>
+                <p>Compra tu ticket y entra en nuestros sorteos exclusivos. Tu oportunidad comienza hoy.</p>
             </div>
         </div>
-        <p class="copyright">&copy; 2025 Todos los derechos reservados.</p>
-    </footer>
+    </section>
 
-    <div id="modal-consultar-tickets" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-btn" id="close-consultar-tickets">&times;</span>
-            <h3 style="color: var(--dark-color);">Consultar Mis Tickets</h3>
-            
-            <form id="form-consultar-tickets">
-                <p>Selecciona tu método de búsqueda:</p>
+    <div class="main-view">
+        <div class="raffles-main">
+            <div class="container">
+                <h2 class="raffles-title">Sorteos Activos</h2>
                 
-                <div class="tab-buttons">
-                    <button type="button" class="tab-btn active" id="tab-telefono">Por Teléfono/Cédula</button>
-                    <button type="button" class="tab-btn" id="tab-email">Por Email</button>
+                <div class="raffles-grid" id="sorteos-container">
+                    <div class="loading"></div> Cargando sorteos...
                 </div>
-
-                <div id="consulta-telefono-group" class="form-group" style="display: block;">
-                    <label for="telefono-consulta">Teléfono o Cédula (V/E + Número)</label>
-                    <input 
-                        type="text" 
-                        id="telefono-consulta" 
-                        placeholder="Ej: 04121234567 o V12345678" 
-                        required
-                    >
-                </div>
-
-                <div id="consulta-email-group" class="form-group" style="display: none;">
-                    <label for="email-consulta">Email registrado</label>
-                    <input 
-                        type="email" 
-                        id="email-consulta" 
-                        placeholder="ejemplo@correo.com"
-                        required
-                    >
-                </div>
-            
-                <button type="submit" class="btn-pago-movil" style="width: 100%; background-color: var(--action-button-color);">Buscar Boletos</button>
-            </form>
-
-            <div id="resultados-consulta-scroll">
-                <div id="resultados-consulta" style="margin-top: 20px;">
-                    </div>
             </div>
-            
-            <button class="consulta-btn" id="btn-cerrar-consulta-visible" style="margin-top: 15px; background-color: #333;">Cerrar Consulta</button>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
-    <script src="supabase-config.js"></script> 
-    <script src="script.js"></script>
+
+    <footer class="site-footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-column">
+                        <div class="footer-logo">
+                            <div class="footer-logo-container">
+                                <img src="logo.png" alt="Logo" class="logo-img">
+                            </div>
+                        </div>
+                        <h3>Sobre Nosotros</h3>
+                        <p>Somos la plataforma líder en sorteos digitales, ofreciendo transparencia y seguridad.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-telegram"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-column">
+                        <h3>Contacto</h3>
+                        <div class="contact-info">
+                            <div class="contact-item"><i class="fas fa-envelope"></i> contacto@tusorteo.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2025 Todos los derechos reservados</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <div class="toast" id="toastNotification"></div>
+
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Inicializa la librería de partículas si el elemento existe
+        if (document.getElementById('particles-js')) {
+            particlesJS.load('particles-js', 'particles.json', function() {
+                console.log('particles.js loaded - callback');
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script> <script src="script.js"></script>
+
+    <script src="boton.js"></script> 
+    
+    <script>
+        function verDetalle(id) {
+            // Esta función debe ser programada para abrir el modal de compra
+            console.log("Abriendo sorteo: " + id);
+        }
+        function abrirModalConsulta() {
+            // Esta función debe ser programada para abrir el modal de consulta
+            console.log("Abriendo modal de consulta de tickets");
+        }
+    </script>
 </body>
 </html>

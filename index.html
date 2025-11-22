@@ -1,86 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Sorteos</title>
-   <link rel="stylesheet" href="/gana-con-narbis/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Sorteos</title>
+    <link rel="stylesheet" href="/gana-con-narbis/styles.css">
 </head>
 <body>
 
-    <header class="navbar">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo de Sorteos" class="logo">
-            <nav>
-                <a href="index.html" class="nav-link">Inicio</a>
-                <a href="#" class="nav-link">Contacto</a>
-            </nav>
-        </div>
-        <div>
-            <button class="consulta-btn" id="consultar-tickets-btn">Consultar Tickets</button>
-        </div>
-    </header>
+    <header class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo de Sorteos" class="logo">
+            <nav>
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="#" class="nav-link">Contacto</a>
+            </nav>
+        </div>
+        <div>
+            <button class="consulta-btn" id="consultar-tickets-btn">Consultar Tickets</button>
+        </div>
+    </header>
 
-    <section class="sorteos-header-section">
-        <h2>🎉 Sorteos Activos Ahora Mismo</h2>
-        <p>¡No pierdas la oportunidad de ganar! Selecciona tu sorteo favorito y participa.</p>
-    </section>
+    <section class="sorteos-header-section">
+        <h2>🎉 Sorteos Activos Ahora Mismo</h2>
+        <p>¡No pierdas la oportunidad de ganar! Selecciona tu sorteo favorito y participa.</p>
+    </section>
 
-    <main class="sorteos-grid" id="sorteos-container">
-        <p>Cargando sorteos...</p>
-    </main>
+    <main class="sorteos-grid" id="sorteos-container">
+        <p>Cargando sorteos...</p>
+    </main>
 
-    <section class="banner-invitacion">
-        <h3>¿Quieres ser el próximo ganador?</h3>
-        <p>Compra tus boletos hoy mismo y sé parte de la emoción.</p>
-    </section>
+    <section class="banner-invitacion">
+        <h3>¿Quieres ser el próximo ganador?</h3>
+        <p>Compra tus boletos hoy mismo y sé parte de la emoción.</p>
+    </section>
 
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Acerca de Nosotros</h4>
-                <p>Somos la plataforma líder en sorteos, ofreciendo premios transparentes y emocionantes a nuestra comunidad.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Enlaces Rápidos</h4>
-                <ul>
-                    <li><a href="index.html" style="color: #ccc; text-decoration: none;">Inicio</a></li>
-                    <li><a href="#" style="color: #ccc; text-decoration: none;">Términos y Condiciones</a></li>
-                    <li><a href="#" style="color: #ccc; text-decoration: none;">Política de Privacidad</a></li>
-                </ul>
-            </div>
-        </div>
-        <p class="copyright">&copy; 2025 Todos los derechos reservados.</p>
-    </footer>
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Acerca de Nosotros</h4>
+                <p>Somos la plataforma líder en sorteos, ofreciendo premios transparentes y emocionantes a nuestra comunidad.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="index.html" style="color: #ccc; text-decoration: none;">Inicio</a></li>
+                    <li><a href="#" style="color: #ccc; text-decoration: none;">Términos y Condiciones</a></li>
+                    <li><a href="#" style="color: #ccc; text-decoration: none;">Política de Privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        <p class="copyright">&copy; 2025 Todos los derechos reservados.</p>
+    </footer>
 
-    <div id="modal-consultar-tickets" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-btn" id="close-consultar-tickets">&times;</span> 
-            
-            <h4>Consultar Mis Tickets Validados</h4>
+    <div id="modal-consultar-tickets" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-btn" id="close-consultar-tickets">&times;</span>
+            <h3 style="color: var(--dark-color);">Consultar Mis Tickets</h3>
+            
+            <form id="form-consultar-tickets">
+                <p>Selecciona tu método de búsqueda:</p>
+                
+                <div class="tab-buttons">
+                    <button type="button" class="tab-btn active" id="tab-telefono">Por Teléfono/Cédula</button>
+                    <button type="button" class="tab-btn" id="tab-email">Por Email</button>
+                </div>
 
-            <form id="form-consultar-tickets">
-                <p>Introduce tu **Teléfono** o **Cédula** (V/E + número) para ver tus boletos activos:</p>
-                <input 
-                    type="text" 
-                    id="identificador-consulta" 
-                    placeholder="Ej: 04121234567 o V12345678" 
-                    required
-                >
-                <button type="submit" class="btn-pago-movil" style="background-color: #008CBA;">Buscar Boletos</button>
-            </form>
+                <div id="consulta-telefono-group" class="form-group" style="display: block;">
+                    <label for="telefono-consulta">Teléfono o Cédula (V/E + Número)</label>
+                    <input 
+                        type="text" 
+                        id="telefono-consulta" 
+                        placeholder="Ej: 04121234567 o V12345678" 
+                        required
+                    >
+                </div>
 
-            <div id="resultados-consulta-scroll">
-                <div id="resultados-consulta" style="margin-top: 20px;">
-                    </div>
-            </div>
-            <button class="consulta-btn" id="btn-cerrar-consulta-visible" style="margin-top: 15px;">Cerrar Consulta</button>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+                <div id="consulta-email-group" class="form-group" style="display: none;">
+                    <label for="email-consulta">Email registrado</label>
+                    <input 
+                        type="email" 
+                        id="email-consulta" 
+                        placeholder="ejemplo@correo.com"
+                        required
+                    >
+                </div>
+            
+                <button type="submit" class="btn-pago-movil" style="width: 100%; background-color: var(--action-button-color);">Buscar Boletos</button>
+            </form>
 
-    <script src="supabase-config.js"></script> 
-    
-    <script src="script.js"></script>
+            <div id="resultados-consulta-scroll">
+                <div id="resultados-consulta" style="margin-top: 20px;">
+                    </div>
+            </div>
+            
+            <button class="consulta-btn" id="btn-cerrar-consulta-visible" style="margin-top: 15px; background-color: #333;">Cerrar Consulta</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+    <script src="supabase-config.js"></script> 
+    <script src="script.js"></script>
 </body>
 </html>

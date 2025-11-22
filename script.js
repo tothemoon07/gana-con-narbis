@@ -148,9 +148,9 @@ async function cargarSorteos() {
                             </div>
                         </div>
                         
-                        <button class="btn-main-card" onclick="event.stopPropagation(); verDetalle('${sorteo.id}')">
-                            ¡COMPRAR BOLETO AHORA!
-                        </button>
+                        <button class="btn-main-card" onclick="window.location.href = 'sorteo.html?id=${sorteo.id}'; event.stopPropagation();">
+                        ¡COMPRAR BOLETO AHORA!
+                    </button>
                     </div>
                 </div>
             `;

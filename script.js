@@ -1,5 +1,4 @@
-// script.js
-// IMPORTANTE: Este archivo asume que la variable 'supabase' está definida en tu 'supabase-config.js'
+// script.js - CÓDIGO CORREGIDO PARA TU ESTRUCTURA DE TABLA
 
 const sorteosContainer = document.getElementById('sorteos-container');
 const toastNotification = document.getElementById('toastNotification');
@@ -10,15 +9,12 @@ const toastNotification = document.getElementById('toastNotification');
 
 /**
  * Muestra una notificación temporal tipo "Toast" en la parte inferior.
- * @param {string} message El mensaje a mostrar.
- * @param {string} type El tipo de notificación ('success', 'error', 'info').
  */
 function showToast(message, type = 'success') {
     if (toastNotification) {
         toastNotification.textContent = message;
         toastNotification.className = `toast show ${type}`;
         setTimeout(() => {
-            // Ocultar la notificación después de 3 segundos
             toastNotification.className = toastNotification.className.replace("show", "");
         }, 3000);
     }
@@ -33,7 +29,7 @@ function showToast(message, type = 'success') {
  */
 async function cargarSorteos() {
     if (!sorteosContainer) {
-        console.error("Contenedor 'sorteos-container' no encontrado. Asegúrate de que el ID es correcto en index.html");
+        console.error("Contenedor 'sorteos-container' no encontrado.");
         return;
     }
 
@@ -46,12 +42,13 @@ async function cargarSorteos() {
     `;
 
     try {
-        // 2. Consulta a Supabase
+        // 2. Consulta a Supabase - CORRECCIÓN CLAVE: Usamos 'estado' en lugar de 'activo'
         const { data: sorteos, error } = await supabase
             .from('sorteos')
             .select('*')
-            .eq('activo', true) // Filtra solo los sorteos marcados como activos
-            .order('fecha_sorteo', { ascending: true }); // Ordena por fecha más cercana
+            // Suponemos que un sorteo activo/visible tiene estado='activo'. AJUSTA ESTO SI ES NECESARIO.
+            .eq('estado', 'activo') 
+            .order('fecha_sorteo', { ascending: true }); 
 
         if (error) {
             console.error('Error al cargar sorteos:', error.message);
@@ -64,7 +61,6 @@ async function cargarSorteos() {
             return;
         }
 
-        // 3. Manejar caso sin sorteos
         if (sorteos.length === 0) {
             sorteosContainer.innerHTML = `
                 <div class="empty-state">
@@ -76,37 +72,45 @@ async function cargarSorteos() {
             return;
         }
 
-        // 4. Generar el HTML de las tarjetas
         let htmlContent = '';
         
         sorteos.forEach(sorteo => {
-            // --- Lógica para el BADGE (Etiqueta de tipo) y Clase de Tarjeta ---
+            // --- CORRECCIÓN DE NOMBRES DE COLUMNAS ---
+            const precio = sorteo.precio_bs || 0; 
+            const totalBoletos = sorteo.total_boletos || 1;
+            // Nota: Se asume que tienes una columna 'boletos_vendidos' para el progreso, si no la tienes, el progreso será 0.
+            const boletosVendidos = sorteo.boletos_vendidos || 0; 
+
+            // --- Lógica para el BADGE (Etiqueta de tipo) ---
             let badgeHTML = '';
             let claseCard = '';
             
-            if (sorteo.tipo && sorteo.tipo.toLowerCase() === 'premium') {
+            // Usamos la columna 'estado' para definir el badge/clase si es necesario
+            if (sorteo.estado && sorteo.estado.toLowerCase() === 'premium') {
                 badgeHTML = `<span class="raffle-badge premium">PREMIUM</span>`;
                 claseCard = 'premium-card';
-            } else if (sorteo.tipo && sorteo.tipo.toLowerCase() === 'express') {
+            } else if (sorteo.estado && sorteo.estado.toLowerCase() === 'express') {
                 badgeHTML = `<span class="raffle-badge express">EXPRESS</span>`;
                 claseCard = 'express-card';
             } else {
-                badgeHTML = `<span class="raffle-badge normal">ACTIVO</span>`;
-                claseCard = 'normal-card';
+                badgeData = "ACTIVO";
+                if ((boletosVendidos / totalBoletos) * 100 > 80) {
+                     badgeData = "¡QUEDAN POCOS!";
+                     claseCard += ' last-tickets-card';
+                }
+                badgeHTML = `<span class="raffle-badge normal">${badgeData}</span>`;
             }
             
             // --- Formato de Fecha y Moneda ---
             const fechaSorteo = new Date(sorteo.fecha_sorteo);
-            // Configuración para el formato de fecha (ej: "25 nov. 2025, 18:30")
             const opcionesFecha = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             const fechaFormateada = fechaSorteo.toLocaleDateString('es-ES', opcionesFecha);
             
-            // Usar toFixed(2) para asegurar dos decimales en el precio
-            const precioFormateado = sorteo.precio_ticket ? sorteo.precio_ticket.toFixed(2) : '0.00';
+            const precioFormateado = precio.toFixed(2);
 
             // --- Cálculo del Progreso ---
-            const progreso = (sorteo.tickets_vendidos / sorteo.tickets_totales) * 100;
-            const ticketsRestantes = sorteo.tickets_totales - sorteo.tickets_vendidos;
+            const progreso = (boletosVendidos / totalBoletos) * 100;
+            const ticketsRestantes = totalBoletos - boletosVendidos;
 
             const cardHtml = `
                 <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
@@ -128,14 +132,14 @@ async function cargarSorteos() {
                                 </div>
                                 <span class="progress-text">${Math.round(progreso)}% Vendido</span>
                             </div>
-                            <span class="tickets-left-text">${ticketsRestantes} tickets restantes</span>
+                            <span class="tickets-left-text">${ticketsRestantes} boletos restantes</span>
                         </div>
 
                         <div class="raffle-info-grid">
                             <div class="info-item price-item">
                                 <i class="fas fa-ticket-alt"></i>
                                 <span class="info-label">Precio Ticket</span>
-                                <span class="info-value price-value">$${precioFormateado}</span>
+                                <span class="info-value price-value">${precioFormateado} BS</span>
                             </div>
                             <div class="info-item date-item">
                                 <i class="fas fa-clock"></i>
@@ -145,7 +149,7 @@ async function cargarSorteos() {
                         </div>
                         
                         <button class="btn-main-card" onclick="event.stopPropagation(); verDetalle('${sorteo.id}')">
-                            ¡COMPRAR TICKET AHORA!
+                            ¡COMPRAR BOLETO AHORA!
                         </button>
                     </div>
                 </div>
@@ -170,3 +174,12 @@ async function cargarSorteos() {
 
 // Iniciar la carga de sorteos cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', cargarSorteos);
+
+// Funciones placeholder (Deben ser implementadas en app.js)
+function verDetalle(id) {
+    console.log("Abriendo detalle del sorteo: " + id);
+}
+
+function abrirModalConsulta() {
+    console.log("Abriendo modal de consulta de boletos.");
+}

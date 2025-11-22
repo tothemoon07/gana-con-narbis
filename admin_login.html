@@ -3,76 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso Administrador</title>
-    <link rel="stylesheet" href="admin_styles.css"> 
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="supabase-admin-config.js"></script>
-    
+    <title>Acceso Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Estilos básicos para el formulario de login */
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4ff4f4; /* Fondo claro */
-            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: #f0f2f5;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
         }
-        .login-container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
-            width: 320px;
+        .login-card {
+            background: white; padding: 40px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center;
         }
-        .login-container h2 {
-            margin-bottom: 25px;
-            text-align: center;
-            color: #333;
+        input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;
         }
-        .login-container input[type="email"], 
-        .login-container input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 18px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
+        button {
+            width: 100%; padding: 12px; background: #1a73e8; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;
         }
-        .login-container button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff; /* Color primario */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 17px;
-            transition: background-color 0.3s ease;
-        }
-        .login-container button:hover {
-            background-color: #0056b3;
-        }
-        #error-message {
-            color: #dc3545; /* Color de error */
-            text-align: center; 
-            margin-top: 15px;
-            font-size: 14px;
-        }
+        button:hover { background: #1557b0; }
+        .error { color: red; font-size: 12px; margin-top: 10px; display: none; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-admin-config.js"></script>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Acceso Administrativo</h2>
+    <div class="login-card">
+        <img src="logonarbis.jpeg" width="80" style="border-radius:50%; margin-bottom:20px;">
+        <h2 style="margin:0 0 20px;">Panel Admin</h2>
         <form id="login-form">
-            <input type="email" id="email" placeholder="Correo Electrónico" required>
+            <input type="email" id="email" placeholder="Usuario" required>
             <input type="password" id="password" placeholder="Contraseña" required>
-            <button type="submit">Iniciar Sesión</button>
-            <p id="error-message"></p>
+            <button type="submit">Ingresar</button>
+            <p id="error-msg" class="error"></p>
         </form>
     </div>
 
@@ -81,36 +46,20 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = ''; // Limpiar mensaje de error anterior
+            const btn = e.target.querySelector('button');
+            const err = document.getElementById('error-msg');
+            
+            btn.innerText = "Verificando..."; btn.disabled = true;
+            err.style.display = 'none';
 
-            // Verificar si supabase está disponible
-            if (typeof supabase === 'undefined' || supabase === null) {
-                errorMessage.textContent = 'Error de configuración. Supabase no está cargado.';
-                return;
-            }
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-            try {
-                // Función clave: Intenta iniciar sesión con el método signInWithPassword
-                const { error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) {
-                    errorMessage.textContent = 'Error: Credenciales inválidas o cuenta no confirmada.';
-                    console.error('Error de autenticación:', error);
-                } else {
-                    alert('¡Inicio de sesión exitoso! Redirigiendo al panel.');
-                    
-                    // 🔑 SOLUCIÓN CLAVE: Retraso de 500ms para permitir que Supabase guarde el token antes de la redirección.
-                    setTimeout(() => {
-                        window.location.href = 'admin.html';
-                    }, 500); // Espera 500 milisegundos
-                }
-            } catch (err) {
-                errorMessage.textContent = 'Ocurrió un error inesperado de conexión.';
-                console.error('Error inesperado:', err);
+            if (error) {
+                err.innerText = "Credenciales incorrectas";
+                err.style.display = 'block';
+                btn.innerText = "Ingresar"; btn.disabled = false;
+            } else {
+                window.location.href = 'admin.html';
             }
         });
     </script>

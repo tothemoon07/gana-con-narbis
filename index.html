@@ -16,6 +16,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .terminos-lista-container {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 60vh; /* Altura máxima adaptable */
+            overflow-y: auto; /* Scroll si es muy largo */
+        }
+        .lista-terminos {
+            margin-left: 20px;
+            color: #444;
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .lista-terminos li {
+            margin-bottom: 12px;
+            padding-left: 5px;
+        }
+        .lista-terminos li::marker {
+            color: #19A0D0; /* Color azul de la marca */
+            font-weight: 800;
+        }
+        /* Barra de scroll bonita */
+        .terminos-lista-container::-webkit-scrollbar { width: 6px; }
+        .terminos-lista-container::-webkit-scrollbar-track { background: #f1f1f1; }
+        .terminos-lista-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
 </head>
 <body>
 
@@ -168,6 +198,46 @@
                 </div>
                 
                 <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalTerminos">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-file-contract" style="color: var(--primary-color);"></i> 
+                    Términos y Condiciones
+                </h2>
+                <button class="modal-close" onclick="cerrarTerminos()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">
+                    Por favor, lee y acepta nuestras normas para continuar:
+                </p>
+                
+                <div class="terminos-lista-container">
+                    <ol class="lista-terminos">
+                        <li>Los números disponibles para la compra en cada uno de nuestros sorteos se especificarán en la página de detalles correspondiente a cada sorteo.</li>
+                        <li>Solo podrán participar en nuestros sorteos personas naturales mayores de 18 años.</li>
+                        <li>Los premios deberán ser retirados en persona en la ubicación designada para cada sorteo. Si está afuera del estado se realizarán entregas personales en la dirección indicada por el ganador.</li>
+                        <li>De no venderse el 80% de la boletería la fecha del sorteo se reprogramará con previo aviso.</li>
+                        <li>Para reclamar tu premio tienes un lapso de 72 horas.</li>
+                        <li>Los ganadores aceptan aparecer en el contenido audiovisual del sorteo mostrando su presencia en las redes y entrega de los premios. Esto es <strong>OBLIGATORIO</strong>.</li>
+                        <li>La compra mínima requerida para participar en nuestros sorteos es de dos tickets. Los números de tickets serán al azar.</li>
+                        <li>La confirmación de su ticket le será enviada a su correo electrónico y a su WhatsApp en un lapso no mayor a 12 horas después de confirmar el pago.</li>
+                    </ol>
+                </div>
+
+                <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px; padding-top: 0;">
+                    <button class="buy-button secondary" onclick="cerrarTerminos()" style="background: #e5e7eb; color: #333; margin-top:0; font-size: 14px;">
+                        Cancelar
+                    </button>
+                    <button class="buy-button" onclick="aceptarTerminos()" style="margin-top:0; font-size: 14px;">
+                        Aceptar y Continuar
+                    </button>
+                </div>
             </div>
         </div>
     </div>

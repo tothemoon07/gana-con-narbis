@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: script.js - VERSIÓN FINAL CON SCROLL Y CIERRE
+// Archivo: script.js - VERSIÓN FINAL UNIFICADA
 // ==========================================================
 
 // ==========================================================
@@ -19,7 +19,7 @@ async function cargarSorteos() {
             .from('sorteos')
             .select('*')
             .eq('estado', 'activo'); 
-        
+            
         if (error) {
             console.error("Error al cargar sorteos:", error);
             document.getElementById('sorteos-container').innerHTML = `<p style="color: red;">Error al cargar sorteos: ${error.message}</p>`;
@@ -36,27 +36,31 @@ async function cargarSorteos() {
         } else {
             // MOSTRAR los sorteos en el HTML
             sorteos.forEach(sorteo => {
+                // Lógica de formateo de fecha (simplificada para el ejemplo)
                 const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
                 });
                 
+                // Lógica de imagen
                 const imgHtml = sorteo.imagen_url ? 
-                    `<img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" style="width:100%; height:auto; border-radius:8px; margin-bottom:10px;">` : '';
+                    `<div class="sorteo-img-container"><img src="${sorteo.imagen_url}" alt="${sorteo.titulo}" class="sorteo-img"></div>` : '';
 
 
                 const card = document.createElement('div');
                 card.className = 'sorteo-card'; 
 
+                // Usamos la estructura de tarjeta más completa para asegurar que los estilos CSS funcionen
                 card.innerHTML = `
-                    <div class="sorteo-contenido">
-                        ${imgHtml}
-                        <h3 class="sorteo-titulo">${sorteo.titulo}</h3>
-                        <p class="sorteo-fecha">📅 Fecha: ${fecha}</p>
-                        <p class="sorteo-precio">💰 Precio: Bs. ${sorteo.precio_bs}</p>
-                        
-                        <button class="participar-btn" onclick="window.location.href='sorteo.html?id=${sorteo.id}'">
+                    <div class="sorteo-img-container">
+                        <img src="${sorteo.imagen_url || 'placeholder.png'}" alt="${sorteo.titulo}" class="sorteo-img">
+                        </div>
+                    <div class="sorteo-info">
+                        <h3>${sorteo.titulo}</h3>
+                        <p>📅 Fecha: ${fecha}</p>
+                        <p class="price">Bs. ${sorteo.precio_bs}</p>
+                        <button class="btn-participar" onclick="window.location.href='sorteo.html?id=${sorteo.id}'">
                             Participar ahora
                         </button>
                     </div>
@@ -75,43 +79,54 @@ async function cargarSorteos() {
 }
 
 // ==========================================================
-// FUNCIÓN DE CONSULTA DE TICKETS (CORREGIDA PARA CÉDULA ROBUSTA)
+// FUNCIÓN DE CONSULTA DE TICKETS (UNIFICADA PARA TELÉFONO/CÉDULA Y EMAIL)
 // ==========================================================
 
-async function buscarBoletosCliente(identificador) {
+/**
+ * Busca boletos por Teléfono/Cédula O por Email.
+ * @param {string} identificador - El valor a buscar (teléfono, cédula o email).
+ * @param {string} tipoBusqueda - 'telefono_cedula' o 'email'.
+ */
+async function buscarBoletosCliente(identificador, tipoBusqueda) {
     const resultadosDiv = document.getElementById('resultados-consulta');
     resultadosDiv.innerHTML = '<p style="text-align:center;">Buscando...</p>';
 
-    // 1. Limpiamos el identificador de caracteres especiales
-    const identificadorLimpio = identificador.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    // Base de la consulta
+    let query = supabase.from('boletos').select('id, sorteo_id, cantidad_boletos, numeros_asignados, estado, sorteos(titulo)').eq('estado', 'validado');
     
-    // 2. Definimos las posibilidades de búsqueda iniciales
-    let posiblesBusquedas = [
-        `telefono_cliente.eq.${identificadorLimpio}`, // Teléfono o cédula completa (ej: V12345678)
-        `cedula_cliente.eq.${identificadorLimpio}`   
-    ];
-
-    // 3. Si la entrada es un número sin prefijo y es larga, añadimos los prefijos comunes (V y E)
-    const primerCaracter = identificadorLimpio.charAt(0);
-    if (!['V', 'E', 'P'].includes(primerCaracter) && identificadorLimpio.length >= 5) {
-        // Agregamos la búsqueda con los prefijos más comunes
-        posiblesBusquedas.push(`cedula_cliente.eq.V${identificadorLimpio}`);
-        posiblesBusquedas.push(`cedula_cliente.eq.E${identificadorLimpio}`);
-    }
-    
-    // 4. Construimos la cláusula OR
-    const orClauses = posiblesBusquedas.join(',');
-
     try {
-        const { data: ordenes, error } = await supabase
-            .from('boletos')
-            .select('id, sorteo_id, cantidad_boletos, numeros_asignados, estado, sorteos(titulo)')
-            .eq('estado', 'validado') 
-            .or(orClauses); 
+        if (tipoBusqueda === 'email') {
+            // Búsqueda simple por EMAIL
+            const emailLimpio = identificador.toLowerCase();
+            query = query.eq('email_cliente', emailLimpio); // ASUME 'email_cliente' es el nombre de la columna
+
+        } else if (tipoBusqueda === 'telefono_cedula') {
+            // Lógica robusta para TELÉFONO/CÉDULA (similar a tu código original)
+            const identificadorLimpio = identificador.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+            let posiblesBusquedas = [
+                `telefono_cliente.eq.${identificadorLimpio}`,
+                `cedula_cliente.eq.${identificadorLimpio}`
+            ];
+
+            const primerCaracter = identificadorLimpio.charAt(0);
+            if (!['V', 'E', 'P', 'J', 'G'].includes(primerCaracter) && identificadorLimpio.length >= 5) {
+                posiblesBusquedas.push(`cedula_cliente.eq.V${identificadorLimpio}`);
+                posiblesBusquedas.push(`cedula_cliente.eq.E${identificadorLimpio}`);
+            }
+
+            const orClauses = posiblesBusquedas.join(',');
+            query = query.or(orClauses);
+        } else {
+             resultadosDiv.innerHTML = '<p style="color: red; text-align: center;">Error: Tipo de búsqueda no definido.</p>';
+             return;
+        }
+
+        const { data: ordenes, error } = await query;
 
         if (error) {
              console.error("Error de Supabase al consultar boletos:", error);
-             resultadosDiv.innerHTML = '<p style="color: red; text-align: center; margin-top: 15px;">Error al conectar. ¿La política RLS SELECT en "boletos" está en true?</p>';
+             resultadosDiv.innerHTML = '<p style="color: red; text-align: center; margin-top: 15px;">Error al conectar. Revisa la consola y las políticas RLS SELECT en "boletos".</p>';
              return;
         }
 
@@ -142,7 +157,7 @@ async function buscarBoletosCliente(identificador) {
 }
 
 // ==========================================================
-// INICIALIZACIÓN Y EVENT LISTENERS
+// INICIALIZACIÓN Y EVENT LISTENERS (CON LÓGICA DE PESTAÑAS)
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
     cargarSorteos();
@@ -150,47 +165,104 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConsulta = document.getElementById('modal-consultar-tickets');
     const btnAbrirConsulta = document.getElementById('consultar-tickets-btn');
     const btnCerrarConsulta = document.getElementById('close-consultar-tickets');
-    const btnCerrarConsultaVisible = document.getElementById('btn-cerrar-consulta-visible'); // NUEVO BOTÓN
+    const btnCerrarConsultaVisible = document.getElementById('btn-cerrar-consulta-visible'); 
     const formConsulta = document.getElementById('form-consultar-tickets');
     const resultadosDiv = document.getElementById('resultados-consulta');
     
-    // Configurar Abrir Modal
-    btnAbrirConsulta?.addEventListener('click', (e) => {
-        e.preventDefault(); 
+    // Elementos de las pestañas
+    const tabTelefono = document.getElementById('tab-telefono');
+    const tabEmail = document.getElementById('tab-email');
+    const groupTelefono = document.getElementById('consulta-telefono-group');
+    const groupEmail = document.getElementById('consulta-email-group');
+    const inputTelefono = document.getElementById('telefono-consulta');
+    const inputEmail = document.getElementById('email-consulta');
+
+
+    // ----------------------------------------------------
+    // FUNCIÓN DE CAMBIO DE PESTAÑA (Incluye manejo de 'required')
+    // ----------------------------------------------------
+    const switchTab = (activeTab, inactiveTab, activeGroup, inactiveGroup, activeInput, inactiveInput) => {
+        // Estilo de botones
+        activeTab.classList.add('active');
+        inactiveTab.classList.remove('active');
+        
+        // Visibilidad de grupos
+        activeGroup.style.display = 'block';
+        inactiveGroup.style.display = 'none';
+        
+        // Manejo de 'required'
+        if (activeInput) {
+            activeInput.setAttribute('required', 'true');
+            activeInput.focus(); // Enfoca el campo visible
+        }
+        if (inactiveInput) {
+            inactiveInput.removeAttribute('required');
+            inactiveInput.value = ''; // Limpia el campo oculto
+        }
+
+        // Limpiar resultados al cambiar de pestaña
+        if(resultadosDiv) resultadosDiv.innerHTML = '';
+    };
+
+    // ----------------------------------------------------
+    // Event Listeners de las pestañas
+    // ----------------------------------------------------
+    tabTelefono?.addEventListener('click', () => {
+        switchTab(tabTelefono, tabEmail, groupTelefono, groupEmail, inputTelefono, inputEmail);
+    });
+
+    tabEmail?.addEventListener('click', () => {
+        switchTab(tabEmail, tabTelefono, groupEmail, groupTelefono, inputEmail, inputTelefono);
+    });
+
+    // ----------------------------------------------------
+    // Lógica de Abrir/Cerrar Modal (Actualizada para usar 'flex' y limpiar)
+    // ----------------------------------------------------
+    const cerrarModal = () => {
+        if(modalConsulta) modalConsulta.classList.remove('active');
+    }
+    const abrirModal = () => {
         if(modalConsulta) {
-            modalConsulta.style.display = 'flex';
+            modalConsulta.classList.add('active');
             if(resultadosDiv) resultadosDiv.innerHTML = ''; 
-            const input = document.getElementById('identificador-consulta');
-            if(input) input.value = ''; 
+            // Reinicia la pestaña por defecto si quieres, o deja la última seleccionada
+            // switchTab(tabTelefono, tabEmail, groupTelefono, groupEmail, inputTelefono, inputEmail); 
+        }
+    }
+
+    btnAbrirConsulta?.addEventListener('click', abrirModal);
+    btnCerrarConsulta?.addEventListener('click', cerrarModal);
+    btnCerrarConsultaVisible?.addEventListener('click', cerrarModal);
+
+    // Cierre al hacer click fuera del modal
+    modalConsulta?.addEventListener('click', (e) => {
+        if (e.target.id === 'modal-consultar-tickets') {
+            cerrarModal();
         }
     });
 
-    // Función para Cerrar Modal
-    const cerrarModal = () => {
-        if(modalConsulta) modalConsulta.style.display = 'none';
-    }
-
-    // Configurar Cerrar Modal (X)
-    btnCerrarConsulta?.addEventListener('click', cerrarModal);
-    
-    // Configurar Cerrar Modal (Botón Visible)
-    btnCerrarConsultaVisible?.addEventListener('click', cerrarModal); // NUEVO LISTENER
-
-    // Configurar Cierre al hacer click fuera del contenido (solo si existe el modal)
-    if(modalConsulta) {
-        modalConsulta.addEventListener('click', (e) => {
-            if (e.target.id === 'modal-consultar-tickets') {
-                cerrarModal();
-            }
-        });
-    }
-
-    // Configurar Formulario de Búsqueda
+    // ----------------------------------------------------
+    // Configurar Formulario de Búsqueda (Conecta las pestañas a la función)
+    // ----------------------------------------------------
     formConsulta?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const identificador = document.getElementById('identificador-consulta').value.trim();
+        
+        let identificador = '';
+        let tipoBusqueda = '';
+
+        // Determinar qué campo está activo y obtener el valor
+        if (inputTelefono.hasAttribute('required')) {
+            identificador = inputTelefono.value.trim();
+            tipoBusqueda = 'telefono_cedula';
+        } else if (inputEmail.hasAttribute('required')) {
+            identificador = inputEmail.value.trim();
+            tipoBusqueda = 'email';
+        }
+
         if (identificador) {
-            await buscarBoletosCliente(identificador);
+            await buscarBoletosCliente(identificador, tipoBusqueda);
+        } else {
+             resultadosDiv.innerHTML = '<p style="color: var(--primary-color); text-align: center;">Introduce el valor de búsqueda.</p>';
         }
     });
 

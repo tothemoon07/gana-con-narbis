@@ -63,20 +63,47 @@
     </div>
 
                 <div id="modal-consultar-tickets" class="modal-overlay">
-        <div class="modal-pago-content" style="max-width: 400px;">
-            <span class="close-btn-pago" id="close-consultar-tickets">&times;</span>
-            <h4>Consultar Mis Tickets Validados</h4>
+            <div class="modal-pago-content" style="max-width: 400px;">
+                <span class="close-btn-pago" id="close-consultar-tickets">&times;</span>
+                <h4>Consultar Mis Tickets Validados</h4>
 
-            <form id="form-consultar-tickets">
-                <p>Introduce tu **Teléfono** o **Cédula** (V/E + número) para ver tus boletos activos:</p>
-                <input 
-                    type="text" 
-                    id="identificador-consulta" 
-                    placeholder="Ej: 04121234567 o V12345678" 
-                    required
-                >
-                <button type="submit" class="btn-pago-movil" style="background-color: #008CBA;">Buscar Boletos</button>
-            </form>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" id="tab-telefono">Por Teléfono/Cédula</button>
+                    <button class="tab-btn" id="tab-email">Por Email</button>
+                </div>
+
+                <form id="form-consultar-tickets">
+                    <p style="font-size: 0.9em; margin-top: 10px;">Ingresa tu dato para ver todos tus tickets:</p>
+
+                    <div id="consulta-telefono-group" style="display: block;">
+                        <input 
+                            type="text" 
+                            id="telefono-consulta" 
+                            placeholder="Teléfono o Cédula (Ej: V12345678)" 
+                            required
+                        >
+                    </div>
+
+                    <div id="consulta-email-group" style="display: none;">
+                        <input 
+                            type="email" 
+                            id="email-consulta" 
+                            placeholder="ejemplo@correo.com" 
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn-pago-movil" style="background-color: var(--action-button-color); margin-top: 15px;">
+                        <i class="fas fa-search"></i> Buscar Mis Tickets
+                    </button>
+                </form>
+
+                <div id="resultados-consulta-scroll">
+                    <div id="resultados-consulta" style="margin-top: 20px;">
+                        </div>
+                </div>
+                <button class="consulta-btn" id="btn-cerrar-consulta-visible" style="margin-top: 15px;">Cerrar Consulta</button>
+            </div>
+        </div>
 
             <div id="resultados-consulta-scroll">
                 <div id="resultados-consulta" style="margin-top: 20px;">

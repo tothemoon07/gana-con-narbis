@@ -4859,3 +4859,45 @@ h1, h2, h3, h4, h5, h6 {
     padding: 6px 14px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
+
+/* =========================================
+   ESTILOS MODAL TÉRMINOS Y CONDICIONES
+   ========================================= */
+
+.terminos-lista-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 300px; /* Altura máxima con scroll */
+    overflow-y: auto; /* Scroll si es muy largo en móvil */
+}
+
+.lista-terminos {
+    margin-left: 20px;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.lista-terminos li {
+    margin-bottom: 12px;
+    padding-left: 5px;
+}
+
+.lista-terminos li::marker {
+    color: #19A0D0; /* Números azules */
+    font-weight: bold;
+}
+
+/* Barra de scroll bonita para los términos */
+.terminos-lista-container::-webkit-scrollbar {
+    width: 6px;
+}
+.terminos-lista-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.terminos-lista-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}

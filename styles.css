@@ -4901,3 +4901,26 @@ h1, h2, h3, h4, h5, h6 {
     background: #cbd5e1;
     border-radius: 3px;
 }
+
+/* =========================================
+   ESTILO PARA INPUT DE CANTIDAD MANUAL
+   ========================================= */
+#tickets-input {
+    width: 80px; /* Espacio suficiente para números grandes */
+    text-align: center;
+    font-size: 24px; /* Mismo tamaño que tenía el número fijo */
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: #333;
+    font-family: 'Montserrat', sans-serif;
+    outline: none; /* Quita el borde azul al seleccionar */
+    -moz-appearance: textfield; /* Quita flechitas en Firefox */
+}
+
+/* Quita las flechitas de subir/bajar nativas del navegador */
+#tickets-input::-webkit-outer-spin-button,
+#tickets-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

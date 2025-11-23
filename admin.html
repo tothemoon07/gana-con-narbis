@@ -18,6 +18,7 @@
             --success: #22c55e;
             --whatsapp: #25D366;
             --gold: #FFD700;
+            --purple: #8e44ad;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -133,6 +134,12 @@
             border-radius: 6px; cursor: pointer; font-size: 0.85rem;
         }
 
+        .btn-copy {
+            background: var(--purple); color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-copy:hover { opacity: 0.9; }
+
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.9rem; }
         td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
@@ -170,8 +177,17 @@
             letter-spacing: 1px; line-height: 1.5; color: #333; word-break: break-all;
         }
 
-        /* Estilo para el icono de corona en el top */
         .rank-1 { color: var(--gold); font-size: 1.2rem; margin-right: 5px; }
+
+        /* Estilos Tickets Premio Box */
+        .premio-box {
+            background: #f3e5f5; border: 2px dashed #9c27b0; padding: 20px; border-radius: 12px;
+            text-align: center; margin-top: 20px; display: none;
+        }
+        .premio-numbers {
+            font-family: monospace; font-size: 1.5rem; color: #6a1b9a; letter-spacing: 2px;
+            margin: 15px 0; word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -193,6 +209,11 @@
                 <li>
                     <div class="nav-item" id="nav-top" onclick="cambiarVista('top')">
                         <i class="fas fa-trophy"></i> Top Compradores
+                    </div>
+                </li>
+                <li>
+                    <div class="nav-item" id="nav-premios" onclick="cambiarVista('premios')">
+                        <i class="fas fa-gift"></i> Tickets Premio
                     </div>
                 </li>
             </ul>
@@ -284,6 +305,32 @@
             </div>
         </div>
 
+        <div id="view-premios" style="display: none;">
+            <div class="header-actions">
+                <h1>🎁 Tickets Premio (Marketing)</h1>
+            </div>
+            
+            <div class="card">
+                <label>Selecciona el Sorteo:</label>
+                <select id="select-sorteo-premios" onchange="cargarTicketsPremio()" style="margin-bottom: 20px; font-size: 16px;">
+                    <option value="">-- Selecciona un Sorteo --</option>
+                </select>
+
+                <div id="info-premios-container" style="text-align:center; padding: 40px; color:#666;">
+                    Selecciona un sorteo para ver si tiene tickets premiados asignados.
+                </div>
+
+                <div id="box-premios-resultado" class="premio-box">
+                    <h3>🎉 Tickets Premiados Generados</h3>
+                    <p>Copia esta lista y publícala en tus redes sociales.</p>
+                    <div id="lista-premios-texto" class="premio-numbers"></div>
+                    <button class="btn-copy" onclick="copiarAlPortapapeles()">
+                        <i class="fas fa-copy"></i> Copiar Lista
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <div id="modal-nuevo-sorteo" class="modal">
@@ -309,6 +356,18 @@
                 <textarea id="input-desc-corta" rows="4" placeholder="Ej:
 🥇 1er Lugar: $1000 (10:00 PM)
 🥈 2do Lugar: $500 (4:00 PM)"></textarea>
+
+                <div style="margin: 15px 0; border-top:1px solid #eee; padding-top:15px;">
+                    <label style="display:flex; align-items:center; gap:10px; color:var(--purple); cursor:pointer;">
+                        <input type="checkbox" id="check-generar-premios" onchange="toggleInputPremios()">
+                        🎁 Generar Tickets Premio (Marketing)
+                    </label>
+                    <div id="div-cantidad-premios" style="display:none; margin-top:10px; padding-left:25px;">
+                        <label>Cantidad de Tickets a Premiar</label>
+                        <input type="number" id="input-cantidad-premios" value="5" min="1" max="50">
+                        <small style="color:#666;">Se elegirán al azar entre los boletos disponibles.</small>
+                    </div>
+                </div>
 
                 <label>Imagen del Sorteo</label>
                 <input type="file" id="input-imagen" accept="image/*" required>
@@ -373,27 +432,26 @@
         // NAVEGACIÓN
         function cambiarVista(vista) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-sorteos').style.display = 'none';
-            document.getElementById('view-pedidos').style.display = 'none';
-            document.getElementById('view-top').style.display = 'none'; // Ocultar top
+            const vistas = ['sorteos', 'pedidos', 'top', 'premios'];
+            vistas.forEach(v => document.getElementById(`view-${v}`).style.display = 'none');
 
-            if (vista === 'sorteos') {
-                document.getElementById('view-sorteos').style.display = 'block';
-                document.getElementById('nav-sorteos').classList.add('active');
-                cargarSorteos();
-            } else if (vista === 'pedidos') {
-                document.getElementById('view-pedidos').style.display = 'block';
-                document.getElementById('nav-pedidos').classList.add('active');
-                cargarPedidos();
-            } else if (vista === 'top') {
-                document.getElementById('view-top').style.display = 'block';
-                document.getElementById('nav-top').classList.add('active');
-                cargarOpcionesSorteoTop(); // Cargar el select
-            }
+            document.getElementById(`view-${vista}`).style.display = 'block';
+            document.getElementById(`nav-${vista}`).classList.add('active');
+
+            if (vista === 'sorteos') cargarSorteos();
+            else if (vista === 'pedidos') cargarPedidos();
+            else if (vista === 'top') cargarSelectSorteos('select-sorteo-top');
+            else if (vista === 'premios') cargarSelectSorteos('select-sorteo-premios');
         }
 
         function abrirModal(id) { document.getElementById(id).classList.add('active'); }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(el => el.classList.remove('active')); }
+        
+        // --- LOGICA FORMULARIO PREMIOS ---
+        function toggleInputPremios() {
+            const check = document.getElementById('check-generar-premios');
+            document.getElementById('div-cantidad-premios').style.display = check.checked ? 'block' : 'none';
+        }
 
         // --- GESTIÓN SORTEOS ---
         async function cargarSorteos() {
@@ -417,27 +475,51 @@
         async function guardarSorteo(e) {
             e.preventDefault();
             const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
+
             try {
+                // 1. Generar números premio si aplica
+                let ticketsPremioStr = null;
+                const checkPremios = document.getElementById('check-generar-premios').checked;
+                const totalBoletos = parseInt(document.getElementById('input-stock').value);
+
+                if (checkPremios) {
+                    const cantidadPremios = parseInt(document.getElementById('input-cantidad-premios').value);
+                    let premios = [];
+                    let pad = totalBoletos.toString().length;
+                    
+                    while(premios.length < cantidadPremios) {
+                        let num = Math.floor(Math.random() * totalBoletos) + 1;
+                        let str = num.toString().padStart(pad, '0');
+                        if(!premios.includes(str)) premios.push(str);
+                    }
+                    ticketsPremioStr = premios.join(', ');
+                }
+
+                // 2. Subir imagen
                 const file = document.getElementById('input-imagen').files[0];
                 const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
                 const { error: upErr } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
                 if (upErr) throw upErr;
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
 
+                // 3. Insertar
                 const { error: dbErr } = await supabase.from('sorteos').insert([{
                     titulo: document.getElementById('input-titulo').value,
                     precio_bs: document.getElementById('input-precio').value,
-                    total_boletos: document.getElementById('input-stock').value,
+                    total_boletos: totalBoletos,
                     fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(),
                     descripcion_larga: document.getElementById('input-desc-larga').value,
                     descripcion_corta: document.getElementById('input-desc-corta').value,
                     imagen_url: publicUrl,
                     estado: 'activo',
+                    tickets_premio: ticketsPremioStr, // AQUI SE GUARDA LA LISTA
                     creado_en: new Date()
                 }]);
+
                 if (dbErr) throw dbErr;
-                alert("Sorteo creado!");
+                alert("Sorteo creado exitosamente!");
                 cerrarModales(); cargarSorteos(); e.target.reset();
+
             } catch (err) { alert("Error: " + err.message); console.error(err); } 
             finally { btn.disabled = false; btn.textContent = "Crear Sorteo"; }
         }
@@ -537,12 +619,10 @@
             }
         }
 
-        // --- TOP COMPRADORES (LÓGICA NUEVA) ---
-        async function cargarOpcionesSorteoTop() {
-            const select = document.getElementById('select-sorteo-top');
-            // Si ya tiene opciones (más de la default), no recargamos para no parpadear, a menos que se quiera forzar
-            if(select.options.length > 1) return;
-
+        // --- SELECTOR UNIVERSAL DE SORTEOS ---
+        async function cargarSelectSorteos(idSelect) {
+            const select = document.getElementById(idSelect);
+            if(select.options.length > 1) return; // Evitar recargar si ya tiene datos
             const { data: sorteos } = await supabase.from('sorteos').select('id, titulo').eq('estado', 'activo');
             if(sorteos) {
                 sorteos.forEach(s => {
@@ -554,66 +634,66 @@
             }
         }
 
+        // --- TOP COMPRADORES ---
         async function cargarTopCompradores() {
             const sorteoId = document.getElementById('select-sorteo-top').value;
             const tbody = document.getElementById('tbody-top');
             
-            if(!sorteoId) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>';
-                return;
-            }
-
+            if(!sorteoId) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>'; return; }
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Calculando ranking...</td></tr>';
 
-            // 1. Obtener todos los tickets validados de ese sorteo
-            const { data: boletos, error } = await supabase
-                .from('boletos')
-                .select('nombre_cliente, telefono_cliente, cantidad_boletos')
-                .eq('sorteo_id', sorteoId)
-                .eq('estado', 'validado');
+            const { data: boletos, error } = await supabase.from('boletos').select('nombre_cliente, telefono_cliente, cantidad_boletos').eq('sorteo_id', sorteoId).eq('estado', 'validado');
+            if(error || !boletos || boletos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>'; return; }
 
-            if(error || !boletos || boletos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>';
-                return;
-            }
-
-            // 2. Agrupar por teléfono (cliente único)
             const ranking = {};
-
             boletos.forEach(ticket => {
-                const key = ticket.telefono_cliente; // Usamos teléfono como ID único
-                if(!ranking[key]) {
-                    ranking[key] = {
-                        nombre: ticket.nombre_cliente,
-                        telefono: ticket.telefono_cliente,
-                        total: 0
-                    };
-                }
+                const key = ticket.telefono_cliente; 
+                if(!ranking[key]) { ranking[key] = { nombre: ticket.nombre_cliente, telefono: ticket.telefono_cliente, total: 0 }; }
                 ranking[key].total += ticket.cantidad_boletos;
             });
 
-            // 3. Convertir a array y ordenar
-            const rankingArray = Object.values(ranking).sort((a, b) => b.total - a.total);
-
-            // 4. Mostrar Top 10
-            const top10 = rankingArray.slice(0, 10);
+            const top10 = Object.values(ranking).sort((a, b) => b.total - a.total).slice(0, 10);
             
             tbody.innerHTML = '';
             top10.forEach((cliente, index) => {
-                let medal = '';
+                let medal = `#${index + 1}`;
                 if(index === 0) medal = '<i class="fas fa-crown rank-1"></i>';
                 else if(index === 1) medal = '🥈 ';
                 else if(index === 2) medal = '🥉 ';
-                else medal = `#${index + 1}`;
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight:bold;">${medal}</td>
-                        <td>${cliente.nombre}</td>
-                        <td>${cliente.telefono}</td>
-                        <td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td style="font-weight:bold;">${medal}</td><td>${cliente.nombre}</td><td>${cliente.telefono}</td><td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td></tr>`;
+            });
+        }
+
+        // --- TICKETS PREMIO (MARKETING) ---
+        async function cargarTicketsPremio() {
+            const sorteoId = document.getElementById('select-sorteo-premios').value;
+            const infoDiv = document.getElementById('info-premios-container');
+            const boxDiv = document.getElementById('box-premios-resultado');
+            const listaText = document.getElementById('lista-premios-texto');
+
+            infoDiv.style.display = 'block';
+            boxDiv.style.display = 'none';
+
+            if (!sorteoId) return;
+
+            // Consultar base de datos
+            const { data: sorteo } = await supabase.from('sorteos').select('tickets_premio').eq('id', sorteoId).single();
+
+            infoDiv.style.display = 'none';
+            if (sorteo && sorteo.tickets_premio) {
+                boxDiv.style.display = 'block';
+                listaText.textContent = sorteo.tickets_premio;
+            } else {
+                infoDiv.style.display = 'block';
+                infoDiv.textContent = "Este sorteo no tiene tickets premiados asignados.";
+            }
+        }
+
+        function copiarAlPortapapeles() {
+            const texto = document.getElementById('lista-premios-texto').textContent;
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("¡Lista copiada al portapapeles! Ahora pégala en Instagram.");
             });
         }
 

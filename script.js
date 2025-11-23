@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: script.js - SINCRONIZADO Y FORMATO 0.00%
+// Archivo: script.js - POPULAR VISUAL & SINCRONIZADO
 // ==========================================================
 
 const sorteosContainer = document.getElementById('sorteos-container');
@@ -35,8 +35,7 @@ async function cargarSorteos() {
         let htmlContent = '';
 
         for (const sorteo of sorteos) {
-            // CAMBIO IMPORTANTE: Usamos la misma lógica que en el detalle.
-            // Solo sumamos REPORTADOS y VALIDADOS. Ignoramos pendientes.
+            // SOLO contamos REPORTADOS y VALIDADOS. Ignoramos pendientes.
             const { data: ventas } = await supabase
                 .from('boletos')
                 .select('cantidad_boletos')
@@ -48,16 +47,14 @@ async function cargarSorteos() {
             
             // CÁLCULO DEL PROGRESO
             let progreso = (boletosOcupados / totalBoletos) * 100;
-            
-            // Tope visual al 100%
             let progresoVisual = Math.min(progreso, 100);
             
             const ticketsRestantes = Math.max(0, totalBoletos - boletosOcupados);
             const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' });
             const precio = sorteo.precio_bs.toFixed(2);
 
-            // Etiquetas y Estados
-            let badgeHTML = `<span class="raffle-badge normal">ACTIVO</span>`;
+            // LOGICA DE ETIQUETAS VISUALES
+            let badgeHTML = '';
             let claseCard = '';
             let textoBoton = '¡COMPRAR BOLETO AHORA!';
             let botonDisabled = '';
@@ -65,6 +62,7 @@ async function cargarSorteos() {
             let clickAction = `onclick="event.stopPropagation(); verDetalle('${sorteo.id}')"`;
 
             if (boletosOcupados >= totalBoletos) {
+                // AGOTADO
                 badgeHTML = `<span class="raffle-badge" style="background:red;">VENDIDO</span>`;
                 claseCard = 'sold-out';
                 textoBoton = 'AGOTADO';
@@ -72,12 +70,13 @@ async function cargarSorteos() {
                 estiloImagen = 'filter: grayscale(100%);';
                 clickAction = ''; 
             } else if (progreso > 80) {
+                // QUEDAN POCOS
                 badgeHTML = `<span class="raffle-badge" style="background:#ff9800;">¡QUEDAN POCOS!</span>`;
-            } else if (sorteo.es_popular) {
-                badgeHTML = `<span class="raffle-badge" style="background:#00bcd4;">POPULAR</span>`;
+            } else {
+                // POR DEFECTO: POPULAR (Visualmente azul)
+                badgeHTML = `<span class="raffle-badge" style="background:#00bcd4;">🔥 POPULAR</span>`;
             }
 
-            // CAMBIO FORMATO: .toFixed(2) para mostrar 0.00%
             htmlContent += `
                 <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
                     <div class="raffle-image-container">

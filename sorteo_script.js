@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - LÓGICA CORREGIDA (CERO RESERVAS FANTASMA)
+// Archivo: sorteo_script.js - FORMATO 0.00% & SIN FANTASMAS
 // ==========================================================
 
 window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     configurarBotonesCantidad();
     configurarBotonesCompraRapida();
-    configurarModales(); // AQUÍ ESTÁ EL CAMBIO IMPORTANTE DE LÓGICA
-    configurarFormularios(); // (Si tienes funciones extra aquí)
+    configurarModales(); 
+    configurarFormularios(); 
     configurarBotonConsultaTickets(); 
 });
 
@@ -121,8 +121,7 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // MODIFICADO: Solo contamos boletos que ya tienen FOTO (reportado) o ya están validados.
-        // Ignoramos cualquier 'pendiente' que haya quedado basura en la BD antigua.
+        // Solo contamos boletos que ya tienen FOTO (reportado) o ya están validados.
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos')
@@ -149,7 +148,8 @@ async function cargarDetalleSorteo(id) {
         const imgEl = document.getElementById('imagen-sorteo');
         if(imgEl) imgEl.src = sorteo.imagen_url || 'placeholder.png';
 
-        document.getElementById('porcentaje-progreso').textContent = `${porcentajeVisual.toFixed(1)}%`;
+        // CAMBIO FORMATO: .toFixed(2)
+        document.getElementById('porcentaje-progreso').textContent = `${porcentajeVisual.toFixed(2)}%`;
         document.getElementById('barra-progreso').style.width = `${porcentajeVisual}%`;
         const textoProgreso = document.getElementById('texto-progreso');
 
@@ -265,7 +265,7 @@ function configurarBotonesCompraRapida() {
 }
 
 // ==========================================================
-// MODALES Y FLUJO DE COMPRA (MODIFICADO PARA EVITAR FALSOS POSITIVOS)
+// MODALES Y FLUJO DE COMPRA
 // ==========================================================
 
 function configurarModales() {
@@ -333,7 +333,6 @@ function configurarModales() {
 // ==========================================================
 // CONSULTA TICKETS
 // ==========================================================
-
 function switchTabConsulta(activeTab, inactiveTab, activeGroup, inactiveGroup, activeInput, inactiveInput) {
     activeTab.classList.add('active');
     inactiveTab.classList.remove('active');
@@ -341,7 +340,6 @@ function switchTabConsulta(activeTab, inactiveTab, activeGroup, inactiveGroup, a
     inactiveGroup.style.display = 'none';
     if(resultadosConsultaDiv) resultadosConsultaDiv.innerHTML = '';
 }
-
 function abrirModalConsultaTickets() {
     if (modalConsultaTickets) {
         resultadosConsultaDiv.innerHTML = ''; 
@@ -350,26 +348,22 @@ function abrirModalConsultaTickets() {
         modalConsultaTickets.style.display = 'flex';
     }
 }
-
 function cerrarModalConsultaTickets() {
     if (modalConsultaTickets) {
         modalConsultaTickets.classList.remove('active');
         modalConsultaTickets.style.display = 'none';
     }
 }
-
 function configurarBotonConsultaTickets() {
     btnConsultaNavbar?.addEventListener('click', abrirModalConsultaTickets);
     btnCerrarConsulta?.addEventListener('click', cerrarModalConsultaTickets);
     btnCerrarVisible?.addEventListener('click', cerrarModalConsultaTickets);
-
     tabTelefono?.addEventListener('click', () => {
         switchTabConsulta(tabTelefono, tabEmail, groupTelefono, groupEmail, inputTelefono, inputEmail);
     });
     tabEmail?.addEventListener('click', () => {
         switchTabConsulta(tabEmail, tabTelefono, groupEmail, groupTelefono, inputEmail, inputTelefono);
     });
-
     formConsultarTickets?.addEventListener('submit', async (e) => {
         e.preventDefault();
         let valor = '';
@@ -382,7 +376,6 @@ function configurarBotonConsultaTickets() {
         if (valor) await consultarBoletosValidos(valor, tipo);
     });
 }
-
 async function consultarBoletosValidos(identificador, tipoBusqueda) {
     resultadosConsultaDiv.innerHTML = '<div class="loading"></div><p style="text-align:center;">Buscando...</p>';
     let query = supabase.from('boletos').select('cantidad_boletos, numeros_asignados, sorteos(titulo)').eq('estado', 'validado'); 
@@ -404,11 +397,9 @@ async function consultarBoletosValidos(identificador, tipoBusqueda) {
 }
 
 // ==========================================================
-// GUARDADO FINAL Y REPORTE (AQUÍ SE CREA LA ORDEN REAL)
+// GUARDADO FINAL
 // ==========================================================
-
-// Funciones "dummy" para que no den error si algo las llama (aunque ya no se usan)
-function configurarFormularios() {}
+function configurarFormularios() {} // Dummy
 
 document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -426,7 +417,7 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     const btn = e.submitter; 
     btn.textContent = "Enviando Pedido..."; btn.disabled = true;
 
-    // 2. SUBIR IMAGEN A SUPABASE STORAGE
+    // 2. SUBIR IMAGEN
     const BUCKET = 'comprobantes_narbis_v2';
     let fileUrl = null;
     const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
@@ -444,27 +435,23 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
     fileUrl = data.publicUrl;
 
-    // 3. INSERTAR TODO EN BASE DE DATOS (AHORA SÍ EXISTE LA ORDEN)
+    // 3. INSERTAR TODO EN SUPABASE
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
     const nuevaOrden = {
         sorteo_id: sorteoActual.id,
-        // Datos del paso 1 (Memoria)
         nombre_cliente: datosClienteTemporal.nombre,
         email_cliente: datosClienteTemporal.email,
         telefono_cliente: datosClienteTemporal.telefono,
         cedula_cliente: datosClienteTemporal.cedula,
         estado_cliente: datosClienteTemporal.estado,
-        // Datos del pedido
         cantidad_boletos: boletosSeleccionados,
         precio_total: total,
         metodo_pago: 'pago_movil',
         codigo_concepto: referenciaUnica,
-        // Datos del reporte (Paso 3)
-        referencia_pago: document.getElementById('referencia-pago').value, // Referencia bancaria
+        referencia_pago: document.getElementById('referencia-pago').value,
         telefono_pago: document.getElementById('telefono-pago-movil').value,
         url_capture: fileUrl,
-        // Estado directo a reportado
         estado: 'reportado',
         creado_en: new Date().toISOString()
     };

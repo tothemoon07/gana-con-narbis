@@ -17,6 +17,7 @@
             --danger: #ef4444;
             --success: #22c55e;
             --whatsapp: #25D366;
+            --gold: #FFD700;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -163,12 +164,14 @@
         
         .capture-img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; }
 
-        /* Estilo para la lista de números en el modal */
         #lista-numeros-container {
             background: #f1f5f9; padding: 15px; border-radius: 8px; 
             max-height: 200px; overflow-y: auto; font-family: monospace; 
             letter-spacing: 1px; line-height: 1.5; color: #333; word-break: break-all;
         }
+
+        /* Estilo para el icono de corona en el top */
+        .rank-1 { color: var(--gold); font-size: 1.2rem; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -185,6 +188,11 @@
                 <li>
                     <div class="nav-item" id="nav-pedidos" onclick="cambiarVista('pedidos')">
                         <i class="fas fa-shopping-cart"></i> Pedidos
+                    </div>
+                </li>
+                <li>
+                    <div class="nav-item" id="nav-top" onclick="cambiarVista('top')">
+                        <i class="fas fa-trophy"></i> Top Compradores
                     </div>
                 </li>
             </ul>
@@ -245,6 +253,33 @@
                         </tr>
                     </thead>
                     <tbody id="tbody-pedidos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-top" style="display: none;">
+            <div class="header-actions">
+                <h1>🏆 Ranking de Compradores</h1>
+            </div>
+            
+            <div class="card">
+                <label>Selecciona el Sorteo para ver el Top:</label>
+                <select id="select-sorteo-top" onchange="cargarTopCompradores()" style="margin-bottom: 20px; font-size: 16px;">
+                    <option value="">-- Selecciona un Sorteo --</option>
+                </select>
+
+                <table id="tabla-top">
+                    <thead>
+                        <tr>
+                            <th># Rank</th>
+                            <th>Cliente</th>
+                            <th>Teléfono</th>
+                            <th style="text-align: center;">Total Boletos Comprados</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-top">
+                        <tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -335,25 +370,32 @@
             document.getElementById('form-sorteo').addEventListener('submit', guardarSorteo);
         });
 
+        // NAVEGACIÓN
         function cambiarVista(vista) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('view-sorteos').style.display = 'none';
             document.getElementById('view-pedidos').style.display = 'none';
+            document.getElementById('view-top').style.display = 'none'; // Ocultar top
 
             if (vista === 'sorteos') {
                 document.getElementById('view-sorteos').style.display = 'block';
                 document.getElementById('nav-sorteos').classList.add('active');
                 cargarSorteos();
-            } else {
+            } else if (vista === 'pedidos') {
                 document.getElementById('view-pedidos').style.display = 'block';
                 document.getElementById('nav-pedidos').classList.add('active');
                 cargarPedidos();
+            } else if (vista === 'top') {
+                document.getElementById('view-top').style.display = 'block';
+                document.getElementById('nav-top').classList.add('active');
+                cargarOpcionesSorteoTop(); // Cargar el select
             }
         }
 
         function abrirModal(id) { document.getElementById(id).classList.add('active'); }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(el => el.classList.remove('active')); }
 
+        // --- GESTIÓN SORTEOS ---
         async function cargarSorteos() {
             const tbody = document.getElementById('tbody-sorteos');
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Cargando...</td></tr>';
@@ -375,7 +417,6 @@
         async function guardarSorteo(e) {
             e.preventDefault();
             const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
-
             try {
                 const file = document.getElementById('input-imagen').files[0];
                 const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -394,7 +435,6 @@
                     estado: 'activo',
                     creado_en: new Date()
                 }]);
-
                 if (dbErr) throw dbErr;
                 alert("Sorteo creado!");
                 cerrarModales(); cargarSorteos(); e.target.reset();
@@ -406,6 +446,7 @@
             if(confirm("¿Eliminar este sorteo?")) { await supabase.from('sorteos').delete().eq('id', id); cargarSorteos(); }
         }
 
+        // --- GESTIÓN PEDIDOS ---
         function filtrarPedidos(estado, btn) {
             filtroActual = estado;
             document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
@@ -416,38 +457,23 @@
         async function cargarPedidos() {
             const tbody = document.getElementById('tbody-pedidos');
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Cargando...</td></tr>';
-
-            const { data: pedidos, error } = await supabase
-                .from('boletos')
-                .select('*, sorteos(titulo)') 
-                .eq('estado', filtroActual)
-                .order('creado_en', { ascending: false });
+            const { data: pedidos, error } = await supabase.from('boletos').select('*, sorteos(titulo)').eq('estado', filtroActual).order('creado_en', { ascending: false });
 
             if (error || !pedidos.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No hay pedidos en esta sección.</td></tr>'; return; }
-
             tbody.innerHTML = '';
             pedidos.forEach(p => {
                 let btnAccion = '-';
                 let btnNumeros = `<span style="color:#999; font-style:italic;">Pendiente</span>`;
 
-                // LOGICA DE BOTONES SEGÚN ESTADO
                 if (filtroActual === 'reportado') {
-                    // BOTON REVISAR (Pendientes)
                     btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.referencia_pago}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`;
                 } else if (filtroActual === 'validado') {
-                    // BOTON WHATSAPP (Validados)
-                    // Formatear mensaje
-                    const nombreCliente = p.nombre_cliente.split(' ')[0]; // Solo primer nombre
+                    const nombreCliente = p.nombre_cliente.split(' ')[0]; 
                     const sorteoTitulo = p.sorteos?.titulo || 'Sorteo';
                     const listaTickets = p.numeros_asignados;
-                    
                     const mensaje = `Hola ${nombreCliente}! 🧢👋 Muchas gracias por tu compra en CAPI RIFAS BARINAS. ✅ Tu pago ha sido validado con éxito. 🎟️ Aquí están tus tickets para el sorteo *${sorteoTitulo}*: ${listaTickets}. 🍀 ¡Mucha suerte! Si deseas comprar más oportunidades, aquí estamos a la orden.`;
-                    
                     const urlWhatsapp = `https://wa.me/58${p.telefono_cliente.replace(/^0/, '')}?text=${encodeURIComponent(mensaje)}`;
-
                     btnAccion = `<a href="${urlWhatsapp}" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Enviar Tickets</a>`;
-                    
-                    // BOTÓN VER NÚMEROS (Validados)
                     btnNumeros = `<button class="btn-ver-numeros" onclick="verNumeros('${p.nombre_cliente}', '${p.numeros_asignados}')"><i class="fas fa-eye"></i> Ver</button>`;
                 }
 
@@ -466,7 +492,6 @@
             });
         }
 
-        // FUNCION PARA ABRIR MODAL DE NUMEROS
         function verNumeros(cliente, numeros) {
             document.getElementById('modal-numeros-cliente').textContent = cliente;
             document.getElementById('lista-numeros-container').textContent = numeros;
@@ -511,6 +536,87 @@
                 cerrarModales(); cargarPedidos();
             }
         }
+
+        // --- TOP COMPRADORES (LÓGICA NUEVA) ---
+        async function cargarOpcionesSorteoTop() {
+            const select = document.getElementById('select-sorteo-top');
+            // Si ya tiene opciones (más de la default), no recargamos para no parpadear, a menos que se quiera forzar
+            if(select.options.length > 1) return;
+
+            const { data: sorteos } = await supabase.from('sorteos').select('id, titulo').eq('estado', 'activo');
+            if(sorteos) {
+                sorteos.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = s.titulo;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        async function cargarTopCompradores() {
+            const sorteoId = document.getElementById('select-sorteo-top').value;
+            const tbody = document.getElementById('tbody-top');
+            
+            if(!sorteoId) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Calculando ranking...</td></tr>';
+
+            // 1. Obtener todos los tickets validados de ese sorteo
+            const { data: boletos, error } = await supabase
+                .from('boletos')
+                .select('nombre_cliente, telefono_cliente, cantidad_boletos')
+                .eq('sorteo_id', sorteoId)
+                .eq('estado', 'validado');
+
+            if(error || !boletos || boletos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>';
+                return;
+            }
+
+            // 2. Agrupar por teléfono (cliente único)
+            const ranking = {};
+
+            boletos.forEach(ticket => {
+                const key = ticket.telefono_cliente; // Usamos teléfono como ID único
+                if(!ranking[key]) {
+                    ranking[key] = {
+                        nombre: ticket.nombre_cliente,
+                        telefono: ticket.telefono_cliente,
+                        total: 0
+                    };
+                }
+                ranking[key].total += ticket.cantidad_boletos;
+            });
+
+            // 3. Convertir a array y ordenar
+            const rankingArray = Object.values(ranking).sort((a, b) => b.total - a.total);
+
+            // 4. Mostrar Top 10
+            const top10 = rankingArray.slice(0, 10);
+            
+            tbody.innerHTML = '';
+            top10.forEach((cliente, index) => {
+                let medal = '';
+                if(index === 0) medal = '<i class="fas fa-crown rank-1"></i>';
+                else if(index === 1) medal = '🥈 ';
+                else if(index === 2) medal = '🥉 ';
+                else medal = `#${index + 1}`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold;">${medal}</td>
+                        <td>${cliente.nombre}</td>
+                        <td>${cliente.telefono}</td>
+                        <td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td>
+                    </tr>
+                `;
+            });
+        }
+
     </script>
 </body>
 </html>

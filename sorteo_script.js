@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - VALIDACIÓN STOCK EN TIEMPO REAL
+// Archivo: sorteo_script.js - CAPTURE OBLIGATORIO & VALIDACIÓN STOCK
 // ==========================================================
 
 window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
@@ -8,7 +8,7 @@ window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
 let sorteoActual = null;
 let precioUnitario = 0;
 let boletosSeleccionados = 2; 
-let maxDisponible = 0; // NUEVA VARIABLE PARA CONTROLAR EL STOCK REAL
+let maxDisponible = 0; // CONTROL DEL STOCK REAL
 let referenciaUnica = null;
 
 // Variables botones
@@ -80,13 +80,6 @@ function activarModoEscrituraManual() {
             let valor = parseInt(e.target.value);
             if (isNaN(valor)) valor = 0;
             
-            // VALIDACIÓN EN TIEMPO REAL: NO PUEDE SUPERAR EL STOCK
-            if (maxDisponible > 0 && valor > maxDisponible) {
-                // Si escribe 10000 y hay 500, no lo bloqueamos escribiendo,
-                // pero visualmente el total se calcula con el máximo posible?
-                // Mejor estrategia: Dejar que escriba, pero validar al salir (blur) o al comprar.
-            }
-            
             boletosSeleccionados = valor;
             actualizarSoloTotal(); 
         });
@@ -99,7 +92,7 @@ function activarModoEscrituraManual() {
                 valor = 2;
             }
             
-            // 2. Máximo disponible (El freno a los 10,000 tickets)
+            // 2. Máximo disponible (El freno a los tickets extra)
             if (maxDisponible > 0 && valor > maxDisponible) {
                 alert(`Solo quedan ${maxDisponible} boletos disponibles.`);
                 valor = maxDisponible;
@@ -186,7 +179,7 @@ async function cargarDetalleSorteo(id) {
             btnComprarBoletos.textContent = "Comprar Boletos";
             btnComprarBoletos.disabled = false;
             
-            // Ajustar valor inicial si queda menos de 2 (caso raro pero posible)
+            // Ajustar valor inicial si queda menos de 2
             let inicio = 2;
             if (maxDisponible < 2) inicio = maxDisponible;
             actualizarTotales(inicio);
@@ -373,7 +366,7 @@ function configurarModales() {
 }
 
 // ==========================================================
-// CONSULTA TICKETS (Mismo código)
+// CONSULTA TICKETS
 // ==========================================================
 
 function switchTabConsulta(activeTab, inactiveTab, activeGroup, inactiveGroup, activeInput, inactiveInput) {
@@ -465,7 +458,7 @@ async function consultarBoletosValidos(identificador, tipoBusqueda) {
 }
 
 // ==========================================================
-// Guardar Orden
+// Guardar Orden y REPORTAR PAGO (CON VALIDACIÓN DE FOTO)
 // ==========================================================
 
 async function guardarOrdenPendiente() {
@@ -493,39 +486,50 @@ async function guardarOrdenPendiente() {
 
 document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // --- VALIDACIÓN DE CAPTURE OBLIGATORIA ---
+    const fileInput = document.getElementById('capture-input');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("⚠️ ¡ATENCIÓN!\nEs OBLIGATORIO subir la captura del pago para poder verificar tu compra.");
+        fileInput.style.border = "2px solid red"; // Resaltar en rojo
+        return; // DETIENE EL PROCESO AQUÍ SI NO HAY FOTO
+    }
+    // -----------------------------------------
+
     const btn = e.submitter; 
     btn.textContent = "Subiendo..."; btn.disabled = true;
 
-    const file = document.getElementById('capture-input').files[0];
     const BUCKET = 'comprobantes_narbis_v2';
     let fileUrl = null;
 
-    if (file) {
-        const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
-        const fileName = `${referenciaUnica}_${Date.now()}_${cleanName}`;
+    const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
+    const fileName = `${referenciaUnica}_${Date.now()}_${cleanName}`;
+    
+    const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(fileName, file);
+    
+    if (!uploadErr) {
+        const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
+        fileUrl = data.publicUrl;
         
-        const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(fileName, file);
-        
-        if (!uploadErr) {
-            const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-            fileUrl = data.publicUrl;
+        const { error } = await supabase.from('boletos').update({
+            referencia_pago: document.getElementById('referencia-pago').value,
+            telefono_pago: document.getElementById('telefono-pago-movil').value,
+            url_capture: fileUrl,
+            estado: 'reportado'
+        }).eq('codigo_concepto', referenciaUnica);
+
+        if (!error) {
+            alert("¡Pago reportado con éxito! Validaremos tu pago en breve.");
+            window.location.href = 'index.html';
         } else {
-            console.error("Error subida:", uploadErr);
+            alert("Error al guardar reporte.");
+            btn.disabled = false; btn.textContent = "Reportar Pago";
         }
-    }
-
-    const { error } = await supabase.from('boletos').update({
-        referencia_pago: document.getElementById('referencia-pago').value,
-        telefono_pago: document.getElementById('telefono-pago-movil').value,
-        url_capture: fileUrl,
-        estado: 'reportado'
-    }).eq('codigo_concepto', referenciaUnica);
-
-    if (!error) {
-        alert("¡Pago reportado con éxito! Te contactaremos para validar tu ticket.");
-        window.location.href = 'index.html';
     } else {
-        alert("Error al reportar. Contáctanos por WhatsApp.");
+        console.error("Error subida:", uploadErr);
+        alert("Error al subir la imagen. Intenta de nuevo.");
         btn.disabled = false; btn.textContent = "Reportar Pago";
     }
 });

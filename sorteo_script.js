@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - CAPTURE OBLIGATORIO & VALIDACIÓN STOCK
+// Archivo: sorteo_script.js - LÓGICA CORREGIDA (CERO RESERVAS FANTASMA)
 // ==========================================================
 
 window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
@@ -8,8 +8,9 @@ window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
 let sorteoActual = null;
 let precioUnitario = 0;
 let boletosSeleccionados = 2; 
-let maxDisponible = 0; // CONTROL DEL STOCK REAL
+let maxDisponible = 0; 
 let referenciaUnica = null;
+let datosClienteTemporal = {}; // AQUÍ GUARDAMOS LOS DATOS MIENTRAS PAGAN
 
 // Variables botones
 let intervalId = null;
@@ -61,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     configurarBotonesCantidad();
     configurarBotonesCompraRapida();
-    configurarModales();
-    configurarFormularios();
+    configurarModales(); // AQUÍ ESTÁ EL CAMBIO IMPORTANTE DE LÓGICA
+    configurarFormularios(); // (Si tienes funciones extra aquí)
     configurarBotonConsultaTickets(); 
 });
 
@@ -79,25 +80,17 @@ function activarModoEscrituraManual() {
         inputCantidad.addEventListener('input', (e) => {
             let valor = parseInt(e.target.value);
             if (isNaN(valor)) valor = 0;
-            
             boletosSeleccionados = valor;
             actualizarSoloTotal(); 
         });
 
         inputCantidad.addEventListener('blur', () => {
             let valor = parseInt(inputCantidad.value);
-            
-            // 1. Mínimo 2
-            if (isNaN(valor) || valor < 2) {
-                valor = 2;
-            }
-            
-            // 2. Máximo disponible (El freno a los tickets extra)
+            if (isNaN(valor) || valor < 2) { valor = 2; }
             if (maxDisponible > 0 && valor > maxDisponible) {
                 alert(`Solo quedan ${maxDisponible} boletos disponibles.`);
                 valor = maxDisponible;
             }
-
             inputCantidad.value = valor;
             actualizarTotales(valor);
         });
@@ -105,7 +98,7 @@ function activarModoEscrituraManual() {
 }
 
 // ==========================================================
-// CARGA DE DATOS
+// CARGA DE DATOS (SOLO CUENTA VENTAS REALES)
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -128,24 +121,21 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // Contamos Pendientes + Reportados + Validados
+        // MODIFICADO: Solo contamos boletos que ya tienen FOTO (reportado) o ya están validados.
+        // Ignoramos cualquier 'pendiente' que haya quedado basura en la BD antigua.
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos')
             .eq('sorteo_id', id)
-            .in('estado', ['pendiente', 'reportado', 'validado']); 
+            .in('estado', ['reportado', 'validado']); 
 
         const boletosOcupados = ventas ? ventas.reduce((sum, orden) => sum + orden.cantidad_boletos, 0) : 0;
         const totalTickets = sorteo.total_boletos || 10000; 
         
-        // CÁLCULOS DE STOCK
         maxDisponible = Math.max(0, totalTickets - boletosOcupados);
         let porcentaje = (boletosOcupados / totalTickets) * 100;
-        
-        // CORRECCIÓN VISUAL
         let porcentajeVisual = Math.min(porcentaje, 100);
         
-        // Renderizado
         document.title = `${sorteo.titulo} | Detalles`;
         document.getElementById('titulo-sorteo').textContent = sorteo.titulo;
         
@@ -163,7 +153,6 @@ async function cargarDetalleSorteo(id) {
         document.getElementById('barra-progreso').style.width = `${porcentajeVisual}%`;
         const textoProgreso = document.getElementById('texto-progreso');
 
-        // ESTADO AGOTADO
         if (boletosOcupados >= totalTickets) {
             textoProgreso.textContent = "¡Sorteo Agotado!";
             textoProgreso.style.color = "red";
@@ -178,8 +167,6 @@ async function cargarDetalleSorteo(id) {
             textoProgreso.textContent = `Quedan ${maxDisponible} boletos disponibles`;
             btnComprarBoletos.textContent = "Comprar Boletos";
             btnComprarBoletos.disabled = false;
-            
-            // Ajustar valor inicial si queda menos de 2
             let inicio = 2;
             if (maxDisponible < 2) inicio = maxDisponible;
             actualizarTotales(inicio);
@@ -196,7 +183,6 @@ async function cargarDetalleSorteo(id) {
 // ==========================================================
 
 function actualizarTotales(cantidad) {
-    // Validar contra Stock
     if (maxDisponible > 0 && cantidad > maxDisponible) {
         cantidad = maxDisponible;
         alert(`Ajustado al máximo disponible: ${maxDisponible}`);
@@ -221,10 +207,8 @@ function actualizarSoloTotal() {
 function cambiarCantidad(step) {
     let actual = parseInt(inputCantidad.value) || 2;
     let nuevoValor = actual + step;
-    
     if (nuevoValor < 2) nuevoValor = 2; 
     if (maxDisponible > 0 && nuevoValor > maxDisponible) nuevoValor = maxDisponible;
-
     actualizarTotales(nuevoValor);
 }
 
@@ -250,14 +234,11 @@ function configurarBotonesCantidad() {
         btnPlus.addEventListener('mousedown', () => iniciarAutoCambio(1));
         btnPlus.addEventListener('mouseup', detenerAutoCambio);
         btnPlus.addEventListener('mouseleave', detenerAutoCambio);
-
         btnMinus.addEventListener('mousedown', () => iniciarAutoCambio(-1));
         btnMinus.addEventListener('mouseup', detenerAutoCambio);
         btnMinus.addEventListener('mouseleave', detenerAutoCambio);
-
         btnPlus.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarAutoCambio(1); });
         btnPlus.addEventListener('touchend', detenerAutoCambio);
-        
         btnMinus.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarAutoCambio(-1); });
         btnMinus.addEventListener('touchend', detenerAutoCambio);
     }
@@ -267,16 +248,12 @@ function configurarBotonesCompraRapida() {
     document.querySelectorAll('.buy-option-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             let cantidad = parseInt(e.currentTarget.getAttribute('data-tickets'));
-            
-            // Validar contra stock
             if (maxDisponible > 0 && cantidad > maxDisponible) {
                 cantidad = maxDisponible;
                 alert("Has seleccionado más de lo disponible. Ajustamos al máximo.");
             }
             if (cantidad < 2) cantidad = 2;
-
             actualizarTotales(cantidad);
-            
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.background = 'white');
             document.querySelectorAll('.buy-option-btn').forEach(b => b.style.color = 'var(--primary)');
             if(!e.currentTarget.classList.contains('popular')) {
@@ -288,7 +265,7 @@ function configurarBotonesCompraRapida() {
 }
 
 // ==========================================================
-// Modales y Pagos (VALIDACIÓN FINAL ANTES DE ABRIR)
+// MODALES Y FLUJO DE COMPRA (MODIFICADO PARA EVITAR FALSOS POSITIVOS)
 // ==========================================================
 
 function configurarModales() {
@@ -298,24 +275,9 @@ function configurarModales() {
 
     btnComprarBoletos.addEventListener('click', () => {
         if (!sorteoActual) return;
-        
-        // VALIDACIÓN DE STOCK ANTES DE ABRIR MODAL
-        if (maxDisponible <= 0) {
-            alert("Lo sentimos, este sorteo está agotado.");
-            return;
-        }
-        
-        if (boletosSeleccionados > maxDisponible) {
-            alert(`Solo puedes comprar hasta ${maxDisponible} boletos.`);
-            actualizarTotales(maxDisponible);
-            return;
-        }
-
-        if (boletosSeleccionados < 2) {
-            alert("La compra mínima es de 2 boletos.");
-            actualizarTotales(2);
-            return;
-        }
+        if (maxDisponible <= 0) { alert("Sorteo agotado."); return; }
+        if (boletosSeleccionados > maxDisponible) { actualizarTotales(maxDisponible); return; }
+        if (boletosSeleccionados < 2) { alert("Mínimo 2 boletos."); actualizarTotales(2); return; }
         
         modalContacto.classList.add('active'); 
         modalContacto.style.display = 'flex'; 
@@ -329,25 +291,29 @@ function configurarModales() {
         });
     });
 
-    document.getElementById('form-datos-contacto').addEventListener('submit', async (e) => {
+    // 1. FORMULARIO DE CONTACTO: NO GUARDA EN BD AÚN
+    document.getElementById('form-datos-contacto').addEventListener('submit', (e) => {
         e.preventDefault();
-        const btn = e.submitter; 
-        btn.textContent = "Procesando..."; btn.disabled = true;
-
-        referenciaUnica = Math.floor(100000 + Math.random() * 900000);
-        const exito = await guardarOrdenPendiente();
         
-        if (exito) {
-            codigoReferenciaDisplay.textContent = referenciaUnica;
-            codigoReferenciaPago.textContent = referenciaUnica;
-            
-            modalContacto.style.display = 'none';
-            modalPago.classList.add('active');
-            modalPago.style.display = 'flex';
-        } else {
-            alert("Error creando orden. Intente de nuevo.");
-        }
-        btn.textContent = "Continuar al Pago"; btn.disabled = false;
+        // Generamos la referencia para mostrarla
+        referenciaUnica = Math.floor(100000 + Math.random() * 900000);
+
+        // GUARDAMOS LOS DATOS EN MEMORIA (NO EN SUPABASE)
+        datosClienteTemporal = {
+            nombre: document.getElementById('nombre-completo').value,
+            email: document.getElementById('email-contacto').value,
+            telefono: document.getElementById('telefono-contacto').value,
+            cedula: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value,
+            estado: document.getElementById('estado-contacto').value
+        };
+
+        // Mostramos referencia y pasamos al pago
+        codigoReferenciaDisplay.textContent = referenciaUnica;
+        codigoReferenciaPago.textContent = referenciaUnica;
+        
+        modalContacto.style.display = 'none';
+        modalPago.classList.add('active');
+        modalPago.style.display = 'flex';
     });
 
     document.getElementById('abrir-reporte').addEventListener('click', () => {
@@ -358,9 +324,8 @@ function configurarModales() {
 
     document.querySelectorAll('.copy-button').forEach(btn => {
         btn.addEventListener('click', () => {
-            const texto = btn.getAttribute('data-copy-target');
-            navigator.clipboard.writeText(texto);
-            alert("Copiado: " + texto);
+            navigator.clipboard.writeText(btn.getAttribute('data-copy-target'));
+            alert("Copiado!");
         });
     });
 }
@@ -401,7 +366,6 @@ function configurarBotonConsultaTickets() {
     tabTelefono?.addEventListener('click', () => {
         switchTabConsulta(tabTelefono, tabEmail, groupTelefono, groupEmail, inputTelefono, inputEmail);
     });
-
     tabEmail?.addEventListener('click', () => {
         switchTabConsulta(tabEmail, tabTelefono, groupEmail, groupTelefono, inputEmail, inputTelefono);
     });
@@ -410,126 +374,109 @@ function configurarBotonConsultaTickets() {
         e.preventDefault();
         let valor = '';
         let tipo = '';
-
         if (groupTelefono.style.display !== 'none') {
-            valor = inputTelefono.value.trim();
-            tipo = 'telefono_cedula';
+            valor = inputTelefono.value.trim(); tipo = 'telefono_cedula';
         } else {
-            valor = inputEmail.value.trim();
-            tipo = 'email';
+            valor = inputEmail.value.trim(); tipo = 'email';
         }
-
         if (valor) await consultarBoletosValidos(valor, tipo);
     });
 }
 
 async function consultarBoletosValidos(identificador, tipoBusqueda) {
     resultadosConsultaDiv.innerHTML = '<div class="loading"></div><p style="text-align:center;">Buscando...</p>';
-    
-    let query = supabase.from('boletos')
-        .select('cantidad_boletos, numeros_asignados, sorteos(titulo)')
-        .eq('estado', 'validado'); 
-
-    if (tipoBusqueda === 'email') {
-        query = query.eq('email_cliente', identificador.toLowerCase());
-    } else {
+    let query = supabase.from('boletos').select('cantidad_boletos, numeros_asignados, sorteos(titulo)').eq('estado', 'validado'); 
+    if (tipoBusqueda === 'email') { query = query.eq('email_cliente', identificador.toLowerCase()); } 
+    else {
         const idLimpio = identificador.toUpperCase().replace(/[^A-Z0-9]/g, '');
         query = query.or(`telefono_cliente.eq.${idLimpio},cedula_cliente.eq.${idLimpio},cedula_cliente.eq.V${idLimpio},cedula_cliente.eq.E${idLimpio}`);
     }
-
     const { data, error } = await query;
-
     if (error || !data || data.length === 0) {
         resultadosConsultaDiv.innerHTML = '<p style="text-align:center; color:var(--gray);">No se encontraron boletos validados.</p>';
         return;
     }
-
     let html = '<h4>✅ Boletos Encontrados</h4>';
     data.forEach(boleto => {
-        html += `
-            <div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px; background:#f8f9fa;">
-                <p style="font-weight:bold; color:var(--primary);">${boleto.sorteos?.titulo || 'Sorteo'}</p>
-                <p>Cantidad: ${boleto.cantidad_boletos}</p>
-                <p style="color:green; font-family:monospace;"># ${boleto.numeros_asignados}</p>
-            </div>
-        `;
+        html += `<div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px; background:#f8f9fa;"><p style="font-weight:bold; color:var(--primary);">${boleto.sorteos?.titulo || 'Sorteo'}</p><p>Cantidad: ${boleto.cantidad_boletos}</p><p style="color:green; font-family:monospace;"># ${boleto.numeros_asignados}</p></div>`;
     });
     resultadosConsultaDiv.innerHTML = html;
 }
 
 // ==========================================================
-// Guardar Orden y REPORTAR PAGO (CON VALIDACIÓN DE FOTO)
+// GUARDADO FINAL Y REPORTE (AQUÍ SE CREA LA ORDEN REAL)
 // ==========================================================
 
-async function guardarOrdenPendiente() {
-    const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
-    
-    const datosOrden = {
-        sorteo_id: sorteoActual.id,
-        nombre_cliente: document.getElementById('nombre-completo').value,
-        email_cliente: document.getElementById('email-contacto').value,
-        telefono_cliente: document.getElementById('telefono-contacto').value,
-        cedula_cliente: document.getElementById('cedula-prefijo').value + document.getElementById('cedula-numero').value, 
-        estado_cliente: document.getElementById('estado-contacto').value, 
-        cantidad_boletos: boletosSeleccionados, 
-        precio_total: total, 
-        metodo_pago: 'pago_movil', 
-        codigo_concepto: referenciaUnica, 
-        estado: 'pendiente', 
-        creado_en: new Date().toISOString()
-    };
-    
-    const { error } = await supabase.from('boletos').insert([datosOrden]);
-    if (error) { console.error(error); return false; }
-    return true;
-}
+// Funciones "dummy" para que no den error si algo las llama (aunque ya no se usan)
+function configurarFormularios() {}
 
 document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // --- VALIDACIÓN DE CAPTURE OBLIGATORIA ---
+    // 1. VALIDACIÓN CAPTURE
     const fileInput = document.getElementById('capture-input');
     const file = fileInput.files[0];
 
     if (!file) {
-        alert("⚠️ ¡ATENCIÓN!\nEs OBLIGATORIO subir la captura del pago para poder verificar tu compra.");
-        fileInput.style.border = "2px solid red"; // Resaltar en rojo
-        return; // DETIENE EL PROCESO AQUÍ SI NO HAY FOTO
+        alert("⚠️ ¡ATENCIÓN!\nEs OBLIGATORIO subir la captura del pago.");
+        fileInput.style.border = "2px solid red";
+        return;
     }
-    // -----------------------------------------
 
     const btn = e.submitter; 
-    btn.textContent = "Subiendo..."; btn.disabled = true;
+    btn.textContent = "Enviando Pedido..."; btn.disabled = true;
 
+    // 2. SUBIR IMAGEN A SUPABASE STORAGE
     const BUCKET = 'comprobantes_narbis_v2';
     let fileUrl = null;
-
     const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
     const fileName = `${referenciaUnica}_${Date.now()}_${cleanName}`;
     
     const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(fileName, file);
     
-    if (!uploadErr) {
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-        fileUrl = data.publicUrl;
-        
-        const { error } = await supabase.from('boletos').update({
-            referencia_pago: document.getElementById('referencia-pago').value,
-            telefono_pago: document.getElementById('telefono-pago-movil').value,
-            url_capture: fileUrl,
-            estado: 'reportado'
-        }).eq('codigo_concepto', referenciaUnica);
-
-        if (!error) {
-            alert("¡Pago reportado con éxito! Validaremos tu pago en breve.");
-            window.location.href = 'index.html';
-        } else {
-            alert("Error al guardar reporte.");
-            btn.disabled = false; btn.textContent = "Reportar Pago";
-        }
-    } else {
+    if (uploadErr) {
         console.error("Error subida:", uploadErr);
-        alert("Error al subir la imagen. Intenta de nuevo.");
+        alert("Error al subir imagen. Revisa tu conexión.");
+        btn.disabled = false; btn.textContent = "Reportar Pago";
+        return;
+    }
+
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
+    fileUrl = data.publicUrl;
+
+    // 3. INSERTAR TODO EN BASE DE DATOS (AHORA SÍ EXISTE LA ORDEN)
+    const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
+    
+    const nuevaOrden = {
+        sorteo_id: sorteoActual.id,
+        // Datos del paso 1 (Memoria)
+        nombre_cliente: datosClienteTemporal.nombre,
+        email_cliente: datosClienteTemporal.email,
+        telefono_cliente: datosClienteTemporal.telefono,
+        cedula_cliente: datosClienteTemporal.cedula,
+        estado_cliente: datosClienteTemporal.estado,
+        // Datos del pedido
+        cantidad_boletos: boletosSeleccionados,
+        precio_total: total,
+        metodo_pago: 'pago_movil',
+        codigo_concepto: referenciaUnica,
+        // Datos del reporte (Paso 3)
+        referencia_pago: document.getElementById('referencia-pago').value, // Referencia bancaria
+        telefono_pago: document.getElementById('telefono-pago-movil').value,
+        url_capture: fileUrl,
+        // Estado directo a reportado
+        estado: 'reportado',
+        creado_en: new Date().toISOString()
+    };
+
+    const { error: insertErr } = await supabase.from('boletos').insert([nuevaOrden]);
+
+    if (!insertErr) {
+        alert("✅ ¡Pedido Enviado Exitosamente!\nTu pago será verificado en breve.");
+        window.location.href = 'index.html';
+    } else {
+        console.error(insertErr);
+        alert("Error al guardar la orden. Contáctanos por WhatsApp.");
         btn.disabled = false; btn.textContent = "Reportar Pago";
     }
 });

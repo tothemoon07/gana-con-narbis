@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin | Narbis</title>
+    <title>Panel Admin | Pagina Test</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -89,9 +89,9 @@
         }
         #btn-logout:hover { background: var(--danger); color: white; }
 
-        /* CONTENIDO PRINCIPAL */
+        /* CONTENIDO */
         #content {
-            margin-left: 260px; /* Espacio para el sidebar */
+            margin-left: 260px;
             padding: 40px;
             flex: 1;
             width: calc(100% - 260px);
@@ -99,7 +99,6 @@
 
         h1 { color: var(--dark); margin-bottom: 30px; font-size: 1.8rem; }
 
-        /* TARJETAS Y TABLAS */
         .card {
             background: white;
             border-radius: 15px;
@@ -107,6 +106,7 @@
             padding: 25px;
             margin-bottom: 30px;
             overflow: hidden;
+            overflow-x: auto;
         }
 
         .header-actions {
@@ -119,16 +119,12 @@
         }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; }
-        td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.9rem; }
+        td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
         tr:hover { background: #f1f5f9; }
 
-        /* ETIQUETAS */
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .badge.reportado { background: #fef3c7; color: #d97706; }
-        .badge.validado { background: #dcfce7; color: #16a34a; }
-        .badge.rechazado { background: #fee2e2; color: #dc2626; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge.activo { background: #dbeafe; color: #1e40af; }
 
         /* MODALES */
@@ -139,28 +135,26 @@
         }
         .modal.active { display: flex; }
         .modal-content {
-            background: white; width: 90%; max-width: 500px; padding: 30px;
-            border-radius: 15px; position: relative; animation: slideUp 0.3s ease;
+            background: white; width: 90%; max-width: 600px; padding: 30px;
+            border-radius: 15px; position: relative; animation: slideUp 0.3s ease; max-height: 90vh; overflow-y: auto;
         }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #94a3b8; }
         
-        /* FILTROS DE PEDIDOS */
         .filtros { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-filtro { padding: 8px 16px; border: 1px solid #e2e8f0; background: white; border-radius: 20px; cursor: pointer; font-weight: 500; }
         .btn-filtro.active { background: var(--dark); color: white; border-color: var(--dark); }
 
-        /* INPUTS */
-        input, select { width: 100%; padding: 10px; margin: 8px 0 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+        label { font-size: 0.9rem; font-weight: 600; color: #475569; display: block; margin-top: 10px;}
         
-        /* IMAGEN CAPTURE */
         .capture-img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
     <aside id="sidebar">
-        <h2>⚙️ Narbis Admin</h2>
+        <h2>⚙️ Pagina Test</h2>
         <nav>
             <ul>
                 <li>
@@ -220,7 +214,8 @@
                 <table id="tabla-pedidos">
                     <thead>
                         <tr>
-                            <th>Ref.</th>
+                            <th>Sorteo</th>
+                            <th>Ref. Pago (6 díg)</th>
                             <th>Cliente</th>
                             <th>Boletos</th>
                             <th>Total</th>
@@ -239,23 +234,32 @@
     <div id="modal-nuevo-sorteo" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarModales()">&times;</span>
-            <h2>Crear Nuevo Sorteo</h2>
+            <h2 style="margin-bottom:20px;">Crear Nuevo Sorteo</h2>
             <form id="form-sorteo">
-                <label>Título</label>
-                <input type="text" id="input-titulo" required>
+                <label>Título del Sorteo</label>
+                <input type="text" id="input-titulo" required placeholder="Ej: Gran Rifa Iphone 15">
                 
                 <div style="display:flex; gap:10px;">
                     <div style="flex:1"><label>Precio (Bs)</label><input type="number" id="input-precio" required step="0.01"></div>
-                    <div style="flex:1"><label>Stock</label><input type="number" id="input-stock" required value="1000"></div>
+                    <div style="flex:1"><label>Total Boletos</label><input type="number" id="input-stock" required value="1000"></div>
                 </div>
 
                 <label>Fecha del Sorteo</label>
                 <input type="datetime-local" id="input-fecha" required>
 
-                <label>Imagen (Obligatoria)</label>
+                <label>Descripción Principal (Debajo del Precio)</label>
+                <textarea id="input-desc-larga" rows="3" placeholder="Ej: ¡Gana un iPhone 15 Pro Max! Sorteo autorizado..."></textarea>
+
+                <label>Lista de Premios y Horarios (Descripción Corta)</label>
+                <textarea id="input-desc-corta" rows="4" placeholder="Ej:
+🥇 1er Lugar: $1000 (10:00 PM)
+🥈 2do Lugar: $500 (4:00 PM)
+🥉 3er Lugar: $200 (3:00 PM)"></textarea>
+
+                <label>Imagen del Sorteo</label>
                 <input type="file" id="input-imagen" accept="image/*" required>
 
-                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:15px;">Guardar</button>
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:15px;">Crear Sorteo</button>
             </form>
         </div>
     </div>
@@ -282,39 +286,22 @@
     <script src="supabase-admin-config.js"></script>
 
     <script>
-        // ==========================================
-        // LÓGICA DEL ADMIN (JS INTEGRADO)
-        // ==========================================
-        
         const BUCKET_SORTEOS = 'imagenes_sorteos'; 
         let filtroActual = 'reportado';
 
-        // 1. VERIFICAR SESIÓN AL CARGAR
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof supabase === 'undefined') {
-                alert("Error: Supabase no cargó. Verifica supabase-admin-config.js");
-                return;
-            }
-
+            if (typeof supabase === 'undefined') return;
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'admin_login.html';
-                return;
-            }
+            if (!session) { window.location.href = 'admin_login.html'; return; }
 
-            // Inicializar
             cargarSorteos();
             
-            // Listeners de botones
             document.getElementById('btn-logout').addEventListener('click', async () => {
-                await supabase.auth.signOut();
-                window.location.href = 'admin_login.html';
+                await supabase.auth.signOut(); window.location.href = 'admin_login.html';
             });
-
             document.getElementById('form-sorteo').addEventListener('submit', guardarSorteo);
         });
 
-        // --- NAVEGACIÓN ---
         function cambiarVista(vista) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('view-sorteos').style.display = 'none';
@@ -331,89 +318,61 @@
             }
         }
 
-        // --- MODALES ---
-        function abrirModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-        function cerrarModales() {
-            document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-        }
+        function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+        function cerrarModales() { document.querySelectorAll('.modal').forEach(el => el.classList.remove('active')); }
 
-        // --- SORTEOS ---
         async function cargarSorteos() {
             const tbody = document.getElementById('tbody-sorteos');
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Cargando...</td></tr>';
-
             const { data: sorteos, error } = await supabase.from('sorteos').select('*').order('creado_en', { ascending: false });
-
-            if (error || !sorteos.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No hay sorteos.</td></tr>';
-                return;
-            }
-
+            if (error || !sorteos.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No hay sorteos.</td></tr>'; return; }
             tbody.innerHTML = '';
             sorteos.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><img src="${s.imagen_url}" width="50" style="border-radius:5px;"></td>
-                        <td>${s.titulo}</td>
-                        <td>Bs. ${s.precio_bs}</td>
-                        <td>${s.total_boletos}</td>
-                        <td><span class="badge activo">${s.estado}</span></td>
-                        <td><button onclick="eliminarSorteo('${s.id}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="fas fa-trash"></i></button></td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr>
+                    <td><img src="${s.imagen_url}" width="50" style="border-radius:5px;"></td>
+                    <td>${s.titulo}</td>
+                    <td>Bs. ${s.precio_bs}</td>
+                    <td>${s.total_boletos}</td>
+                    <td><span class="badge activo">${s.estado}</span></td>
+                    <td><button onclick="eliminarSorteo('${s.id}')" style="color:red;border:none;cursor:pointer;"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
             });
         }
 
         async function guardarSorteo(e) {
             e.preventDefault();
-            const btn = e.submitter; btn.disabled = true; btn.textContent = "Subiendo...";
+            const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
 
             try {
                 const file = document.getElementById('input-imagen').files[0];
                 const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
-
-                // Subir imagen
                 const { error: upErr } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
                 if (upErr) throw upErr;
-
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
 
-                // Guardar datos (SIN COLUMNA POPULAR)
                 const { error: dbErr } = await supabase.from('sorteos').insert([{
                     titulo: document.getElementById('input-titulo').value,
                     precio_bs: document.getElementById('input-precio').value,
                     total_boletos: document.getElementById('input-stock').value,
                     fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(),
+                    descripcion_larga: document.getElementById('input-desc-larga').value, // Descripción Principal
+                    descripcion_corta: document.getElementById('input-desc-corta').value, // Lista de Premios
                     imagen_url: publicUrl,
                     estado: 'activo',
                     creado_en: new Date()
                 }]);
 
                 if (dbErr) throw dbErr;
-
                 alert("Sorteo creado!");
-                cerrarModales();
-                cargarSorteos();
-                e.target.reset();
-
-            } catch (err) {
-                alert("Error: " + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false; btn.textContent = "Guardar";
-            }
+                cerrarModales(); cargarSorteos(); e.target.reset();
+            } catch (err) { alert("Error: " + err.message); console.error(err); } 
+            finally { btn.disabled = false; btn.textContent = "Crear Sorteo"; }
         }
 
         async function eliminarSorteo(id) {
-            if(confirm("¿Eliminar este sorteo?")) {
-                await supabase.from('sorteos').delete().eq('id', id);
-                cargarSorteos();
-            }
+            if(confirm("¿Eliminar este sorteo?")) { await supabase.from('sorteos').delete().eq('id', id); cargarSorteos(); }
         }
 
-        // --- PEDIDOS ---
         function filtrarPedidos(estado, btn) {
             filtroActual = estado;
             document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
@@ -423,111 +382,77 @@
 
         async function cargarPedidos() {
             const tbody = document.getElementById('tbody-pedidos');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Cargando...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Cargando...</td></tr>';
 
+            // AHORA TRAEMOS TAMBIÉN EL TÍTULO DEL SORTEO
             const { data: pedidos, error } = await supabase
                 .from('boletos')
-                .select('*')
+                .select('*, sorteos(titulo)') // Relación para sacar el nombre
                 .eq('estado', filtroActual)
                 .order('creado_en', { ascending: false });
 
-            if (error || !pedidos.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No hay pedidos en esta sección.</td></tr>';
-                return;
-            }
+            if (error || !pedidos.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No hay pedidos en esta sección.</td></tr>'; return; }
 
             tbody.innerHTML = '';
             pedidos.forEach(p => {
                 let btnAccion = '-';
                 if (filtroActual === 'reportado') {
-                    btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.codigo_concepto}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`;
+                    btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.referencia_pago}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`;
                 }
-                
                 let linkImg = p.url_capture ? `<a href="${p.url_capture}" target="_blank" style="color:blue">Ver</a>` : 'N/A';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${p.codigo_concepto}</strong></td>
-                        <td>${p.nombre_cliente}<br><small>${p.telefono_cliente}</small></td>
-                        <td style="text-align:center">${p.cantidad_boletos}</td>
-                        <td>Bs. ${p.precio_total}</td>
-                        <td>${linkImg}</td>
-                        <td style="font-size:11px; max-width:150px; overflow:hidden;">${p.numeros_asignados || 'Pendiente'}</td>
-                        <td>${btnAccion}</td>
-                    </tr>
-                `;
+                
+                // MOSTRAMOS EL NOMBRE DEL SORTEO Y LA REFERENCIA BANCARIA
+                tbody.innerHTML += `<tr>
+                    <td><small>${p.sorteos?.titulo || 'Sorteo Borrado'}</small></td>
+                    <td style="font-weight:bold; color:#1a73e8;">${p.referencia_pago || 'N/A'}</td>
+                    <td>${p.nombre_cliente}<br><small>${p.telefono_cliente}</small></td>
+                    <td style="text-align:center">${p.cantidad_boletos}</td>
+                    <td>Bs. ${p.precio_total}</td>
+                    <td>${linkImg}</td>
+                    <td style="font-size:11px; max-width:150px; overflow:hidden;">${p.numeros_asignados || 'Pendiente'}</td>
+                    <td>${btnAccion}</td>
+                </tr>`;
             });
         }
 
-        // --- REVISIÓN Y APROBACIÓN ---
         function abrirRevisar(id, url, ref, cant, sorteoId) {
             const modal = document.getElementById('modal-capture');
             document.getElementById('img-capture-full').src = url || '';
-            document.getElementById('info-capture').textContent = `Ref: ${ref} | Cantidad: ${cant}`;
-            
+            document.getElementById('info-capture').textContent = `Ref Banco: ${ref} | Boletos: ${cant}`;
             document.getElementById('btn-aprobar-modal').onclick = () => aprobarOrden(id, cant, sorteoId);
             document.getElementById('btn-rechazar-modal').onclick = () => rechazarOrden(id);
-            
             modal.classList.add('active');
         }
 
         async function aprobarOrden(id, cantidad, sorteoId) {
             if(!confirm("¿Aprobar y generar números?")) return;
-
             try {
-                // 1. Buscar números ocupados
-                const { data: ocupados } = await supabase.from('boletos')
-                    .select('numeros_asignados')
-                    .eq('sorteo_id', sorteoId)
-                    .not('numeros_asignados', 'is', null);
-
-                // 2. Buscar total del sorteo
+                const { data: ocupados } = await supabase.from('boletos').select('numeros_asignados').eq('sorteo_id', sorteoId).not('numeros_asignados', 'is', null);
                 const { data: sorteo } = await supabase.from('sorteos').select('total_boletos').eq('id', sorteoId).single();
                 const max = sorteo.total_boletos || 10000;
-
                 let setOcupados = new Set();
                 ocupados.forEach(o => o.numeros_asignados.split(',').forEach(n => setOcupados.add(n.trim())));
 
-                // 3. Generar
-                let nuevos = [];
-                let intentos = 0;
-                let pad = max.toString().length; 
-
+                let nuevos = []; let intentos = 0; let pad = max.toString().length; 
                 while(nuevos.length < cantidad && intentos < 50000) {
                     let num = Math.floor(Math.random() * max) + 1;
                     let str = num.toString().padStart(pad, '0');
-                    if(!setOcupados.has(str) && !nuevos.includes(str)) {
-                        nuevos.push(str);
-                    }
+                    if(!setOcupados.has(str) && !nuevos.includes(str)) nuevos.push(str);
                     intentos++;
                 }
+                if(nuevos.length < cantidad) throw new Error("No hay suficientes números.");
 
-                if(nuevos.length < cantidad) throw new Error("No hay suficientes números disponibles.");
-
-                // 4. Guardar
-                await supabase.from('boletos').update({
-                    estado: 'validado',
-                    numeros_asignados: nuevos.join(', '),
-                    fecha_validacion: new Date()
-                }).eq('id', id);
-
-                alert("¡Aprobado con éxito!");
-                cerrarModales();
-                cargarPedidos();
-
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
+                await supabase.from('boletos').update({ estado: 'validado', numeros_asignados: nuevos.join(', '), fecha_validacion: new Date() }).eq('id', id);
+                alert("¡Aprobado con éxito!"); cerrarModales(); cargarPedidos();
+            } catch (e) { alert("Error: " + e.message); }
         }
 
         async function rechazarOrden(id) {
             if(confirm("¿Rechazar pedido?")) {
                 await supabase.from('boletos').update({ estado: 'rechazado' }).eq('id', id);
-                cerrarModales();
-                cargarPedidos();
+                cerrarModales(); cargarPedidos();
             }
         }
-
     </script>
 </body>
 </html>

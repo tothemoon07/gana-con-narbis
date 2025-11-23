@@ -29,6 +29,7 @@
                             </div>
                             <div class="logo-text">
                                 <h1>NARBIS</h1>
+                                <p>Sorteos Exclusivos</p>
                             </div>
                         </a>
                     </div>
@@ -74,7 +75,7 @@
                         <div class="prize-price">Bs. <span id="precio-boleto-display">-</span> por boleto</div>
                         
                         <div class="raffle-description" id="descripcion-sorteo">
-                            </div>
+                        </div>
 
                         <div class="progress-section">
                             <div class="progress-header">
@@ -164,7 +165,8 @@
                             <option value="Anzoátegui">Anzoátegui</option>
                             <option value="Bolívar">Bolívar</option>
                             <option value="Táchira">Táchira</option>
-                            </select>
+                            <option value="Otros">Otros</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Cédula</label>
@@ -246,8 +248,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Subir Capture (Opcional)</label>
-                        <input type="file" id="capture-input" accept="image/*" style="padding: 10px;">
+                        <label>Subir Capture <span style="color:red; font-weight:bold; font-size:0.9em;">* (Obligatorio)</span></label>
+                        <input type="file" id="capture-input" accept="image/*" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%;" required>
                     </div>
 
                     <button type="submit" class="buy-button">Reportar Pago</button>

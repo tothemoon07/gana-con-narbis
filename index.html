@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Gana con Narbis | Sorteos Exclusivos</title>
+    <title>Detalle del Sorteo | CAPI RIFAS BARINAS</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -12,249 +12,264 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="styles.css">
-
-    <style>
-        .terminos-lista-container {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            max-height: 60vh; /* Altura máxima adaptable */
-            overflow-y: auto; /* Scroll si es muy largo */
-        }
-        .lista-terminos {
-            margin-left: 20px;
-            color: #444;
-            font-size: 14px;
-            line-height: 1.6;
-            font-family: 'Montserrat', sans-serif;
-        }
-        .lista-terminos li {
-            margin-bottom: 12px;
-            padding-left: 5px;
-        }
-        .lista-terminos li::marker {
-            color: #19A0D0; /* Color azul de la marca */
-            font-weight: 800;
-        }
-        /* Barra de scroll bonita */
-        .terminos-lista-container::-webkit-scrollbar { width: 6px; }
-        .terminos-lista-container::-webkit-scrollbar-track { background: #f1f1f1; }
-        .terminos-lista-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    </style>
 </head>
 <body>
-
-    <div id="particles-js"></div>
 
     <header class="site-header">
         <div class="header-main">
             <div class="container">
                 <div class="header-content">
-                    
                     <div class="logo-section">
-                        <a href="#" class="logo-link">
+                        <a href="index.html" class="logo-link">
                             <div class="logo-container">
-                                <img src="logonarbis.jpeg" alt="Gana con Narbis" class="logo-img">
+                                <img src="583342640_17847217287606761_2000281505261553577_n.jpg" alt="CAPI RIFAS BARINAS Logo" class="logo-img">
                             </div>
                             <div class="logo-text">
-                                <h1>NARBIS</h1>
+                                <h1>CAPI RIFAS BARINAS</h1>
                                 <p>Sorteos Exclusivos</p>
                             </div>
                         </a>
                     </div>
-                    
-                    <nav class="main-nav">
-                        <ul>
-                            <li><a href="#">Inicio</a></li>
-                            <li><a href="#sorteos-container">Sorteos Activos</a></li>
-                        </ul>
-                    </nav>
-
                     <div class="header-actions">
-                        <button class="btn-check-tickets" onclick="abrirModalConsulta()">
-                            <i class="fas fa-search"></i> 
-                            <span>Consultar Mis Tickets</span>
-                        </button>
+                        <a href="index.html" class="btn-check-tickets" style="text-decoration:none;">
+                            <i class="fas fa-home"></i> Volver al Inicio
+                        </a>
                     </div>
-
-                    <button class="mobile-menu-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <section class="hero-section">
-        <div class="container">
-            <div class="hero-content">
-                <h2>¡Participa y Gana <br><span>Grandes Premios!</span></h2>
-                <p>Compra tu ticket y entra en nuestros sorteos exclusivos. Tu oportunidad comienza hoy.</p>
-            </div>
-        </div>
-    </section>
-
-    <div class="main-view">
-        <div class="raffles-main">
-            <div class="container">
-                <h2 class="raffles-title">Sorteos Activos</h2>
-                
-                <div class="raffles-grid" id="sorteos-container">
-                    <div class="loading"></div> Cargando sorteos...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer class="site-footer">
-        <div class="footer-top">
-            <div class="container">
-                <div class="footer-grid">
-                    <div class="footer-column">
-                        <div class="footer-logo">
-                            <div class="footer-logo-container">
-                                <img src="logonarbis.jpeg" alt="Logo Narbis" class="logo-img" style="max-height: 50px;">
-                            </div>
-                        </div>
-                        <h3>Sobre Nosotros</h3>
-                        <p>Somos la plataforma líder en sorteos digitales, ofreciendo transparencia y seguridad.</p>
-                        <div class="social-links">
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-telegram"></i></a>
-                        </div>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h3>Contacto</h3>
-                        <div class="contact-info">
-                            <div class="contact-item"><i class="fas fa-envelope"></i> contacto@ganaconnarbis.com</div>
-                            <div class="contact-item"><i class="fas fa-phone"></i> +58 412 123 4567</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="container">
-                <div class="footer-bottom-content">
-                    <p>&copy; 2025 Gana con Narbis. Todos los derechos reservados</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <a href="#" class="whatsapp-float" target="_blank">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-
-    <div class="toast" id="toastNotification"></div>
-
-    <div class="modal" id="checkTicketsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Consultar Mis Tickets</h2>
-                <button class="modal-close" onclick="cerrarModalConsulta()">×</button>
-            </div>
+    <div class="detail-view show" style="display: block; margin-top: 20px;">
+        <div class="detail-view-wrapper">
             
-            <div class="modal-body">
-                <div class="search-section">
-                    <p class="search-description">
-                        Ingresa tu email o número de teléfono para ver tus tickets.
-                    </p>
-                    
-                    <div class="search-form">
-                        <div class="search-tabs">
-                            <button class="search-tab active" id="tab-email" onclick="cambiarPestanaBusqueda('email')">
-                                <i class="fas fa-envelope"></i> Por Email
-                            </button>
-                            <button class="search-tab" id="tab-phone" onclick="cambiarPestanaBusqueda('phone')">
-                                <i class="fas fa-phone"></i> Por Teléfono
-                            </button>
+            <header class="header" style="position: relative; top: 0;">
+                <div class="header-content">
+                    <button class="back-button" onclick="window.location.href='index.html'">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="header-title">Detalle del Sorteo</h1>
+                    <button class="share-button" onclick="compartirSorteo()">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div id="sorteo-detalle-content">
+                <div class="gallery">
+                    <div class="gallery-scroll">
+                        <img src="" id="imagen-sorteo" class="gallery-image" alt="Premio">
+                    </div>
+                </div>
+
+                <div class="detail-container">
+                    <div class="prize-section">
+                        <h2 class="prize-title" id="titulo-sorteo">Cargando título...</h2>
+
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0; border: 1px solid #e9ecef;">
+                            <div class="prize-date" style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.2rem;">⏰</span>
+                                <span id="fecha-sorteo" style="font-weight: 600; color: #333;">Cargando fecha...</span>
+                            </div>
+                            <div class="prize-price" style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+                                <span style="font-size: 1.2rem;">💸</span>
+                                <div>
+                                    PRECIO ÚNICO: <strong style="color: var(--primary);">Bs. <span id="precio-boleto-display">--</span></strong>
+                                    <div style="font-size: 0.8rem; color: #666; font-weight: normal;">Mínimo de compra: 2 tickets</div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="search-inputs">
-                            <div class="search-input-group" id="input-group-email">
-                                <label>Email registrado</label>
-                                <input type="email" id="searchEmail" placeholder="ejemplo@correo.com">
+                        <div class="raffle-description" id="descripcion-sorteo" style="margin-bottom: 20px; font-size: 1rem; line-height: 1.6;"></div>
+
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span class="progress-title">Esta es tu oportunidad</span>
+                                <span class="progress-percentage" id="porcentaje-progreso">0.00%</span>
                             </div>
-                            
-                            <div class="search-input-group hidden" id="input-group-phone" style="display:none;">
-                                <label>Teléfono registrado</label>
-                                <input type="tel" id="searchPhone" placeholder="04121234567">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="barra-progreso" style="width: 0%"></div>
                             </div>
+                            <div class="progress-text" id="texto-progreso">Calculando boletos restantes...</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-buy-section">
+                        <h3 class="section-title">Compra aquí tus boletos</h3>
+                        
+                        <div class="quick-buy-grid">
+                            <button class="quick-buy-btn buy-option-btn" data-tickets="2">+2</button>
+                            <button class="quick-buy-btn popular buy-option-btn" data-tickets="5">
+                                <span class="popular-tag">Más popular</span>
+                                +5
+                            </button>
+                            <button class="quick-buy-btn buy-option-btn" data-tickets="10">+10</button>
+                            <button class="quick-buy-btn buy-option-btn" data-tickets="20">+20</button>
+                            <button class="quick-buy-btn buy-option-btn" data-tickets="50">+50</button>
+                            <button class="quick-buy-btn buy-option-btn" data-tickets="100">+100</button>
+                        </div>
+
+                        <div class="custom-amount">
+                            <button class="amount-control" id="decrement-btn">−</button>
+                            <input type="number" id="tickets-input" value="1" min="1" style="display:none;">
+                            <div class="amount-display" id="tickets-count-display">1</div>
+                            <button class="amount-control" id="increment-btn">+</button>
                         </div>
                         
-                        <button class="search-button" onclick="ejecutarBusquedaTickets()">
-                            <span class="search-button-text">
-                                <i class="fas fa-search"></i> Buscar Mis Tickets
-                            </span>
+                        <div style="margin-top: 15px; text-align: center; font-size: 1.2rem;">
+                            Total a pagar: <span id="total-a-pagar" style="font-weight: 800; color: var(--primary);">Bs. 0.00</span>
+                        </div>
+
+                        <button class="buy-button" id="btn-comprar-boletos">
+                            <i class="fas fa-shopping-cart"></i> Comprar boletos
                         </button>
                     </div>
+
+                    <div class="details-section">
+                        <h3 class="details-title">🏆 Detalles de los Premios</h3>
+                        <div class="info-notice">
+                            <div class="info-text" id="lista-premios" style="white-space: pre-line; color: #333;">
+                                Cargando premios...
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="search-results" id="searchResults"></div>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="modalTerminos">
-        <div class="modal-content" style="max-width: 600px;">
+    <div class="modal" id="modal-datos-contacto">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
-                    <i class="fas fa-file-contract" style="color: var(--primary-color);"></i> 
-                    Términos y Condiciones
-                </h2>
-                <button class="modal-close" onclick="cerrarTerminos()">×</button>
+                <h2 class="modal-title">Tus Datos</h2>
+                <button class="modal-close" id="close-datos-contacto">×</button>
             </div>
-            
             <div class="modal-body">
-                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">
-                    Por favor, lee y acepta nuestras normas para continuar:
-                </p>
-                
-                <div class="terminos-lista-container">
-                    <ol class="lista-terminos">
-                        <li>Los números disponibles para la compra en cada uno de nuestros sorteos se especificarán en la página de detalles correspondiente a cada sorteo.</li>
-                        <li>Solo podrán participar en nuestros sorteos personas naturales mayores de 18 años.</li>
-                        <li>Los premios deberán ser retirados en persona en la ubicación designada para cada sorteo. Si está afuera del estado se realizarán entregas personales en la dirección indicada por el ganador.</li>
-                        <li>De no venderse el 80% de la boletería la fecha del sorteo se reprogramará con previo aviso.</li>
-                        <li>Para reclamar tu premio tienes un lapso de 72 horas.</li>
-                        <li>Los ganadores aceptan aparecer en el contenido audiovisual del sorteo mostrando su presencia en las redes y entrega de los premios. Esto es <strong>OBLIGATORIO</strong>.</li>
-                        <li>La compra mínima requerida para participar en nuestros sorteos es de dos tickets. Los números de tickets serán al azar.</li>
-                        <li>La confirmación de su ticket le será enviada a su correo electrónico y a su WhatsApp en un lapso no mayor a 12 horas después de confirmar el pago.</li>
-                    </ol>
+                <form id="form-datos-contacto" class="auth-form">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="nombre-completo" required placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email-contacto" required placeholder="juan@correo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="telefono-contacto" required placeholder="0414 123 4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="estado-contacto" required style="width:100%; padding:15px; border-radius:12px; border:2px solid #e5e7eb;">
+                            <option value="">Selecciona tu estado</option>
+                            <option value="Distrito Capital">Distrito Capital</option>
+                            <option value="Miranda">Miranda</option>
+                            <option value="Zulia">Zulia</option>
+                            <option value="Carabobo">Carabobo</option>
+                            <option value="Lara">Lara</option>
+                            <option value="Aragua">Aragua</option>
+                            <option value="Anzoátegui">Anzoátegui</option>
+                            <option value="Bolívar">Bolívar</option>
+                            <option value="Táchira">Táchira</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cédula</label>
+                        <div class="id-input-group">
+                            <select id="cedula-prefijo" class="id-type-select">
+                                <option value="V">V</option>
+                                <option value="E">E</option>
+                            </select>
+                            <input type="number" id="cedula-numero" class="id-number-input" required placeholder="12345678">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="buy-button" style="margin-top:20px;">Continuar al Pago</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-datos-pago">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Realizar Pago Móvil</h2>
+                <button class="modal-close" id="close-datos-pago">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-details">
+                    <div class="payment-timer">
+                        Referencia de Orden: <span id="codigo-referencia-display" style="font-weight:800; font-size:1.2em;">-</span>
+                    </div>
+                    
+                    <p style="text-align:center; margin-bottom:15px;">Realiza el pago móvil a los siguientes datos:</p>
+                    
+                    <div class="info-notice" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div class="payment-info-compact">
+                            <span>Banco:</span> <strong>Banesco (0134)</strong>
+                        </div>
+                        <div class="payment-info-compact">
+                            <span>Teléfono:</span> 
+                            <strong>0412 123 4567</strong> 
+                            <button class="copy-button" data-copy-target="04121234567"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="payment-info-compact">
+                            <span>Cédula:</span> 
+                            <strong>V-12.345.678</strong>
+                            <button class="copy-button" data-copy-target="12345678"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="payment-info-compact" style="border-top:1px solid #ddd; padding-top:10px; margin-top:5px; width:100%">
+                            <span>Monto Exacto:</span> 
+                            <strong style="color:var(--primary); font-size:1.2em;">Bs. <span id="monto-final-pago">0.00</span></strong>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px; padding-top: 0;">
-                    <button class="buy-button secondary" onclick="cerrarTerminos()" style="background: #e5e7eb; color: #333; margin-top:0; font-size: 14px;">
-                        Cancelar
-                    </button>
-                    <button class="buy-button" onclick="aceptarTerminos()" style="margin-top:0; font-size: 14px;">
-                        Aceptar y Continuar
-                    </button>
+                <div class="modal-footer">
+                    <button class="buy-button" id="abrir-reporte">Ya realicé el pago</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script>
-        if (document.getElementById('particles-js')) {
-            particlesJS.load('particles-js', 'particles.json', function() {
-                console.log('Fondo de partículas cargado.');
-            });
-        }
-    </script>
+    <div class="modal" id="modal-reporte-pago">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Reportar Pago</h2>
+                <button class="modal-close" id="close-reporte-pago">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-reporte-pago" class="auth-form">
+                    <p style="text-align: center; margin-bottom: 20px;">Orden #<span id="codigo-referencia"></span></p>
+
+                    <div class="form-group">
+                        <label>Número de Referencia (6 últimos dígitos)</label>
+                        <input type="text" id="referencia-pago" required placeholder="Ej: 123456" minlength="6" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Teléfono desde el que pagaste</label>
+                        <input type="tel" id="telefono-pago-movil" required placeholder="0412...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subir Capture <span style="color:red; font-weight:bold; font-size:0.9em;">* (Obligatorio)</span></label>
+                        <input type="file" id="capture-input" accept="image/*" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%;" required>
+                    </div>
+
+                    <button type="submit" class="buy-button">Reportar Pago</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
-    
-    <script src="script.js"></script>
+    <script src="sorteo_script.js"></script> 
 
 </body>
 </html>

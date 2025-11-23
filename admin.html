@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin | Pagina Test</title>
+    <title>Panel Admin | CAPI RIFAS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,6 +16,7 @@
             --white: #ffffff;
             --danger: #ef4444;
             --success: #22c55e;
+            --whatsapp: #25D366;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -119,7 +120,19 @@
         }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .btn-whatsapp {
+            background: var(--whatsapp); color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+            display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+        }
+        .btn-whatsapp:hover { opacity: 0.9; }
+
+        .btn-ver-numeros {
+            background: var(--primary); color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.9rem; }
         td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
         tr:hover { background: #f1f5f9; }
@@ -149,12 +162,19 @@
         label { font-size: 0.9rem; font-weight: 600; color: #475569; display: block; margin-top: 10px;}
         
         .capture-img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; }
+
+        /* Estilo para la lista de números en el modal */
+        #lista-numeros-container {
+            background: #f1f5f9; padding: 15px; border-radius: 8px; 
+            max-height: 200px; overflow-y: auto; font-family: monospace; 
+            letter-spacing: 1px; line-height: 1.5; color: #333; word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
     <aside id="sidebar">
-        <h2>⚙️ Pagina Test</h2>
+        <h2>⚙️ CAPI RIFAS</h2>
         <nav>
             <ul>
                 <li>
@@ -253,8 +273,7 @@
                 <label>Lista de Premios y Horarios (Descripción Corta)</label>
                 <textarea id="input-desc-corta" rows="4" placeholder="Ej:
 🥇 1er Lugar: $1000 (10:00 PM)
-🥈 2do Lugar: $500 (4:00 PM)
-🥉 3er Lugar: $200 (3:00 PM)"></textarea>
+🥈 2do Lugar: $500 (4:00 PM)"></textarea>
 
                 <label>Imagen del Sorteo</label>
                 <input type="file" id="input-imagen" accept="image/*" required>
@@ -278,6 +297,20 @@
                 <button id="btn-rechazar-modal" class="btn-primary" style="background: var(--danger);">
                     <i class="fas fa-times"></i> Rechazar
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-ver-numeros" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModales()">&times;</span>
+            <h3>Números Asignados</h3>
+            <p style="margin-bottom:10px; color:#666;">Cliente: <span id="modal-numeros-cliente" style="font-weight:bold;"></span></p>
+            
+            <div id="lista-numeros-container"></div>
+            
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn-primary" onclick="cerrarModales()">Cerrar</button>
             </div>
         </div>
     </div>
@@ -355,8 +388,8 @@
                     precio_bs: document.getElementById('input-precio').value,
                     total_boletos: document.getElementById('input-stock').value,
                     fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(),
-                    descripcion_larga: document.getElementById('input-desc-larga').value, // Descripción Principal
-                    descripcion_corta: document.getElementById('input-desc-corta').value, // Lista de Premios
+                    descripcion_larga: document.getElementById('input-desc-larga').value,
+                    descripcion_corta: document.getElementById('input-desc-corta').value,
                     imagen_url: publicUrl,
                     estado: 'activo',
                     creado_en: new Date()
@@ -384,10 +417,9 @@
             const tbody = document.getElementById('tbody-pedidos');
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Cargando...</td></tr>';
 
-            // AHORA TRAEMOS TAMBIÉN EL TÍTULO DEL SORTEO
             const { data: pedidos, error } = await supabase
                 .from('boletos')
-                .select('*, sorteos(titulo)') // Relación para sacar el nombre
+                .select('*, sorteos(titulo)') 
                 .eq('estado', filtroActual)
                 .order('creado_en', { ascending: false });
 
@@ -396,12 +428,31 @@
             tbody.innerHTML = '';
             pedidos.forEach(p => {
                 let btnAccion = '-';
+                let btnNumeros = `<span style="color:#999; font-style:italic;">Pendiente</span>`;
+
+                // LOGICA DE BOTONES SEGÚN ESTADO
                 if (filtroActual === 'reportado') {
+                    // BOTON REVISAR (Pendientes)
                     btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.referencia_pago}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`;
+                } else if (filtroActual === 'validado') {
+                    // BOTON WHATSAPP (Validados)
+                    // Formatear mensaje
+                    const nombreCliente = p.nombre_cliente.split(' ')[0]; // Solo primer nombre
+                    const sorteoTitulo = p.sorteos?.titulo || 'Sorteo';
+                    const listaTickets = p.numeros_asignados;
+                    
+                    const mensaje = `Hola ${nombreCliente}! 🧢👋 Muchas gracias por tu compra en CAPI RIFAS BARINAS. ✅ Tu pago ha sido validado con éxito. 🎟️ Aquí están tus tickets para el sorteo *${sorteoTitulo}*: ${listaTickets}. 🍀 ¡Mucha suerte! Si deseas comprar más oportunidades, aquí estamos a la orden.`;
+                    
+                    const urlWhatsapp = `https://wa.me/58${p.telefono_cliente.replace(/^0/, '')}?text=${encodeURIComponent(mensaje)}`;
+
+                    btnAccion = `<a href="${urlWhatsapp}" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Enviar Tickets</a>`;
+                    
+                    // BOTÓN VER NÚMEROS (Validados)
+                    btnNumeros = `<button class="btn-ver-numeros" onclick="verNumeros('${p.nombre_cliente}', '${p.numeros_asignados}')"><i class="fas fa-eye"></i> Ver</button>`;
                 }
+
                 let linkImg = p.url_capture ? `<a href="${p.url_capture}" target="_blank" style="color:blue">Ver</a>` : 'N/A';
                 
-                // MOSTRAMOS EL NOMBRE DEL SORTEO Y LA REFERENCIA BANCARIA
                 tbody.innerHTML += `<tr>
                     <td><small>${p.sorteos?.titulo || 'Sorteo Borrado'}</small></td>
                     <td style="font-weight:bold; color:#1a73e8;">${p.referencia_pago || 'N/A'}</td>
@@ -409,10 +460,17 @@
                     <td style="text-align:center">${p.cantidad_boletos}</td>
                     <td>Bs. ${p.precio_total}</td>
                     <td>${linkImg}</td>
-                    <td style="font-size:11px; max-width:150px; overflow:hidden;">${p.numeros_asignados || 'Pendiente'}</td>
+                    <td style="text-align:center;">${btnNumeros}</td>
                     <td>${btnAccion}</td>
                 </tr>`;
             });
+        }
+
+        // FUNCION PARA ABRIR MODAL DE NUMEROS
+        function verNumeros(cliente, numeros) {
+            document.getElementById('modal-numeros-cliente').textContent = cliente;
+            document.getElementById('lista-numeros-container').textContent = numeros;
+            abrirModal('modal-ver-numeros');
         }
 
         function abrirRevisar(id, url, ref, cant, sorteoId) {

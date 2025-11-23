@@ -173,6 +173,13 @@
         }
         .btn-excel:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(33, 115, 70, 0.3); }
 
+        /* NUEVO BOTÓN: VER PREMIOS AGRUPADOS */
+        .btn-ver-premios { 
+            background: var(--purple); color: white; border: none; padding: 6px 12px; border-radius: 20px; 
+            cursor: pointer; font-size: 0.85rem; font-weight: bold; box-shadow: 0 2px 5px rgba(142, 68, 173, 0.3); 
+        }
+        .btn-ver-premios:hover { transform: scale(1.05); }
+
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.9rem; }
         td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
@@ -242,6 +249,31 @@
             font-weight: bold;
             font-size: 1.1rem;
         }
+
+        /* --- NUEVOS ESTILOS PARA LA TARJETA DEL BUSCADOR --- */
+        .winner-found-card { 
+            border: 2px solid #FFD700; background: #fffbf0; padding: 30px; border-radius: 15px; 
+            text-align: center; display: none; margin-top: 20px; 
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.2); animation: popIn 0.5s ease; 
+        }
+        @keyframes popIn { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }
+        
+        .winner-title { color: #d35400; font-size: 2rem; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .winner-number-display { 
+            font-size: 3rem; color: var(--dark); font-family: 'Montserrat', sans-serif; 
+            font-weight: 900; margin-bottom: 20px; display: inline-block; padding: 10px 30px; 
+            background: #FFD700; border-radius: 50px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); 
+        }
+        .winner-info-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; 
+            margin-bottom: 25px; background: white; padding: 20px; border-radius: 10px; 
+        }
+        .info-label-g { color: #666; font-size: 0.85rem; font-weight: 600; }
+        .info-value-g { color: #333; font-size: 1.1rem; font-weight: bold; }
+
+        /* --- NUEVOS ESTILOS PARA DETALLE DE TICKETS (MODAL) --- */
+        .grid-premios-detalle { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 15px; }
+        .ticket-premio-item { background: var(--purple); color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -258,6 +290,11 @@
                 <li>
                     <div class="nav-item" id="nav-pedidos" onclick="cambiarVista('pedidos')">
                         <i class="fas fa-shopping-cart"></i> Pedidos
+                    </div>
+                </li>
+                <li>
+                    <div class="nav-item" id="nav-buscador" onclick="cambiarVista('buscador')">
+                        <i class="fas fa-search"></i> Buscar Ganador
                     </div>
                 </li>
                 <li>
@@ -338,6 +375,43 @@
             </div>
         </div>
 
+        <div id="view-buscador" style="display: none;">
+            <div class="header-actions"><h1>🔍 Buscar Ganador (Lotería Nacional)</h1></div>
+            
+            <div class="card" style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <p style="margin-bottom: 20px; color: #666;">Ingresa el número que salió en la lotería para encontrar al ganador.</p>
+                <label style="text-align:left;">Selecciona el Sorteo:</label>
+                <select id="select-sorteo-buscador" style="margin-bottom: 15px; font-size: 16px;"><option value="">-- Selecciona un Sorteo --</option></select>
+                <label style="text-align:left;">Número Ganador:</label>
+                <input type="text" id="input-ticket-buscador" placeholder="Ej: 1584" style="font-size: 1.5rem; text-align: center; letter-spacing: 5px; font-weight: bold;">
+                <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 15px;" onclick="buscarGanadorReal()">
+                    <i class="fas fa-search"></i> BUSCAR GANADOR
+                </button>
+            </div>
+
+            <div id="resultado-ganador-card" class="winner-found-card">
+                <div class="winner-title">¡TENEMOS GANADOR!</div>
+                <div id="display-numero-ganador" class="winner-number-display">0000</div>
+                
+                <div class="winner-info-grid">
+                    <div><div class="info-label-g">Nombre Cliente</div><div class="info-value-g" id="g-nombre">---</div></div>
+                    <div><div class="info-label-g">Cédula</div><div class="info-value-g" id="g-cedula">---</div></div>
+                    <div><div class="info-label-g">Teléfono Contacto</div><div class="info-value-g" id="g-telefono">---</div></div>
+                    <div><div class="info-label-g">Teléfono Pago</div><div class="info-value-g" id="g-telefono-pago">---</div></div>
+                    <div><div class="info-label-g">Email</div><div class="info-value-g" id="g-email" style="font-size:0.9rem;">---</div></div>
+                    <div><div class="info-label-g">Tickets Comprados</div><div class="info-value-g" id="g-cantidad">---</div></div>
+                </div>
+
+                <a href="#" id="btn-whatsapp-ganador" target="_blank" class="btn-whatsapp" style="padding: 15px 30px; font-size: 1.1rem; background-color: #25D366;">
+                    <i class="fab fa-whatsapp" style="font-size: 1.4rem;"></i> CONTACTAR AL GANADOR
+                </a>
+            </div>
+            
+            <div id="no-ganador-msg" style="display:none; text-align:center; padding: 20px; background: #ffebee; color: #c62828; border-radius: 10px; margin-top: 20px; border: 1px solid #ef9a9a;">
+                <i class="fas fa-times-circle"></i> No se encontró ningún cliente con ese número en este sorteo.
+            </div>
+        </div>
+
         <div id="view-top" style="display: none;">
             <div class="header-actions">
                 <h1>🏆 Ranking de Compradores</h1>
@@ -400,12 +474,10 @@
                 <table id="tabla-ganadores-reales">
                     <thead>
                         <tr>
-                            <th>Ticket Ganador</th>
                             <th>Cliente</th>
                             <th>Cédula</th>
                             <th>Tel. Contacto</th>
-                            <th>Tel. Pago</th>
-                            <th>Cant. Tickets</th>
+                            <th>Tickets Ganados</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -499,6 +571,21 @@
         </div>
     </div>
 
+    <div id="modal-ver-premios-detalle" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModales()">&times;</span>
+            <h3 style="color:var(--purple); margin-bottom:10px;">Tickets Ganadores</h3>
+            <p style="margin-bottom:15px;">Cliente: <span id="modal-premios-cliente" style="font-weight:bold;"></span></p>
+            
+            <div id="container-premios-detalle" class="grid-premios-detalle">
+                </div>
+            
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn-primary" onclick="cerrarModales()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-admin-config.js"></script>
 
@@ -559,7 +646,8 @@
         // NAVEGACIÓN
         function cambiarVista(vista) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const vistas = ['sorteos', 'pedidos', 'top', 'premios', 'reportes'];
+            // AGREGAMOS 'buscador' AL ARRAY DE VISTAS
+            const vistas = ['sorteos', 'pedidos', 'top', 'premios', 'reportes', 'buscador'];
             vistas.forEach(v => document.getElementById(`view-${v}`).style.display = 'none');
 
             document.getElementById(`view-${vista}`).style.display = 'block';
@@ -570,6 +658,7 @@
             else if (vista === 'top') cargarSelectSorteos('select-sorteo-top');
             else if (vista === 'premios') cargarSelectSorteos('select-sorteo-premios');
             else if (vista === 'reportes') cargarSelectSorteos('select-sorteo-reporte');
+            else if (vista === 'buscador') cargarSelectSorteos('select-sorteo-buscador');
         }
 
         function abrirModal(id) { document.getElementById(id).classList.add('active'); }
@@ -659,13 +748,61 @@
             if(!sorteoId) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>'; return; }
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Calculando ranking...</td></tr>';
             const { data: boletos } = await supabase.from('boletos').select('nombre_cliente, telefono_cliente, cantidad_boletos').eq('sorteo_id', sorteoId).eq('estado', 'validado');
-            if(error || !boletos || boletos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>'; return; }
+            if(!boletos || boletos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>'; return; }
             const ranking = {}; boletos.forEach(ticket => { const key = ticket.telefono_cliente; if(!ranking[key]) { ranking[key] = { nombre: ticket.nombre_cliente, telefono: ticket.telefono_cliente, total: 0 }; } ranking[key].total += ticket.cantidad_boletos; });
             const top10 = Object.values(ranking).sort((a, b) => b.total - a.total).slice(0, 10);
             tbody.innerHTML = ''; top10.forEach((cliente, index) => { let medal = `#${index + 1}`; if(index === 0) medal = '<i class="fas fa-crown rank-1"></i>'; else if(index === 1) medal = '🥈 '; else if(index === 2) medal = '🥉 '; tbody.innerHTML += `<tr><td style="font-weight:bold;">${medal}</td><td>${cliente.nombre}</td><td>${cliente.telefono}</td><td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td></tr>`; });
         }
 
-        // --- TICKETS PREMIO: BUSQUEDA DE GANADORES ---
+        // ============================================
+        // FUNCIONES NUEVAS INTEGRADAS
+        // ============================================
+
+        // 1. BUSCADOR DE GANADOR (LOTERIA NACIONAL)
+        async function buscarGanadorReal() {
+            const sorteoId = document.getElementById('select-sorteo-buscador').value;
+            const numeroBuscado = document.getElementById('input-ticket-buscador').value.trim();
+            const cardResultado = document.getElementById('resultado-ganador-card');
+            const msgNoGanador = document.getElementById('no-ganador-msg');
+
+            cardResultado.style.display = 'none';
+            msgNoGanador.style.display = 'none';
+
+            if (!sorteoId || !numeroBuscado) { alert("Selecciona sorteo e ingresa número."); return; }
+
+            // Buscamos todos los tickets validados de ese sorteo
+            const { data: boletos } = await supabase.from('boletos').select('*').eq('sorteo_id', sorteoId).eq('estado', 'validado');
+
+            let ganadorEncontrado = null;
+
+            if (boletos) {
+                // Buscamos en JS para ser exactos con el string de números
+                ganadorEncontrado = boletos.find(b => {
+                    const numeros = b.numeros_asignados.split(',').map(n => n.trim());
+                    return numeros.includes(numeroBuscado);
+                });
+            }
+
+            if (ganadorEncontrado) {
+                document.getElementById('display-numero-ganador').textContent = `#${numeroBuscado}`;
+                document.getElementById('g-nombre').textContent = ganadorEncontrado.nombre_cliente;
+                document.getElementById('g-cedula').textContent = ganadorEncontrado.cedula_cliente;
+                document.getElementById('g-telefono').textContent = ganadorEncontrado.telefono_cliente;
+                document.getElementById('g-telefono-pago').textContent = ganadorEncontrado.telefono_pago;
+                document.getElementById('g-email').textContent = ganadorEncontrado.email_cliente || 'N/A';
+                document.getElementById('g-cantidad').textContent = ganadorEncontrado.cantidad_boletos;
+
+                const url = `https://wa.me/58${ganadorEncontrado.telefono_cliente.replace(/^0/, '')}?text=¡Felicidades ${ganadorEncontrado.nombre_cliente}! 🎉 Tu ticket #${numeroBuscado} es el GANADOR OFICIAL del sorteo.`;
+                document.getElementById('btn-whatsapp-ganador').href = url;
+
+                cardResultado.style.display = 'block';
+                lanzarConfeti(); // ¡Celebración!
+            } else {
+                msgNoGanador.style.display = 'block';
+            }
+        }
+
+        // 2. TICKETS PREMIO: LOGICA DE AGRUPACIÓN POR USUARIO
         async function cargarTicketsPremio() {
             const sorteoId = document.getElementById('select-sorteo-premios').value;
             const infoDiv = document.getElementById('info-premios-container');
@@ -681,7 +818,6 @@
 
             if (!sorteoId) return;
 
-            // 1. Obtener la lista de premios del sorteo
             const { data: sorteo } = await supabase.from('sorteos').select('tickets_premio').eq('id', sorteoId).single();
 
             infoDiv.style.display = 'none';
@@ -691,56 +827,57 @@
                 boxDiv.style.display = 'block';
                 listaText.textContent = sorteo.tickets_premio;
 
-                // 2. BUSCAR GANADORES REALES
-                // Convertir string de premios a array
-                const ticketsGanadoresArr = sorteo.tickets_premio.split(',').map(n => n.trim());
+                const premios = sorteo.tickets_premio.split(',').map(n => n.trim());
 
                 // Traer todos los boletos validados de este sorteo
-                const { data: boletos } = await supabase
-                    .from('boletos')
-                    .select('*')
-                    .eq('sorteo_id', sorteoId)
-                    .eq('estado', 'validado');
+                const { data: boletos } = await supabase.from('boletos').select('*').eq('sorteo_id', sorteoId).eq('estado', 'validado');
 
-                let ganadoresEncontrados = [];
+                // AGRUPAR POR TELÉFONO DE CLIENTE
+                let ganadoresMap = {};
 
                 if(boletos) {
                     boletos.forEach(b => {
-                        // Sus números asignados
                         const misNumeros = b.numeros_asignados.split(',').map(n => n.trim());
+                        const ganados = misNumeros.filter(num => premios.includes(num));
                         
-                        // Buscar coincidencia
-                        const coincidencia = misNumeros.find(num => ticketsGanadoresArr.includes(num));
-                        
-                        if(coincidencia) {
-                            ganadoresEncontrados.push({
-                                cliente: b.nombre_cliente,
-                                cedula: b.cedula_cliente,
-                                telefono: b.telefono_cliente,
-                                telefono_pago: b.telefono_pago,
-                                cantidad: b.cantidad_boletos,
-                                ticket: coincidencia
-                            });
+                        if(ganados.length > 0) {
+                            const key = b.telefono_cliente; // Usamos telefono como ID único
+                            if(!ganadoresMap[key]) {
+                                ganadoresMap[key] = {
+                                    cliente: b.nombre_cliente,
+                                    cedula: b.cedula_cliente,
+                                    telefono: b.telefono_cliente,
+                                    tickets_ganadores: []
+                                };
+                            }
+                            ganadoresMap[key].tickets_ganadores.push(...ganados);
                         }
                     });
                 }
 
-                // 3. Renderizar Tabla de Ganadores
-                if(ganadoresEncontrados.length > 0) {
+                // Renderizar Tabla
+                const listaGanadores = Object.values(ganadoresMap);
+
+                if(listaGanadores.length > 0) {
                     cardGanadores.style.display = 'block';
                     tbodyGanadores.innerHTML = '';
                     
-                    ganadoresEncontrados.forEach(g => {
-                        const url = `https://wa.me/58${g.telefono.replace(/^0/, '')}?text=Hola ${g.cliente}, ¡FELICIDADES! Tienes el ticket ganador #${g.ticket} 🎉`;
+                    listaGanadores.forEach(g => {
+                        const cantidad = g.tickets_ganadores.length;
+                        const listaTicketsStr = g.tickets_ganadores.join(',');
+                        
+                        const url = `https://wa.me/58${g.telefono.replace(/^0/, '')}?text=Hola ${g.cliente}, ¡Premio Marketing! Ganaste con los tickets: ${listaTicketsStr}`;
                         
                         tbodyGanadores.innerHTML += `
                             <tr class="winner-row">
-                                <td><span class="ticket-ganador-badge">#${g.ticket}</span></td>
                                 <td>${g.cliente}</td>
                                 <td>${g.cedula}</td>
                                 <td>${g.telefono}</td>
-                                <td>${g.telefono_pago}</td>
-                                <td style="text-align:center;">${g.cantidad}</td>
+                                <td style="text-align:center;">
+                                    <button class="btn-ver-premios" onclick="verDetallePremios('${g.cliente}', '${listaTicketsStr}')">
+                                        <i class="fas fa-eye"></i> [ Ver ${cantidad} ]
+                                    </button>
+                                </td>
                                 <td>
                                     <a href="${url}" target="_blank" class="btn-whatsapp">
                                         <i class="fab fa-whatsapp"></i> Contactar
@@ -749,8 +886,6 @@
                             </tr>
                         `;
                     });
-
-                    // ¡LANZAR CONFETI SOLO SI HAY GANADORES!
                     lanzarConfeti();
                 }
 
@@ -758,6 +893,23 @@
                 infoDiv.style.display = 'block';
                 infoDiv.textContent = "Este sorteo no tiene tickets premiados asignados.";
             }
+        }
+
+        // 3. FUNCION PARA ABRIR MODAL DETALLE DE TICKETS AGRUPADOS
+        function verDetallePremios(cliente, ticketsStr) {
+            document.getElementById('modal-premios-cliente').textContent = cliente;
+            const container = document.getElementById('container-premios-detalle');
+            container.innerHTML = ''; // Limpiar anterior
+            
+            const tickets = ticketsStr.split(',');
+            tickets.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'ticket-premio-item';
+                div.textContent = `#${t}`;
+                container.appendChild(div);
+            });
+            
+            abrirModal('modal-ver-premios-detalle');
         }
 
         function copiarAlPortapapeles() {

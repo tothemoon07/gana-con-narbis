@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: script.js - CORREGIDO (TOPE 100% Y BLOQUEO)
+// Archivo: script.js - SINCRONIZADO Y FORMATO 0.00%
 // ==========================================================
 
 const sorteosContainer = document.getElementById('sorteos-container');
@@ -35,13 +35,13 @@ async function cargarSorteos() {
         let htmlContent = '';
 
         for (const sorteo of sorteos) {
-            // Consultar ventas (Pendientes + Reportados + Validamos)
-            // Esto es para mostrar urgencia, pero debemos controlarlo visualmente
+            // CAMBIO IMPORTANTE: Usamos la misma lógica que en el detalle.
+            // Solo sumamos REPORTADOS y VALIDADOS. Ignoramos pendientes.
             const { data: ventas } = await supabase
                 .from('boletos')
                 .select('cantidad_boletos')
                 .eq('sorteo_id', sorteo.id)
-                .neq('estado', 'rechazado'); // Ignoramos los rechazados
+                .in('estado', ['reportado', 'validado']); 
 
             const boletosOcupados = ventas ? ventas.reduce((sum, o) => sum + o.cantidad_boletos, 0) : 0;
             const totalBoletos = sorteo.total_boletos || 100;
@@ -49,7 +49,7 @@ async function cargarSorteos() {
             // CÁLCULO DEL PROGRESO
             let progreso = (boletosOcupados / totalBoletos) * 100;
             
-            // CORRECCIÓN 1: Tope visual al 100%
+            // Tope visual al 100%
             let progresoVisual = Math.min(progreso, 100);
             
             const ticketsRestantes = Math.max(0, totalBoletos - boletosOcupados);
@@ -64,20 +64,20 @@ async function cargarSorteos() {
             let estiloImagen = '';
             let clickAction = `onclick="event.stopPropagation(); verDetalle('${sorteo.id}')"`;
 
-            // CORRECCIÓN 2: Si está lleno (o pasado), se bloquea totalmente
             if (boletosOcupados >= totalBoletos) {
                 badgeHTML = `<span class="raffle-badge" style="background:red;">VENDIDO</span>`;
                 claseCard = 'sold-out';
                 textoBoton = 'AGOTADO';
-                botonDisabled = 'disabled'; // Desactiva el botón
+                botonDisabled = 'disabled';
                 estiloImagen = 'filter: grayscale(100%);';
-                clickAction = ''; // Elimina la acción de clic
+                clickAction = ''; 
             } else if (progreso > 80) {
                 badgeHTML = `<span class="raffle-badge" style="background:#ff9800;">¡QUEDAN POCOS!</span>`;
             } else if (sorteo.es_popular) {
                 badgeHTML = `<span class="raffle-badge" style="background:#00bcd4;">POPULAR</span>`;
             }
 
+            // CAMBIO FORMATO: .toFixed(2) para mostrar 0.00%
             htmlContent += `
                 <div class="raffle-card-main ${claseCard}" onclick="verDetalle('${sorteo.id}')">
                     <div class="raffle-image-container">
@@ -94,7 +94,7 @@ async function cargarSorteos() {
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progresoVisual}%;"></div>
                                 </div>
-                                <span class="progress-text">${Math.round(progresoVisual)}% Vendido</span>
+                                <span class="progress-text">${progresoVisual.toFixed(2)}% Vendido</span>
                             </div>
                             <span class="tickets-left-text">${ticketsRestantes} boletos restantes</span>
                         </div>
@@ -127,12 +127,9 @@ async function cargarSorteos() {
     }
 }
 
-// LÓGICA DE TÉRMINOS (CORREGIDA PARA EVITAR ENTRAR SI ESTÁ AGOTADO)
+// LÓGICA DE TÉRMINOS
 function verDetalle(id) {
-    // Buscamos si el botón estaba deshabilitado en el DOM
-    // (Forma simple: intentamos ir, pero la validación real está en la carga de datos del detalle)
     idSorteoPendiente = id;
-    
     const modal = document.getElementById('modalTerminos');
     if (modal) {
         modal.style.display = 'flex';
@@ -159,11 +156,8 @@ function cerrarTerminos() {
     idSorteoPendiente = null;
 }
 
-// --- (RESTO DEL CÓDIGO DE MODALES DE CONSULTA SE MANTIENE IGUAL) ---
-// (Copia aquí el resto de funciones de abrirModalConsulta, cambiarPestanaBusqueda, etc. del script anterior)
-
 // ===========================================
-// 3. LÓGICA DEL MODAL DE CONSULTA DE TICKETS
+// LÓGICA DEL MODAL DE CONSULTA DE TICKETS
 // ===========================================
 
 window.abrirModalConsulta = function() {

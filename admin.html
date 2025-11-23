@@ -255,10 +255,6 @@
                 <label>Imagen (Obligatoria)</label>
                 <input type="file" id="input-imagen" accept="image/*" required>
 
-                <label style="display:flex; align-items:center; gap:10px; margin-top:10px;">
-                    <input type="checkbox" id="input-popular" style="width:auto; margin:0;"> Marcar como Popular
-                </label>
-
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:15px;">Guardar</button>
             </form>
         </div>
@@ -384,13 +380,12 @@
 
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
 
-                // Guardar datos
+                // Guardar datos (SIN COLUMNA POPULAR)
                 const { error: dbErr } = await supabase.from('sorteos').insert([{
                     titulo: document.getElementById('input-titulo').value,
                     precio_bs: document.getElementById('input-precio').value,
                     total_boletos: document.getElementById('input-stock').value,
                     fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(),
-                    es_popular: document.getElementById('input-popular').checked,
                     imagen_url: publicUrl,
                     estado: 'activo',
                     creado_en: new Date()
@@ -405,6 +400,7 @@
 
             } catch (err) {
                 alert("Error: " + err.message);
+                console.error(err);
             } finally {
                 btn.disabled = false; btn.textContent = "Guardar";
             }

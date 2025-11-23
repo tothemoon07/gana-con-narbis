@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Detalle del Sorteo | Gana con Narbis</title>
+    <title>Detalle del Sorteo | Pagina Test</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -28,7 +28,7 @@
                                 <img src="logonarbis.jpeg" alt="Logo" class="logo-img">
                             </div>
                             <div class="logo-text">
-                                <h1>NARBIS</h1>
+                                <h1>Pagina Test</h1>
                                 <p>Sorteos Exclusivos</p>
                             </div>
                         </a>
@@ -67,20 +67,30 @@
 
                 <div class="detail-container">
                     <div class="prize-section">
-                        <div class="prize-date">
-                            <span>🗓️</span>
-                            <span id="fecha-sorteo">Cargando...</span>
-                        </div>
                         <h2 class="prize-title" id="titulo-sorteo">Cargando título...</h2>
-                        <div class="prize-price">Bs. <span id="precio-boleto-display">-</span> por boleto</div>
-                        
-                        <div class="raffle-description" id="descripcion-sorteo">
+
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0; border: 1px solid #e9ecef;">
+                            
+                            <div class="prize-date" style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.2rem;">⏰</span>
+                                <span id="fecha-sorteo" style="font-weight: 600; color: #333;">Cargando fecha...</span>
+                            </div>
+
+                            <div class="prize-price" style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+                                <span style="font-size: 1.2rem;">💸</span>
+                                <div>
+                                    PRECIO ÚNICO: <strong style="color: var(--primary);">Bs. <span id="precio-boleto-display">--</span></strong>
+                                    <div style="font-size: 0.8rem; color: #666; font-weight: normal;">Mínimo de compra: 2 tickets</div>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <div class="raffle-description" id="descripcion-sorteo" style="margin-bottom: 20px; font-size: 1rem; line-height: 1.6;"></div>
 
                         <div class="progress-section">
                             <div class="progress-header">
                                 <span class="progress-title">Esta es tu oportunidad</span>
-                                <span class="progress-percentage" id="porcentaje-progreso">0%</span>
+                                <span class="progress-percentage" id="porcentaje-progreso">0.00%</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" id="barra-progreso" style="width: 0%"></div>
@@ -121,10 +131,11 @@
                     </div>
 
                     <div class="details-section">
-                        <h3 class="details-title">Información Legal</h3>
+                        <h3 class="details-title">🏆 Detalles de los Premios</h3>
                         <div class="info-notice">
-                            <span class="info-icon">🔒</span>
-                            <div class="info-text">Sorteo verificado y seguro. Los resultados se publicarán en nuestras redes sociales.</div>
+                            <div class="info-text" id="lista-premios" style="white-space: pre-line; color: #333;">
+                                Cargando premios...
+                            </div>
                         </div>
                     </div>
                 </div>

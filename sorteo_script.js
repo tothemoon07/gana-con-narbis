@@ -1,5 +1,5 @@
 // ==========================================================
-// Archivo: sorteo_script.js - FORMATO 0.00% & SIN FANTASMAS
+// Archivo: sorteo_script.js - CORREGIDO (PRECIO + PREMIOS)
 // ==========================================================
 
 window.abrirModalConsultaTicketsGlobal = abrirModalConsultaTickets;
@@ -10,7 +10,7 @@ let precioUnitario = 0;
 let boletosSeleccionados = 2; 
 let maxDisponible = 0; 
 let referenciaUnica = null;
-let datosClienteTemporal = {}; // AQUÍ GUARDAMOS LOS DATOS MIENTRAS PAGAN
+let datosClienteTemporal = {}; 
 
 // Variables botones
 let intervalId = null;
@@ -21,7 +21,7 @@ const INITIAL_DELAY = 400;
 // DOM Elements
 const inputCantidad = document.getElementById('tickets-input');
 const displayTicketsCount = document.getElementById('tickets-count-display'); 
-const displayPrecioBoleto = document.getElementById('precio-por-boleto');
+const displayPrecioBoleto = document.getElementById('precio-boleto-display'); // ID CORREGIDO
 const displayTotalPagar = document.getElementById('total-a-pagar');
 const displayMontoFinalPago = document.getElementById('monto-final-pago');
 const codigoReferenciaPago = document.getElementById('codigo-referencia');
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================
-// ACTIVAR ESCRITURA MANUAL CON LÍMITE DE STOCK
+// ACTIVAR ESCRITURA MANUAL
 // ==========================================================
 function activarModoEscrituraManual() {
     if(displayTicketsCount) displayTicketsCount.style.display = 'none';
@@ -98,7 +98,7 @@ function activarModoEscrituraManual() {
 }
 
 // ==========================================================
-// CARGA DE DATOS (SOLO CUENTA VENTAS REALES)
+// CARGA DE DATOS
 // ==========================================================
 
 async function cargarDetalleSorteo(id) {
@@ -121,7 +121,7 @@ async function cargarDetalleSorteo(id) {
         sorteoActual = sorteo;
         precioUnitario = sorteo.precio_bs;
 
-        // Solo contamos boletos que ya tienen FOTO (reportado) o ya están validados.
+        // VENTAS REALES
         const { data: ventas } = await supabase
             .from('boletos')
             .select('cantidad_boletos')
@@ -138,17 +138,26 @@ async function cargarDetalleSorteo(id) {
         document.title = `${sorteo.titulo} | Detalles`;
         document.getElementById('titulo-sorteo').textContent = sorteo.titulo;
         
+        // FECHA
         const fecha = new Date(sorteo.fecha_sorteo).toLocaleDateString('es-VE', { 
-            day: 'numeric', month: 'long', year: 'numeric' 
+            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
         document.getElementById('fecha-sorteo').textContent = fecha;
-        document.getElementById('descripcion-sorteo').textContent = sorteo.descripcion_larga || sorteo.descripcion_corta || '';
+
+        // DESCRIPCIONES (NUEVO)
+        // Descripción Larga -> Debajo del precio
+        document.getElementById('descripcion-sorteo').textContent = sorteo.descripcion_larga || '';
+        // Descripción Corta -> Lista de Premios
+        document.getElementById('lista-premios').textContent = sorteo.descripcion_corta || 'No hay detalles adicionales.';
         
-        if(displayPrecioBoleto) displayPrecioBoleto.textContent = precioUnitario.toFixed(2);
+        // PRECIO (CORREGIDO)
+        if(displayPrecioBoleto) {
+            displayPrecioBoleto.textContent = precioUnitario.toFixed(2);
+        }
+
         const imgEl = document.getElementById('imagen-sorteo');
         if(imgEl) imgEl.src = sorteo.imagen_url || 'placeholder.png';
 
-        // CAMBIO FORMATO: .toFixed(2)
         document.getElementById('porcentaje-progreso').textContent = `${porcentajeVisual.toFixed(2)}%`;
         document.getElementById('barra-progreso').style.width = `${porcentajeVisual}%`;
         const textoProgreso = document.getElementById('texto-progreso');
@@ -291,14 +300,11 @@ function configurarModales() {
         });
     });
 
-    // 1. FORMULARIO DE CONTACTO: NO GUARDA EN BD AÚN
     document.getElementById('form-datos-contacto').addEventListener('submit', (e) => {
         e.preventDefault();
         
-        // Generamos la referencia para mostrarla
         referenciaUnica = Math.floor(100000 + Math.random() * 900000);
 
-        // GUARDAMOS LOS DATOS EN MEMORIA (NO EN SUPABASE)
         datosClienteTemporal = {
             nombre: document.getElementById('nombre-completo').value,
             email: document.getElementById('email-contacto').value,
@@ -307,7 +313,6 @@ function configurarModales() {
             estado: document.getElementById('estado-contacto').value
         };
 
-        // Mostramos referencia y pasamos al pago
         codigoReferenciaDisplay.textContent = referenciaUnica;
         codigoReferenciaPago.textContent = referenciaUnica;
         
@@ -329,6 +334,8 @@ function configurarModales() {
         });
     });
 }
+
+function configurarFormularios() {} 
 
 // ==========================================================
 // CONSULTA TICKETS
@@ -399,12 +406,11 @@ async function consultarBoletosValidos(identificador, tipoBusqueda) {
 // ==========================================================
 // GUARDADO FINAL
 // ==========================================================
-function configurarFormularios() {} // Dummy
 
 document.getElementById('form-reporte-pago').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // 1. VALIDACIÓN CAPTURE
+    // A. VALIDACIÓN CAPTURE
     const fileInput = document.getElementById('capture-input');
     const file = fileInput.files[0];
 
@@ -417,7 +423,7 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     const btn = e.submitter; 
     btn.textContent = "Enviando Pedido..."; btn.disabled = true;
 
-    // 2. SUBIR IMAGEN
+    // B. SUBIR IMAGEN
     const BUCKET = 'comprobantes_narbis_v2';
     let fileUrl = null;
     const cleanName = file.name.replace(/[^a-zA-Z0-9_.]/g, '');
@@ -435,7 +441,7 @@ document.getElementById('form-reporte-pago').addEventListener('submit', async (e
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
     fileUrl = data.publicUrl;
 
-    // 3. INSERTAR TODO EN SUPABASE
+    // C. INSERTAR TODO EN SUPABASE
     const total = parseFloat(displayTotalPagar.textContent.replace('Bs. ', ''));
     
     const nuevaOrden = {

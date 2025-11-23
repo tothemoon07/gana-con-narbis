@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
         :root {
@@ -69,6 +70,7 @@
             transition: all 0.3s;
             cursor: pointer;
             font-weight: 500;
+            position: relative; /* Importante para la notificación */
         }
 
         .nav-item i { margin-right: 12px; width: 20px; text-align: center; }
@@ -77,6 +79,28 @@
             background-color: var(--primary);
             color: white;
             transform: translateX(5px);
+        }
+
+        /* NOTIFICACIÓN ROJA (Badge) */
+        .notification-badge {
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            position: absolute;
+            right: 15px;
+            top: 12px;
+            font-weight: bold;
+            display: none; /* Se oculta si es 0 */
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         #btn-logout {
@@ -197,6 +221,27 @@
             font-family: monospace; font-size: 1.5rem; color: #6a1b9a; letter-spacing: 2px;
             margin: 15px 0; word-break: break-all;
         }
+
+        /* Estilos TABLA DE GANADORES REALES */
+        .winner-table-header {
+            color: #b8860b; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+        }
+        .winner-row {
+            background-color: #fffde7 !important; /* Fondo amarillo claro */
+            border-left: 4px solid #FFD700;
+        }
+        .ticket-ganador-badge {
+            background: var(--purple);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +268,7 @@
                 <li>
                     <div class="nav-item" id="nav-premios" onclick="cambiarVista('premios')">
                         <i class="fas fa-gift"></i> Tickets Premio
+                        <span id="badge-premios" class="notification-badge">0</span>
                     </div>
                 </li>
                 <li>
@@ -335,13 +381,36 @@
                 </div>
 
                 <div id="box-premios-resultado" class="premio-box">
-                    <h3>🎉 Tickets Premiados Generados</h3>
-                    <p>Copia esta lista y publícala en tus redes sociales.</p>
+                    <h3>🎉 Tickets Premiados (Lista Generada)</h3>
+                    <p>Estos son los números ganadores que generó el sistema:</p>
                     <div id="lista-premios-texto" class="premio-numbers"></div>
                     <button class="btn-copy" onclick="copiarAlPortapapeles()">
                         <i class="fas fa-copy"></i> Copiar Lista
                     </button>
                 </div>
+            </div>
+
+            <div class="card" id="card-ganadores-reales" style="display:none; border: 2px solid var(--gold);">
+                <div class="winner-table-header">
+                    <i class="fas fa-crown fa-2x"></i>
+                    <h2>¡GANADORES ENCONTRADOS!</h2>
+                </div>
+                <p style="margin-bottom: 15px; color:#555;">Estas personas compraron uno de los tickets premiados. ¡Contáctalos!</p>
+                
+                <table id="tabla-ganadores-reales">
+                    <thead>
+                        <tr>
+                            <th>Ticket Ganador</th>
+                            <th>Cliente</th>
+                            <th>Cédula</th>
+                            <th>Tel. Contacto</th>
+                            <th>Tel. Pago</th>
+                            <th>Cant. Tickets</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-ganadores-reales"></tbody>
+                </table>
             </div>
         </div>
 
@@ -377,23 +446,16 @@
             <form id="form-sorteo">
                 <label>Título del Sorteo</label>
                 <input type="text" id="input-titulo" required placeholder="Ej: Gran Rifa Iphone 15">
-                
                 <div style="display:flex; gap:10px;">
                     <div style="flex:1"><label>Precio (Bs)</label><input type="number" id="input-precio" required step="0.01"></div>
                     <div style="flex:1"><label>Total Boletos</label><input type="number" id="input-stock" required value="1000"></div>
                 </div>
-
                 <label>Fecha del Sorteo</label>
                 <input type="datetime-local" id="input-fecha" required>
-
-                <label>Descripción Principal (Debajo del Precio)</label>
-                <textarea id="input-desc-larga" rows="3" placeholder="Ej: ¡Gana un iPhone 15 Pro Max! Sorteo autorizado..."></textarea>
-
-                <label>Lista de Premios y Horarios (Descripción Corta)</label>
-                <textarea id="input-desc-corta" rows="4" placeholder="Ej:
-🥇 1er Lugar: $1000 (10:00 PM)
-🥈 2do Lugar: $500 (4:00 PM)"></textarea>
-
+                <label>Descripción Principal</label>
+                <textarea id="input-desc-larga" rows="3" placeholder="Ej: ¡Gana un iPhone 15 Pro Max!..."></textarea>
+                <label>Lista de Premios y Horarios</label>
+                <textarea id="input-desc-corta" rows="4" placeholder="Ej: 🥇 1er Lugar: $1000..."></textarea>
                 <div style="margin: 15px 0; border-top:1px solid #eee; padding-top:15px;">
                     <label style="display:flex; align-items:center; gap:10px; color:var(--purple); cursor:pointer;">
                         <input type="checkbox" id="check-generar-premios" onchange="toggleInputPremios()">
@@ -405,10 +467,8 @@
                         <small style="color:#666;">Se elegirán al azar entre los boletos disponibles.</small>
                     </div>
                 </div>
-
                 <label>Imagen del Sorteo</label>
                 <input type="file" id="input-imagen" accept="image/*" required>
-
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:15px;">Crear Sorteo</button>
             </form>
         </div>
@@ -420,14 +480,9 @@
             <h3>Revisar Pago</h3>
             <img src="" id="img-capture-full" class="capture-img">
             <p id="info-capture" style="margin-bottom: 20px; font-weight: bold;"></p>
-            
             <div style="display:flex; gap:10px; justify-content:center;">
-                <button id="btn-aprobar-modal" class="btn-primary" style="background: var(--success);">
-                    <i class="fas fa-check"></i> Aprobar
-                </button>
-                <button id="btn-rechazar-modal" class="btn-primary" style="background: var(--danger);">
-                    <i class="fas fa-times"></i> Rechazar
-                </button>
+                <button id="btn-aprobar-modal" class="btn-primary" style="background: var(--success);"><i class="fas fa-check"></i> Aprobar</button>
+                <button id="btn-rechazar-modal" class="btn-primary" style="background: var(--danger);"><i class="fas fa-times"></i> Rechazar</button>
             </div>
         </div>
     </div>
@@ -437,9 +492,7 @@
             <span class="close-modal" onclick="cerrarModales()">&times;</span>
             <h3>Números Asignados</h3>
             <p style="margin-bottom:10px; color:#666;">Cliente: <span id="modal-numeros-cliente" style="font-weight:bold;"></span></p>
-            
             <div id="lista-numeros-container"></div>
-            
             <div style="margin-top:20px; text-align:right;">
                 <button class="btn-primary" onclick="cerrarModales()">Cerrar</button>
             </div>
@@ -459,12 +512,49 @@
             if (!session) { window.location.href = 'admin_login.html'; return; }
 
             cargarSorteos();
+            // INICIAMOS LA VERIFICACIÓN DE GANADORES AL CARGAR
+            verificarNotificacionesGanadores(); 
             
             document.getElementById('btn-logout').addEventListener('click', async () => {
                 await supabase.auth.signOut(); window.location.href = 'admin_login.html';
             });
             document.getElementById('form-sorteo').addEventListener('submit', guardarSorteo);
         });
+
+        // --- SISTEMA DE NOTIFICACIONES DE GANADORES ---
+        async function verificarNotificacionesGanadores() {
+            // 1. Obtener todos los sorteos activos con tickets premio
+            const { data: sorteos } = await supabase.from('sorteos').select('id, tickets_premio').eq('estado', 'activo').not('tickets_premio', 'is', null);
+            
+            if(!sorteos) return;
+            
+            let totalGanadores = 0;
+
+            for (const sorteo of sorteos) {
+                const premios = sorteo.tickets_premio.split(',').map(n => n.trim());
+                
+                // 2. Buscar tickets validados para este sorteo
+                const { data: boletos } = await supabase.from('boletos').select('numeros_asignados').eq('sorteo_id', sorteo.id).eq('estado', 'validado');
+                
+                if(boletos) {
+                    boletos.forEach(boleto => {
+                        const misNumeros = boleto.numeros_asignados.split(',').map(n => n.trim());
+                        // Verificar intersección
+                        const ganados = misNumeros.filter(n => premios.includes(n));
+                        totalGanadores += ganados.length;
+                    });
+                }
+            }
+
+            // 3. Actualizar la Notificación Roja
+            const badge = document.getElementById('badge-premios');
+            if (totalGanadores > 0) {
+                badge.textContent = totalGanadores;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
 
         // NAVEGACIÓN
         function cambiarVista(vista) {
@@ -484,7 +574,6 @@
 
         function abrirModal(id) { document.getElementById(id).classList.add('active'); }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(el => el.classList.remove('active')); }
-        
         function toggleInputPremios() {
             const check = document.getElementById('check-generar-premios');
             document.getElementById('div-cantidad-premios').style.display = check.checked ? 'block' : 'none';
@@ -510,210 +599,161 @@
         }
 
         async function guardarSorteo(e) {
-            e.preventDefault();
-            const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
-
+            e.preventDefault(); const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
             try {
-                let ticketsPremioStr = null;
-                const checkPremios = document.getElementById('check-generar-premios').checked;
-                const totalBoletos = parseInt(document.getElementById('input-stock').value);
-
+                let ticketsPremioStr = null; const checkPremios = document.getElementById('check-generar-premios').checked; const totalBoletos = parseInt(document.getElementById('input-stock').value);
                 if (checkPremios) {
-                    const cantidadPremios = parseInt(document.getElementById('input-cantidad-premios').value);
-                    let premios = [];
-                    let pad = totalBoletos.toString().length;
-                    
-                    while(premios.length < cantidadPremios) {
-                        let num = Math.floor(Math.random() * totalBoletos) + 1;
-                        let str = num.toString().padStart(pad, '0');
-                        if(!premios.includes(str)) premios.push(str);
-                    }
+                    const cantidadPremios = parseInt(document.getElementById('input-cantidad-premios').value); let premios = []; let pad = totalBoletos.toString().length;
+                    while(premios.length < cantidadPremios) { let num = Math.floor(Math.random() * totalBoletos) + 1; let str = num.toString().padStart(pad, '0'); if(!premios.includes(str)) premios.push(str); }
                     ticketsPremioStr = premios.join(', ');
                 }
-
-                const file = document.getElementById('input-imagen').files[0];
-                const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
-                const { error: upErr } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
-                if (upErr) throw upErr;
+                const file = document.getElementById('input-imagen').files[0]; const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const { error: upErr } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file); if (upErr) throw upErr;
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
-
-                const { error: dbErr } = await supabase.from('sorteos').insert([{
-                    titulo: document.getElementById('input-titulo').value,
-                    precio_bs: document.getElementById('input-precio').value,
-                    total_boletos: totalBoletos,
-                    fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(),
-                    descripcion_larga: document.getElementById('input-desc-larga').value,
-                    descripcion_corta: document.getElementById('input-desc-corta').value,
-                    imagen_url: publicUrl,
-                    estado: 'activo',
-                    tickets_premio: ticketsPremioStr, 
-                    creado_en: new Date()
-                }]);
-
-                if (dbErr) throw dbErr;
-                alert("Sorteo creado exitosamente!");
-                cerrarModales(); cargarSorteos(); e.target.reset();
-
-            } catch (err) { alert("Error: " + err.message); console.error(err); } 
-            finally { btn.disabled = false; btn.textContent = "Crear Sorteo"; }
+                const { error: dbErr } = await supabase.from('sorteos').insert([{ titulo: document.getElementById('input-titulo').value, precio_bs: document.getElementById('input-precio').value, total_boletos: totalBoletos, fecha_sorteo: new Date(document.getElementById('input-fecha').value).toISOString(), descripcion_larga: document.getElementById('input-desc-larga').value, descripcion_corta: document.getElementById('input-desc-corta').value, imagen_url: publicUrl, estado: 'activo', tickets_premio: ticketsPremioStr, creado_en: new Date() }]);
+                if (dbErr) throw dbErr; alert("Sorteo creado exitosamente!"); cerrarModales(); cargarSorteos(); e.target.reset();
+            } catch (err) { alert("Error: " + err.message); console.error(err); } finally { btn.disabled = false; btn.textContent = "Crear Sorteo"; }
         }
 
-        async function eliminarSorteo(id) {
-            if(confirm("¿Eliminar este sorteo?")) { await supabase.from('sorteos').delete().eq('id', id); cargarSorteos(); }
-        }
+        async function eliminarSorteo(id) { if(confirm("¿Eliminar este sorteo?")) { await supabase.from('sorteos').delete().eq('id', id); cargarSorteos(); } }
 
         // --- GESTIÓN PEDIDOS ---
-        function filtrarPedidos(estado, btn) {
-            filtroActual = estado;
-            document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            cargarPedidos();
-        }
-
+        function filtrarPedidos(estado, btn) { filtroActual = estado; document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active')); btn.classList.add('active'); cargarPedidos(); }
         async function cargarPedidos() {
-            const tbody = document.getElementById('tbody-pedidos');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Cargando...</td></tr>';
+            const tbody = document.getElementById('tbody-pedidos'); tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Cargando...</td></tr>';
             const { data: pedidos, error } = await supabase.from('boletos').select('*, sorteos(titulo)').eq('estado', filtroActual).order('creado_en', { ascending: false });
-
             if (error || !pedidos.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No hay pedidos en esta sección.</td></tr>'; return; }
             tbody.innerHTML = '';
             pedidos.forEach(p => {
-                let btnAccion = '-';
-                let btnNumeros = `<span style="color:#999; font-style:italic;">Pendiente</span>`;
-
-                if (filtroActual === 'reportado') {
-                    btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.referencia_pago}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`;
-                } else if (filtroActual === 'validado') {
-                    const nombreCliente = p.nombre_cliente.split(' ')[0]; 
-                    const sorteoTitulo = p.sorteos?.titulo || 'Sorteo';
-                    const listaTickets = p.numeros_asignados;
+                let btnAccion = '-'; let btnNumeros = `<span style="color:#999; font-style:italic;">Pendiente</span>`;
+                if (filtroActual === 'reportado') { btnAccion = `<button class="btn-primary" style="padding:5px 10px; font-size:12px;" onclick="abrirRevisar('${p.id}', '${p.url_capture}', '${p.referencia_pago}', ${p.cantidad_boletos}, '${p.sorteo_id}')">Revisar</button>`; } 
+                else if (filtroActual === 'validado') {
+                    const nombreCliente = p.nombre_cliente.split(' ')[0]; const sorteoTitulo = p.sorteos?.titulo || 'Sorteo'; const listaTickets = p.numeros_asignados;
                     const mensaje = `Hola ${nombreCliente}! 🧢👋 Muchas gracias por tu compra en CAPI RIFAS BARINAS. ✅ Tu pago ha sido validado con éxito. 🎟️ Aquí están tus tickets para el sorteo *${sorteoTitulo}*: ${listaTickets}. 🍀 ¡Mucha suerte! Si deseas comprar más oportunidades, aquí estamos a la orden.`;
                     const urlWhatsapp = `https://wa.me/58${p.telefono_cliente.replace(/^0/, '')}?text=${encodeURIComponent(mensaje)}`;
                     btnAccion = `<a href="${urlWhatsapp}" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Enviar Tickets</a>`;
                     btnNumeros = `<button class="btn-ver-numeros" onclick="verNumeros('${p.nombre_cliente}', '${p.numeros_asignados}')"><i class="fas fa-eye"></i> Ver</button>`;
                 }
-
                 let linkImg = p.url_capture ? `<a href="${p.url_capture}" target="_blank" style="color:blue">Ver</a>` : 'N/A';
-                
-                tbody.innerHTML += `<tr>
-                    <td><small>${p.sorteos?.titulo || 'Sorteo Borrado'}</small></td>
-                    <td style="font-weight:bold; color:#1a73e8;">${p.referencia_pago || 'N/A'}</td>
-                    <td>${p.nombre_cliente}<br><small>${p.telefono_cliente}</small></td>
-                    <td style="text-align:center">${p.cantidad_boletos}</td>
-                    <td>Bs. ${p.precio_total}</td>
-                    <td>${linkImg}</td>
-                    <td style="text-align:center;">${btnNumeros}</td>
-                    <td>${btnAccion}</td>
-                </tr>`;
+                tbody.innerHTML += `<tr><td><small>${p.sorteos?.titulo || 'Sorteo Borrado'}</small></td><td style="font-weight:bold; color:#1a73e8;">${p.referencia_pago || 'N/A'}</td><td>${p.nombre_cliente}<br><small>${p.telefono_cliente}</small></td><td style="text-align:center">${p.cantidad_boletos}</td><td>Bs. ${p.precio_total}</td><td>${linkImg}</td><td style="text-align:center;">${btnNumeros}</td><td>${btnAccion}</td></tr>`;
             });
         }
-
-        function verNumeros(cliente, numeros) {
-            document.getElementById('modal-numeros-cliente').textContent = cliente;
-            document.getElementById('lista-numeros-container').textContent = numeros;
-            abrirModal('modal-ver-numeros');
-        }
-
-        function abrirRevisar(id, url, ref, cant, sorteoId) {
-            const modal = document.getElementById('modal-capture');
-            document.getElementById('img-capture-full').src = url || '';
-            document.getElementById('info-capture').textContent = `Ref Banco: ${ref} | Boletos: ${cant}`;
-            document.getElementById('btn-aprobar-modal').onclick = () => aprobarOrden(id, cant, sorteoId);
-            document.getElementById('btn-rechazar-modal').onclick = () => rechazarOrden(id);
-            modal.classList.add('active');
-        }
-
+        function verNumeros(cliente, numeros) { document.getElementById('modal-numeros-cliente').textContent = cliente; document.getElementById('lista-numeros-container').textContent = numeros; abrirModal('modal-ver-numeros'); }
+        function abrirRevisar(id, url, ref, cant, sorteoId) { const modal = document.getElementById('modal-capture'); document.getElementById('img-capture-full').src = url || ''; document.getElementById('info-capture').textContent = `Ref Banco: ${ref} | Boletos: ${cant}`; document.getElementById('btn-aprobar-modal').onclick = () => aprobarOrden(id, cant, sorteoId); document.getElementById('btn-rechazar-modal').onclick = () => rechazarOrden(id); modal.classList.add('active'); }
         async function aprobarOrden(id, cantidad, sorteoId) {
             if(!confirm("¿Aprobar y generar números?")) return;
             try {
                 const { data: ocupados } = await supabase.from('boletos').select('numeros_asignados').eq('sorteo_id', sorteoId).not('numeros_asignados', 'is', null);
                 const { data: sorteo } = await supabase.from('sorteos').select('total_boletos').eq('id', sorteoId).single();
-                const max = sorteo.total_boletos || 10000;
-                let setOcupados = new Set();
-                ocupados.forEach(o => o.numeros_asignados.split(',').forEach(n => setOcupados.add(n.trim())));
-
-                let nuevos = []; let intentos = 0; let pad = max.toString().length; 
-                while(nuevos.length < cantidad && intentos < 50000) {
-                    let num = Math.floor(Math.random() * max) + 1;
-                    let str = num.toString().padStart(pad, '0');
-                    if(!setOcupados.has(str) && !nuevos.includes(str)) nuevos.push(str);
-                    intentos++;
-                }
+                const max = sorteo.total_boletos || 10000; let setOcupados = new Set(); ocupados.forEach(o => o.numeros_asignados.split(',').forEach(n => setOcupados.add(n.trim())));
+                let nuevos = []; let intentos = 0; let pad = max.toString().length; while(nuevos.length < cantidad && intentos < 50000) { let num = Math.floor(Math.random() * max) + 1; let str = num.toString().padStart(pad, '0'); if(!setOcupados.has(str) && !nuevos.includes(str)) nuevos.push(str); intentos++; }
                 if(nuevos.length < cantidad) throw new Error("No hay suficientes números.");
-
                 await supabase.from('boletos').update({ estado: 'validado', numeros_asignados: nuevos.join(', '), fecha_validacion: new Date() }).eq('id', id);
                 alert("¡Aprobado con éxito!"); cerrarModales(); cargarPedidos();
             } catch (e) { alert("Error: " + e.message); }
         }
-
-        async function rechazarOrden(id) {
-            if(confirm("¿Rechazar pedido?")) {
-                await supabase.from('boletos').update({ estado: 'rechazado' }).eq('id', id);
-                cerrarModales(); cargarPedidos();
-            }
-        }
-
-        // --- SELECTOR UNIVERSAL ---
-        async function cargarSelectSorteos(idSelect) {
-            const select = document.getElementById(idSelect);
-            if(select.options.length > 1) return; 
-            const { data: sorteos } = await supabase.from('sorteos').select('id, titulo').eq('estado', 'activo');
-            if(sorteos) {
-                sorteos.forEach(s => {
-                    const option = document.createElement('option');
-                    option.value = s.id;
-                    option.textContent = s.titulo;
-                    select.appendChild(option);
-                });
-            }
-        }
-
-        // --- TOP COMPRADORES ---
+        async function rechazarOrden(id) { if(confirm("¿Rechazar pedido?")) { await supabase.from('boletos').update({ estado: 'rechazado' }).eq('id', id); cerrarModales(); cargarPedidos(); } }
+        async function cargarSelectSorteos(idSelect) { const select = document.getElementById(idSelect); if(select.options.length > 1) return; const { data: sorteos } = await supabase.from('sorteos').select('id, titulo').eq('estado', 'activo'); if(sorteos) { sorteos.forEach(s => { const option = document.createElement('option'); option.value = s.id; option.textContent = s.titulo; select.appendChild(option); }); } }
         async function cargarTopCompradores() {
-            const sorteoId = document.getElementById('select-sorteo-top').value;
-            const tbody = document.getElementById('tbody-top');
-            
+            const sorteoId = document.getElementById('select-sorteo-top').value; const tbody = document.getElementById('tbody-top');
             if(!sorteoId) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Selecciona un sorteo arriba</td></tr>'; return; }
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Calculando ranking...</td></tr>';
-
-            const { data: boletos, error } = await supabase.from('boletos').select('nombre_cliente, telefono_cliente, cantidad_boletos').eq('sorteo_id', sorteoId).eq('estado', 'validado');
+            const { data: boletos } = await supabase.from('boletos').select('nombre_cliente, telefono_cliente, cantidad_boletos').eq('sorteo_id', sorteoId).eq('estado', 'validado');
             if(error || !boletos || boletos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay ventas validadas aún para este sorteo.</td></tr>'; return; }
-
-            const ranking = {};
-            boletos.forEach(ticket => {
-                const key = ticket.telefono_cliente; 
-                if(!ranking[key]) { ranking[key] = { nombre: ticket.nombre_cliente, telefono: ticket.telefono_cliente, total: 0 }; }
-                ranking[key].total += ticket.cantidad_boletos;
-            });
-
+            const ranking = {}; boletos.forEach(ticket => { const key = ticket.telefono_cliente; if(!ranking[key]) { ranking[key] = { nombre: ticket.nombre_cliente, telefono: ticket.telefono_cliente, total: 0 }; } ranking[key].total += ticket.cantidad_boletos; });
             const top10 = Object.values(ranking).sort((a, b) => b.total - a.total).slice(0, 10);
-            
-            tbody.innerHTML = '';
-            top10.forEach((cliente, index) => {
-                let medal = `#${index + 1}`;
-                if(index === 0) medal = '<i class="fas fa-crown rank-1"></i>';
-                else if(index === 1) medal = '🥈 ';
-                else if(index === 2) medal = '🥉 ';
-
-                tbody.innerHTML += `<tr><td style="font-weight:bold;">${medal}</td><td>${cliente.nombre}</td><td>${cliente.telefono}</td><td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td></tr>`;
-            });
+            tbody.innerHTML = ''; top10.forEach((cliente, index) => { let medal = `#${index + 1}`; if(index === 0) medal = '<i class="fas fa-crown rank-1"></i>'; else if(index === 1) medal = '🥈 '; else if(index === 2) medal = '🥉 '; tbody.innerHTML += `<tr><td style="font-weight:bold;">${medal}</td><td>${cliente.nombre}</td><td>${cliente.telefono}</td><td style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.1em;">${cliente.total}</td></tr>`; });
         }
 
-        // --- TICKETS PREMIO ---
+        // --- TICKETS PREMIO: BUSQUEDA DE GANADORES ---
         async function cargarTicketsPremio() {
             const sorteoId = document.getElementById('select-sorteo-premios').value;
             const infoDiv = document.getElementById('info-premios-container');
             const boxDiv = document.getElementById('box-premios-resultado');
             const listaText = document.getElementById('lista-premios-texto');
+            const cardGanadores = document.getElementById('card-ganadores-reales');
+            const tbodyGanadores = document.getElementById('tbody-ganadores-reales');
 
-            infoDiv.style.display = 'block'; boxDiv.style.display = 'none';
+            // Resetear vistas
+            infoDiv.style.display = 'block'; 
+            boxDiv.style.display = 'none';
+            cardGanadores.style.display = 'none';
+
             if (!sorteoId) return;
 
+            // 1. Obtener la lista de premios del sorteo
             const { data: sorteo } = await supabase.from('sorteos').select('tickets_premio').eq('id', sorteoId).single();
+
             infoDiv.style.display = 'none';
+            
             if (sorteo && sorteo.tickets_premio) {
+                // Mostrar caja de lista generada
                 boxDiv.style.display = 'block';
                 listaText.textContent = sorteo.tickets_premio;
+
+                // 2. BUSCAR GANADORES REALES
+                // Convertir string de premios a array
+                const ticketsGanadoresArr = sorteo.tickets_premio.split(',').map(n => n.trim());
+
+                // Traer todos los boletos validados de este sorteo
+                const { data: boletos } = await supabase
+                    .from('boletos')
+                    .select('*')
+                    .eq('sorteo_id', sorteoId)
+                    .eq('estado', 'validado');
+
+                let ganadoresEncontrados = [];
+
+                if(boletos) {
+                    boletos.forEach(b => {
+                        // Sus números asignados
+                        const misNumeros = b.numeros_asignados.split(',').map(n => n.trim());
+                        
+                        // Buscar coincidencia
+                        const coincidencia = misNumeros.find(num => ticketsGanadoresArr.includes(num));
+                        
+                        if(coincidencia) {
+                            ganadoresEncontrados.push({
+                                cliente: b.nombre_cliente,
+                                cedula: b.cedula_cliente,
+                                telefono: b.telefono_cliente,
+                                telefono_pago: b.telefono_pago,
+                                cantidad: b.cantidad_boletos,
+                                ticket: coincidencia
+                            });
+                        }
+                    });
+                }
+
+                // 3. Renderizar Tabla de Ganadores
+                if(ganadoresEncontrados.length > 0) {
+                    cardGanadores.style.display = 'block';
+                    tbodyGanadores.innerHTML = '';
+                    
+                    ganadoresEncontrados.forEach(g => {
+                        const url = `https://wa.me/58${g.telefono.replace(/^0/, '')}?text=Hola ${g.cliente}, ¡FELICIDADES! Tienes el ticket ganador #${g.ticket} 🎉`;
+                        
+                        tbodyGanadores.innerHTML += `
+                            <tr class="winner-row">
+                                <td><span class="ticket-ganador-badge">#${g.ticket}</span></td>
+                                <td>${g.cliente}</td>
+                                <td>${g.cedula}</td>
+                                <td>${g.telefono}</td>
+                                <td>${g.telefono_pago}</td>
+                                <td style="text-align:center;">${g.cantidad}</td>
+                                <td>
+                                    <a href="${url}" target="_blank" class="btn-whatsapp">
+                                        <i class="fab fa-whatsapp"></i> Contactar
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    // ¡LANZAR CONFETI SOLO SI HAY GANADORES!
+                    lanzarConfeti();
+                }
+
             } else {
                 infoDiv.style.display = 'block';
                 infoDiv.textContent = "Este sorteo no tiene tickets premiados asignados.";
@@ -725,39 +765,41 @@
             navigator.clipboard.writeText(texto).then(() => { alert("¡Copiado!"); });
         }
 
-        // --- GENERAR REPORTES EXCEL ---
+        function lanzarConfeti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) { return clearInterval(interval); }
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        // --- REPORTES EXCEL ---
         async function descargarExcel() {
             const sorteoId = document.getElementById('select-sorteo-reporte').value;
             if(!sorteoId) { alert("Selecciona un sorteo."); return; }
-
             const btn = document.querySelector('.btn-excel');
             const textoOriginal = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
 
             try {
-                // 1. Datos del Sorteo (Título y Premios)
                 const { data: sorteo } = await supabase.from('sorteos').select('titulo, tickets_premio').eq('id', sorteoId).single();
                 const ticketsGanadores = sorteo.tickets_premio ? sorteo.tickets_premio.split(',').map(s => s.trim()) : [];
-
-                // 2. Datos de los Boletos
-                const { data: boletos } = await supabase
-                    .from('boletos')
-                    .select('*')
-                    .eq('sorteo_id', sorteoId)
-                    .order('creado_en', { ascending: false });
+                const { data: boletos } = await supabase.from('boletos').select('*').eq('sorteo_id', sorteoId).order('creado_en', { ascending: false });
 
                 if (!boletos || boletos.length === 0) { alert("No hay datos para exportar."); return; }
 
-                // 3. Formatear Datos
                 const reporteData = boletos.map(b => {
-                    // Verificar si ganó
                     let esGanador = "NO";
                     if (b.numeros_asignados && ticketsGanadores.length > 0) {
                         const misNumeros = b.numeros_asignados.split(',').map(n => n.trim());
-                        const gano = misNumeros.some(num => ticketsGanadores.includes(num));
-                        if(gano) esGanador = "¡TIENE PREMIO!";
+                        if(misNumeros.some(num => ticketsGanadores.includes(num))) esGanador = "¡TIENE PREMIO!";
                     }
-
                     return {
                         "Fecha Compra": new Date(b.creado_en).toLocaleDateString() + ' ' + new Date(b.creado_en).toLocaleTimeString(),
                         "Cliente": b.nombre_cliente,
@@ -772,26 +814,19 @@
                         "Monto (Bs)": b.precio_total,
                         "Estatus Pedido": b.estado.toUpperCase(),
                         "Números Asignados": b.numeros_asignados || 'Pendiente',
-                        "¿ES GANADOR?": esGanador, // Columna Mágica
+                        "¿ES GANADOR?": esGanador,
                         "Link Capture": b.url_capture
                     };
                 });
 
-                // 4. Crear Libro Excel
                 const ws = XLSX.utils.json_to_sheet(reporteData);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Reporte Ventas");
-
-                // 5. Descargar
                 const nombreArchivo = `Reporte_${sorteo.titulo.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.xlsx`;
                 XLSX.writeFile(wb, nombreArchivo);
 
-            } catch (error) {
-                console.error(error);
-                alert("Error generando Excel.");
-            } finally {
-                btn.disabled = false; btn.innerHTML = textoOriginal;
-            }
+            } catch (error) { console.error(error); alert("Error generando Excel."); } 
+            finally { btn.disabled = false; btn.innerHTML = textoOriginal; }
         }
 
     </script>

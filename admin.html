@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --primary: #1a73e8;
@@ -19,6 +21,7 @@
             --whatsapp: #25D366;
             --gold: #FFD700;
             --purple: #8e44ad;
+            --excel: #217346;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -140,6 +143,12 @@
         }
         .btn-copy:hover { opacity: 0.9; }
 
+        .btn-excel {
+            background: var(--excel); color: white; border: none; padding: 12px 25px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; font-size: 1rem;
+        }
+        .btn-excel:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(33, 115, 70, 0.3); }
+
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.9rem; }
         td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
@@ -214,6 +223,11 @@
                 <li>
                     <div class="nav-item" id="nav-premios" onclick="cambiarVista('premios')">
                         <i class="fas fa-gift"></i> Tickets Premio
+                    </div>
+                </li>
+                <li>
+                    <div class="nav-item" id="nav-reportes" onclick="cambiarVista('reportes')">
+                        <i class="fas fa-file-excel"></i> Reportes Excel
                     </div>
                 </li>
             </ul>
@@ -331,6 +345,29 @@
             </div>
         </div>
 
+        <div id="view-reportes" style="display: none;">
+            <div class="header-actions">
+                <h1>📊 Reportes y Copia de Seguridad</h1>
+            </div>
+            
+            <div class="card" style="text-align:center; padding: 40px;">
+                <i class="fas fa-file-excel" style="font-size: 50px; color: var(--excel); margin-bottom: 20px;"></i>
+                <h3 style="margin-bottom: 20px;">Descargar Base de Datos Completa</h3>
+                <p style="margin-bottom: 30px; color: #666;">Selecciona un sorteo para descargar un archivo Excel con todos los clientes, pagos, referencias y números asignados.</p>
+                
+                <div style="max-width: 400px; margin: 0 auto;">
+                    <label style="text-align:left;">Sorteo a Descargar:</label>
+                    <select id="select-sorteo-reporte" style="margin-bottom: 20px; font-size: 16px;">
+                        <option value="">-- Selecciona un Sorteo --</option>
+                    </select>
+
+                    <button class="btn-excel" onclick="descargarExcel()">
+                        <i class="fas fa-download"></i> Descargar Excel Completo
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <div id="modal-nuevo-sorteo" class="modal">
@@ -432,7 +469,7 @@
         // NAVEGACIÓN
         function cambiarVista(vista) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const vistas = ['sorteos', 'pedidos', 'top', 'premios'];
+            const vistas = ['sorteos', 'pedidos', 'top', 'premios', 'reportes'];
             vistas.forEach(v => document.getElementById(`view-${v}`).style.display = 'none');
 
             document.getElementById(`view-${vista}`).style.display = 'block';
@@ -442,12 +479,12 @@
             else if (vista === 'pedidos') cargarPedidos();
             else if (vista === 'top') cargarSelectSorteos('select-sorteo-top');
             else if (vista === 'premios') cargarSelectSorteos('select-sorteo-premios');
+            else if (vista === 'reportes') cargarSelectSorteos('select-sorteo-reporte');
         }
 
         function abrirModal(id) { document.getElementById(id).classList.add('active'); }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(el => el.classList.remove('active')); }
         
-        // --- LOGICA FORMULARIO PREMIOS ---
         function toggleInputPremios() {
             const check = document.getElementById('check-generar-premios');
             document.getElementById('div-cantidad-premios').style.display = check.checked ? 'block' : 'none';
@@ -477,7 +514,6 @@
             const btn = e.submitter; btn.disabled = true; btn.textContent = "Guardando...";
 
             try {
-                // 1. Generar números premio si aplica
                 let ticketsPremioStr = null;
                 const checkPremios = document.getElementById('check-generar-premios').checked;
                 const totalBoletos = parseInt(document.getElementById('input-stock').value);
@@ -495,14 +531,12 @@
                     ticketsPremioStr = premios.join(', ');
                 }
 
-                // 2. Subir imagen
                 const file = document.getElementById('input-imagen').files[0];
                 const fileName = `premio_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
                 const { error: upErr } = await supabase.storage.from(BUCKET_SORTEOS).upload(fileName, file);
                 if (upErr) throw upErr;
                 const { data: { publicUrl } } = supabase.storage.from(BUCKET_SORTEOS).getPublicUrl(fileName);
 
-                // 3. Insertar
                 const { error: dbErr } = await supabase.from('sorteos').insert([{
                     titulo: document.getElementById('input-titulo').value,
                     precio_bs: document.getElementById('input-precio').value,
@@ -512,7 +546,7 @@
                     descripcion_corta: document.getElementById('input-desc-corta').value,
                     imagen_url: publicUrl,
                     estado: 'activo',
-                    tickets_premio: ticketsPremioStr, // AQUI SE GUARDA LA LISTA
+                    tickets_premio: ticketsPremioStr, 
                     creado_en: new Date()
                 }]);
 
@@ -619,10 +653,10 @@
             }
         }
 
-        // --- SELECTOR UNIVERSAL DE SORTEOS ---
+        // --- SELECTOR UNIVERSAL ---
         async function cargarSelectSorteos(idSelect) {
             const select = document.getElementById(idSelect);
-            if(select.options.length > 1) return; // Evitar recargar si ya tiene datos
+            if(select.options.length > 1) return; 
             const { data: sorteos } = await supabase.from('sorteos').select('id, titulo').eq('estado', 'activo');
             if(sorteos) {
                 sorteos.forEach(s => {
@@ -665,21 +699,17 @@
             });
         }
 
-        // --- TICKETS PREMIO (MARKETING) ---
+        // --- TICKETS PREMIO ---
         async function cargarTicketsPremio() {
             const sorteoId = document.getElementById('select-sorteo-premios').value;
             const infoDiv = document.getElementById('info-premios-container');
             const boxDiv = document.getElementById('box-premios-resultado');
             const listaText = document.getElementById('lista-premios-texto');
 
-            infoDiv.style.display = 'block';
-            boxDiv.style.display = 'none';
-
+            infoDiv.style.display = 'block'; boxDiv.style.display = 'none';
             if (!sorteoId) return;
 
-            // Consultar base de datos
             const { data: sorteo } = await supabase.from('sorteos').select('tickets_premio').eq('id', sorteoId).single();
-
             infoDiv.style.display = 'none';
             if (sorteo && sorteo.tickets_premio) {
                 boxDiv.style.display = 'block';
@@ -692,9 +722,76 @@
 
         function copiarAlPortapapeles() {
             const texto = document.getElementById('lista-premios-texto').textContent;
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Lista copiada al portapapeles! Ahora pégala en Instagram.");
-            });
+            navigator.clipboard.writeText(texto).then(() => { alert("¡Copiado!"); });
+        }
+
+        // --- GENERAR REPORTES EXCEL ---
+        async function descargarExcel() {
+            const sorteoId = document.getElementById('select-sorteo-reporte').value;
+            if(!sorteoId) { alert("Selecciona un sorteo."); return; }
+
+            const btn = document.querySelector('.btn-excel');
+            const textoOriginal = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+            try {
+                // 1. Datos del Sorteo (Título y Premios)
+                const { data: sorteo } = await supabase.from('sorteos').select('titulo, tickets_premio').eq('id', sorteoId).single();
+                const ticketsGanadores = sorteo.tickets_premio ? sorteo.tickets_premio.split(',').map(s => s.trim()) : [];
+
+                // 2. Datos de los Boletos
+                const { data: boletos } = await supabase
+                    .from('boletos')
+                    .select('*')
+                    .eq('sorteo_id', sorteoId)
+                    .order('creado_en', { ascending: false });
+
+                if (!boletos || boletos.length === 0) { alert("No hay datos para exportar."); return; }
+
+                // 3. Formatear Datos
+                const reporteData = boletos.map(b => {
+                    // Verificar si ganó
+                    let esGanador = "NO";
+                    if (b.numeros_asignados && ticketsGanadores.length > 0) {
+                        const misNumeros = b.numeros_asignados.split(',').map(n => n.trim());
+                        const gano = misNumeros.some(num => ticketsGanadores.includes(num));
+                        if(gano) esGanador = "¡TIENE PREMIO!";
+                    }
+
+                    return {
+                        "Fecha Compra": new Date(b.creado_en).toLocaleDateString() + ' ' + new Date(b.creado_en).toLocaleTimeString(),
+                        "Cliente": b.nombre_cliente,
+                        "Cédula": b.cedula_cliente,
+                        "Teléfono": b.telefono_cliente,
+                        "Estado (Ubicación)": b.estado_cliente,
+                        "Email": b.email_cliente || 'No registrado',
+                        "Ref. Pago (6 dig)": b.referencia_pago,
+                        "Código Interno": b.codigo_concepto,
+                        "Teléfono Pago": b.telefono_pago,
+                        "Cantidad Tickets": b.cantidad_boletos,
+                        "Monto (Bs)": b.precio_total,
+                        "Estatus Pedido": b.estado.toUpperCase(),
+                        "Números Asignados": b.numeros_asignados || 'Pendiente',
+                        "¿ES GANADOR?": esGanador, // Columna Mágica
+                        "Link Capture": b.url_capture
+                    };
+                });
+
+                // 4. Crear Libro Excel
+                const ws = XLSX.utils.json_to_sheet(reporteData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Reporte Ventas");
+
+                // 5. Descargar
+                const nombreArchivo = `Reporte_${sorteo.titulo.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.xlsx`;
+                XLSX.writeFile(wb, nombreArchivo);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error generando Excel.");
+            } finally {
+                btn.disabled = false; btn.innerHTML = textoOriginal;
+            }
         }
 
     </script>

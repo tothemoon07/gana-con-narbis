@@ -3,191 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Participa en los mejores sorteos exclusivos de CAPI RIFAS BARINAS. ¡Gana grandes premios hoy mismo!">
-    <title>Inicio | CAPI RIFAS BARINAS</title>
+    <title>Gana con Narbis | Sorteos Exclusivos</title>
     
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .terminos-lista-container {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 60vh; /* Altura máxima adaptable */
+            overflow-y: auto; /* Scroll si es muy largo */
+        }
+        .lista-terminos {
+            margin-left: 20px;
+            color: #444;
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .lista-terminos li {
+            margin-bottom: 12px;
+            padding-left: 5px;
+        }
+        .lista-terminos li::marker {
+            color: #19A0D0; /* Color azul de la marca */
+            font-weight: 800;
+        }
+        /* Barra de scroll bonita */
+        .terminos-lista-container::-webkit-scrollbar { width: 6px; }
+        .terminos-lista-container::-webkit-scrollbar-track { background: #f1f1f1; }
+        .terminos-lista-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
 </head>
 <body>
+
+    <div id="particles-js"></div>
 
     <header class="site-header">
         <div class="header-main">
             <div class="container">
                 <div class="header-content">
+                    
                     <div class="logo-section">
-                        <a href="index.html" class="logo-link">
+                        <a href="#" class="logo-link">
                             <div class="logo-container">
-                                <img src="logo.jpg" alt="CAPI RIFAS BARINAS Logo" class="logo-img">
+                                <img src="logonarbis.jpeg" alt="Gana con Narbis" class="logo-img">
                             </div>
                             <div class="logo-text">
-                                <h1>CAPI RIFAS BARINAS</h1>
+                                <h1>NARBIS</h1>
                                 <p>Sorteos Exclusivos</p>
                             </div>
                         </a>
                     </div>
                     
+                    <nav class="main-nav">
+                        <ul>
+                            <li><a href="#">Inicio</a></li>
+                            <li><a href="#sorteos-container">Sorteos Activos</a></li>
+                        </ul>
+                    </nav>
+
                     <div class="header-actions">
-                        <button class="btn-check-tickets" id="consultar-tickets-navbar-btn" onclick="abrirModalConsulta()">
-                            <i class="fas fa-search"></i> Consultar mis Tickets
+                        <button class="btn-check-tickets" onclick="abrirModalConsulta()">
+                            <i class="fas fa-search"></i> 
+                            <span>Consultar Mis Tickets</span>
                         </button>
                     </div>
+
+                    <button class="mobile-menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
 
     <section class="hero-section">
-        <div class="hero-bg-overlay"></div>
-        <div class="container hero-container">
+        <div class="container">
             <div class="hero-content">
-                <span class="hero-subtitle">¡Bienvenido a CAPI RIFAS BARINAS!</span>
-                <h2 class="hero-title">Gana Premios Increíbles<br>Con Cada Ticket</h2>
-                <p class="hero-description">
-                    Participa en nuestros sorteos exclusivos. Tu próxima gran victoria está a solo un click de distancia. ¡Prueba tu suerte hoy!
-                </p>
-                <div class="hero-features">
-                    <div class="feature-item">
-                        <i class="fas fa-shield-alt"></i> 100% Seguro
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-bolt"></i> Resultados Rápidos
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-gift"></i> Premios Reales
-                    </div>
-                </div>
-                <button class="hero-cta-button" onclick="document.getElementById('sorteos-section').scrollIntoView({behavior: 'smooth'});">
-                    Explorar Sorteos Activos <i class="fas fa-arrow-down"></i>
-                </button>
+                <h2>¡Participa y Gana <br><span>Grandes Premios!</span></h2>
+                <p>Compra tu ticket y entra en nuestros sorteos exclusivos. Tu oportunidad comienza hoy.</p>
             </div>
         </div>
     </section>
 
-    <section class="raffles-section" id="sorteos-section">
-        <div class="container">
-            <div class="section-header text-center">
-                <span class="section-subtitle">Nuestros Sorteos</span>
-                <h3 class="section-title">Sorteos Activos del Momento</h3>
-                <div class="section-divider"></div>
-            </div>
-            
-            <div class="raffles-grid" id="sorteos-container">
-                 <div class="loading-spinner"></div>
+    <div class="main-view">
+        <div class="raffles-main">
+            <div class="container">
+                <h2 class="raffles-title">Sorteos Activos</h2>
+                
+                <div class="raffles-grid" id="sorteos-container">
+                    <div class="loading"></div> Cargando sorteos...
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <h2>CAPI RIFAS BARINAS</h2>
-                    <p>Tu plataforma de sorteos confiable.</p>
-                </div>
-                <div class="footer-links">
-                    <a href="#" id="linkTerminosFooter" onclick="abrirModalTerminos(event)">Términos y Condiciones</a>
-                    <a href="#sorteos-section">Sorteos Activos</a>
-                </div>
-                <div class="footer-social">
-                   <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                   <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                   <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-column">
+                        <div class="footer-logo">
+                            <div class="footer-logo-container">
+                                <img src="logonarbis.jpeg" alt="Logo Narbis" class="logo-img" style="max-height: 50px;">
+                            </div>
+                        </div>
+                        <h3>Sobre Nosotros</h3>
+                        <p>Somos la plataforma líder en sorteos digitales, ofreciendo transparencia y seguridad.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-telegram"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h3>Contacto</h3>
+                        <div class="contact-info">
+                            <div class="contact-item"><i class="fas fa-envelope"></i> contacto@ganaconnarbis.com</div>
+                            <div class="contact-item"><i class="fas fa-phone"></i> +58 412 123 4567</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 CAPI RIFAS BARINAS. Todos los derechos reservados.</p>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2025 Gana con Narbis. Todos los derechos reservados</p>
+                </div>
             </div>
         </div>
     </footer>
 
-    <div id="modalTerminos" class="modal-overlay" style="display: none;">
-        <div class="modal-container">
+    <a href="#" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <div class="toast" id="toastNotification"></div>
+
+    <div class="modal" id="checkTicketsModal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Términos y Condiciones</h3>
-                <button class="modal-close-btn" onclick="cerrarTerminos()">&times;</button>
+                <h2 class="modal-title">Consultar Mis Tickets</h2>
+                <button class="modal-close" onclick="cerrarModalConsulta()">×</button>
             </div>
-            <div class="modal-body scrollable-content">
-                 <h4>1. Aceptación</h4>
-                 <p>Al participar en los sorteos de CAPI RIFAS BARINAS, aceptas estos términos y condiciones en su totalidad.</p>
-                 
-                 <h4>2. Elegibilidad</h4>
-                 <p>Los sorteos están abiertos a residentes legales de Venezuela mayores de 18 años. Nos reservamos el derecho de solicitar verificación de identidad.</p>
-                 
-                 <h4>3. Compra de Boletos y Pagos</h4>
-                 <p>La compra de boletos se realiza mediante Pago Móvil. Es OBLIGATORIO reportar el pago subiendo la captura de pantalla (comprobante) y el número de referencia bancaria. Pagos no reportados o con capturas ilegibles no serán procesados.</p>
-                 
-                 <h4>4. Validación de Pagos</h4>
-                 <p>Todos los pagos son verificados manualmente. La asignación de los números de rifa se realizará una vez confirmado el pago en nuestras cuentas. Este proceso puede tardar hasta 24 horas.</p>
-
-                 <h4>5. Asignación de Números</h4>
-                 <p>Los números de los boletos son asignados aleatoriamente por nuestro sistema una vez validado el pago. No se permite la elección manual de números específicos.</p>
-
-                 <h4>6. Sorteo y Resultados</h4>
-                 <p>La fecha y hora del sorteo están indicadas en la página de cada rifa. Los resultados se publicarán en nuestras redes sociales oficiales y en esta plataforma.</p>
-
-                 <h4>7. Premios</h4>
-                 <p>Los premios no son transferibles ni canjeables por efectivo, salvo que se especifique lo contrario. Los ganadores serán contactados a través de los datos proporcionados (teléfono/email).</p>
-
-                 <h4>8. Reclamo de Premios</h4>
-                 <p>Los ganadores tienen un plazo de 15 días continuos para reclamar su premio. De no hacerlo, el premio podrá ser sorteado nuevamente o declarado desierto.</p>
-                 
-                 <h4>9. Política de Reembolsos</h4>
-                 <p>Todas las ventas de boletos son finales. No se realizan reembolsos una vez asignados los números, salvo en caso de cancelación del sorteo por parte de CAPI RIFAS BARINAS.</p>
-
-                 <h4>10. Modificaciones</h4>
-                 <p>CAPI RIFAS BARINAS se reserva el derecho de modificar estos términos, fechas de sorteo o suspender actividades por causas de fuerza mayor, notificando siempre a los participantes.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-accept" onclick="aceptarTerminos()">Aceptar y Continuar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="checkTicketsModal" class="modal-overlay" style="display: none;">
-        <div class="modal-container search-modal-container">
-             <div class="modal-header search-modal-header">
-                <h3 class="modal-title"><i class="fas fa-search"></i> Consultar Mis Tickets</h3>
-                <button class="modal-close-btn-visible" onclick="cerrarModalConsulta()">Cerrar</button>
-            </div>
-            <div class="modal-body no-scroll">
-                <p class="search-instruction">Introduce tus datos para ver tus números asignados.</p>
-                
-                <div class="search-tabs">
-                    <button class="search-tab active" id="tab-phone" onclick="cambiarPestanaBusqueda('phone')">
-                        <i class="fas fa-mobile-alt"></i> Por Teléfono/Cédula
-                    </button>
-                    <button class="search-tab" id="tab-email" onclick="cambiarPestanaBusqueda('email')">
-                        <i class="fas fa-envelope"></i> Por Email
-                    </button>
-                </div>
-                
-                <div class="search-input-group" id="input-group-phone">
-                    <input type="text" id="searchPhone" placeholder="Ej: 04141234567 o V12345678" class="search-input">
-                    <small class="search-hint">Ingresa solo números, o V/E seguido de números.</small>
-                </div>
-
-                 <div class="search-input-group" id="input-group-email" style="display: none;">
-                    <input type="email" id="searchEmail" placeholder="Ej: tu@email.com" class="search-input">
-                </div>
-
-                <button class="btn-search-action" onclick="ejecutarBusquedaTickets()">
-                    Buscar Tickets <i class="fas fa-arrow-right"></i>
-                </button>
-
-                <div id="searchResults" class="search-results-area">
+            
+            <div class="modal-body">
+                <div class="search-section">
+                    <p class="search-description">
+                        Ingresa tu email o número de teléfono para ver tus tickets.
+                    </p>
+                    
+                    <div class="search-form">
+                        <div class="search-tabs">
+                            <button class="search-tab active" id="tab-email" onclick="cambiarPestanaBusqueda('email')">
+                                <i class="fas fa-envelope"></i> Por Email
+                            </button>
+                            <button class="search-tab" id="tab-phone" onclick="cambiarPestanaBusqueda('phone')">
+                                <i class="fas fa-phone"></i> Por Teléfono
+                            </button>
+                        </div>
+                        
+                        <div class="search-inputs">
+                            <div class="search-input-group" id="input-group-email">
+                                <label>Email registrado</label>
+                                <input type="email" id="searchEmail" placeholder="ejemplo@correo.com">
+                            </div>
+                            
+                            <div class="search-input-group hidden" id="input-group-phone" style="display:none;">
+                                <label>Teléfono registrado</label>
+                                <input type="tel" id="searchPhone" placeholder="04121234567">
+                            </div>
+                        </div>
+                        
+                        <button class="search-button" onclick="ejecutarBusquedaTickets()">
+                            <span class="search-button-text">
+                                <i class="fas fa-search"></i> Buscar Mis Tickets
+                            </span>
+                        </button>
                     </div>
+                </div>
+                
+                <div class="search-results" id="searchResults"></div>
             </div>
         </div>
     </div>
+
+    <div class="modal" id="modalTerminos">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title" style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-file-contract" style="color: var(--primary-color);"></i> 
+                    Términos y Condiciones
+                </h2>
+                <button class="modal-close" onclick="cerrarTerminos()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95rem;">
+                    Por favor, lee y acepta nuestras normas para continuar:
+                </p>
+                
+                <div class="terminos-lista-container">
+                    <ol class="lista-terminos">
+                        <li>Los números disponibles para la compra en cada uno de nuestros sorteos se especificarán en la página de detalles correspondiente a cada sorteo.</li>
+                        <li>Solo podrán participar en nuestros sorteos personas naturales mayores de 18 años.</li>
+                        <li>Los premios deberán ser retirados en persona en la ubicación designada para cada sorteo. Si está afuera del estado se realizarán entregas personales en la dirección indicada por el ganador.</li>
+                        <li>De no venderse el 80% de la boletería la fecha del sorteo se reprogramará con previo aviso.</li>
+                        <li>Para reclamar tu premio tienes un lapso de 72 horas.</li>
+                        <li>Los ganadores aceptan aparecer en el contenido audiovisual del sorteo mostrando su presencia en las redes y entrega de los premios. Esto es <strong>OBLIGATORIO</strong>.</li>
+                        <li>La compra mínima requerida para participar en nuestros sorteos es de dos tickets. Los números de tickets serán al azar.</li>
+                        <li>La confirmación de su ticket le será enviada a su correo electrónico y a su WhatsApp en un lapso no mayor a 12 horas después de confirmar el pago.</li>
+                    </ol>
+                </div>
+
+                <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px; padding-top: 0;">
+                    <button class="buy-button secondary" onclick="cerrarTerminos()" style="background: #e5e7eb; color: #333; margin-top:0; font-size: 14px;">
+                        Cancelar
+                    </button>
+                    <button class="buy-button" onclick="aceptarTerminos()" style="margin-top:0; font-size: 14px;">
+                        Aceptar y Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        if (document.getElementById('particles-js')) {
+            particlesJS.load('particles-js', 'particles.json', function() {
+                console.log('Fondo de partículas cargado.');
+            });
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
